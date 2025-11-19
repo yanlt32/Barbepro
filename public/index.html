@@ -76,7 +76,7 @@
       min-width: 80px;
     }
     
-    .trocar-usuario:hover, .trocar-usuario:active {
+    .trocar-usuario:active {
       background:rgba(255,255,255,0.18);
       transform: translateY(-2px);
     }
@@ -90,12 +90,6 @@
       margin:15px 0;
       box-shadow: 0 8px 32px rgba(0,255,136,0.06); 
       border:1px solid rgba(0,255,136,0.08);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(0,255,136,0.1);
     }
 
     /* Botões */
@@ -165,10 +159,6 @@
     .secundario { 
       background: rgba(255,255,255,0.1); 
       color:#fff; 
-    }
-    
-    .btn:hover {
-      filter: brightness(1.1);
     }
 
     /* Efeito Ripple melhorado para touch */
@@ -483,33 +473,15 @@
 
     /* Melhorias específicas para touch */
     @media (hover: none) and (pointer: coarse) {
-      .btn:hover {
-        filter: none;
+      .btn:active {
+        transform: scale(0.95);
       }
       
-      .card:hover {
-        transform: none;
-        box-shadow: 0 8px 32px rgba(0,255,136,0.06);
+      .action-btn:active {
+        transform: scale(0.95);
       }
       
-      .trocar-usuario:hover {
-        transform: none;
-        background: rgba(255,255,255,0.12);
-      }
-      
-      .action-btn:hover {
-        transform: none;
-        background: #ff3366;
-      }
-      
-      .toggle-visibility:hover {
-        opacity: 0.8;
-        background: rgba(0,255,136,0.1);
-        transform: none;
-      }
-      
-      /* Feedback visual para touch */
-      .btn:active, .action-btn:active, .toggle-visibility:active {
+      .toggle-visibility:active {
         transform: scale(0.95);
       }
     }
@@ -561,46 +533,6 @@
       }
     }
 
-    /* Responsividade para Desktop */
-    @media (min-width: 1025px) {
-      .container {
-        max-width: 900px;
-      }
-      
-      .stats-container {
-        gap: 25px;
-      }
-      
-      .stat-card {
-        padding: 22px;
-      }
-    }
-
-    /* Layout para telas muito pequenas */
-    @media (max-width: 480px) {
-      .container {
-        padding: 15px 12px;
-      }
-      
-      .stats-container {
-        flex-direction: column;
-        gap: 12px;
-      }
-      
-      .stat-card {
-        min-height: 100px;
-      }
-      
-      .modal-content {
-        padding: 20px;
-      }
-      
-      .modal-buttons {
-        flex-direction: column;
-        gap: 10px;
-      }
-    }
-
     /* Animações de entrada */
     .fade-in {
       animation: fadeIn 0.5s ease;
@@ -631,17 +563,6 @@
       background: rgba(0,255,136,0.3);
       border-radius: 10px;
     }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(0,255,136,0.5);
-    }
-    
-    /* Prevenir zoom em inputs em iOS */
-    @media screen and (max-width: 768px) {
-      input, select, textarea {
-        font-size: 16px !important;
-      }
-    }
   </style>
 </head>
 <body>
@@ -659,16 +580,16 @@
     </div>
 
     <div class="card">
-      <button class="btn corte" onclick="registrar('corte')">
+      <button class="btn corte" onclick="registrarServico('corte')">
         <span>CORTE R$</span> <span id="precoCorte">28</span>
       </button>
-      <button class="btn barba" onclick="registrar('barba')">
+      <button class="btn barba" onclick="registrarServico('barba')">
         <span>BARBA R$</span> <span id="precoBarba">15</span>
       </button>
-      <button class="btn barba-cabelo" onclick="registrar('barba-cabelo')">
+      <button class="btn barba-cabelo" onclick="registrarServico('barba-cabelo')">
         <span>BARBA + CABELO R$</span> <span id="precoBarbaCabelo">40</span>
       </button>
-      <button class="btn outro" onclick="outroValor()">OUTRO VALOR</button>
+      <button class="btn outro" onclick="abrirModalOutro()">OUTRO VALOR</button>
       
       <div class="stats-container">
         <div class="stat-card">
@@ -703,10 +624,10 @@
         </div>
       </div>
       
-      <button class="btn whatsapp" onclick="enviarResumoCompleto()">ENVIAR RESUMO DO DIA</button>
-      <button class="btn resumo" onclick="abrirResumoCompleto()">VER RESUMO COMPLETO</button>
-      <button class="btn despesas" onclick="abrirDespesas()">DESPESAS</button>
-      <button class="btn secundario" onclick="abrirConfiguracoes()" style="margin-top:15px;">CONFIGURAÇÕES</button>
+      <button class="btn whatsapp" onclick="enviarResumoWhatsApp()">ENVIAR RESUMO DO DIA</button>
+      <button class="btn resumo" onclick="abrirModalResumo()">VER RESUMO COMPLETO</button>
+      <button class="btn despesas" onclick="abrirModalDespesas()">DESPESAS</button>
+      <button class="btn secundario" onclick="abrirModalConfiguracoes()" style="margin-top:15px;">CONFIGURAÇÕES</button>
     </div>
 
     <div class="card">
@@ -726,7 +647,7 @@
         <option value="0">FIADO</option>
       </select>
       <div class="modal-buttons">
-        <button class="btn corte" onclick="salvarOutro()">SALVAR</button>
+        <button class="btn corte" onclick="salvarServicoCustom()">SALVAR</button>
         <button class="btn secundario" onclick="fecharModal('modalOutro')">CANCELAR</button>
       </div>
     </div>
@@ -738,7 +659,7 @@
       <h3 class="section-title">Resumo Completo</h3>
       <input type="password" id="pinInput" placeholder="Digite o PIN" maxlength="4" />
       <div class="modal-buttons">
-        <button class="btn secundario" onclick="verificarPin()">ACESSAR</button>
+        <button class="btn secundario" onclick="verificarPinResumo()">ACESSAR</button>
         <button class="btn secundario" onclick="fecharModal('modalResumo')">FECHAR</button>
       </div>
       <div id="conteudoResumo" style="display:none; margin-top:20px;"></div>
@@ -772,7 +693,7 @@
       <input id="valBarba" type="number" placeholder="Barba (atual: 15)" min="1" step="0.01" />
       <input id="valCombo" type="number" placeholder="Barba + Cabelo (atual: 40)" min="1" step="0.01" />
       <div class="modal-buttons">
-        <button class="btn corte" onclick="salvarConfig()">SALVAR TUDO</button>
+        <button class="btn corte" onclick="salvarConfiguracoes()">SALVAR TUDO</button>
         <button class="btn secundario" onclick="fecharModal('modalConfig')">FECHAR</button>
       </div>
     </div>
@@ -792,9 +713,22 @@
   </div>
 
   <script>
+    // Variáveis globais
     let usuarioAtual = 'Gabriel';
-    let config = { pin: '1234', whatsapp: '11962094589', corte:28, barba:15, combo:40 };
-    const dados = { Gabriel: [], Wagner: [], despesas: [] };
+    let config = { 
+      pin: '1234', 
+      whatsapp: '11962094589', 
+      corte: 28, 
+      barba: 15, 
+      combo: 40 
+    };
+    
+    const dados = { 
+      Gabriel: [], 
+      Wagner: [], 
+      despesas: [] 
+    };
+    
     let grafico = null;
     let elementoParaRevelar = null;
     let estadoOlhos = {
@@ -803,128 +737,228 @@
       fiadoHoje: false
     };
 
-    // Detectar dispositivo touch
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+      carregarDados();
+      aplicarConfiguracoes();
+      atualizarInterface();
+      configurarEventosTouch();
+    });
 
-    function carregarTudo() {
+    // Funções principais
+    function carregarDados() {
       const salvo = localStorage.getItem('barbapro_duo_v3');
       if (salvo) {
-        const temp = JSON.parse(salvo);
-        dados.Gabriel = temp.Gabriel || [];
-        dados.Wagner = temp.Wagner || [];
-        dados.despesas = temp.despesas || [];
-        if (temp.config) config = { ...config, ...temp.config };
-        if (temp.estadoOlhos) estadoOlhos = { ...estadoOlhos, ...temp.estadoOlhos };
-      }
-      aplicarConfig();
-      atualizarLista();
-      atualizarEstatisticas();
-      restaurarEstadoOlhos();
-      configurarEventosTouch();
-    }
-
-    function configurarEventosTouch() {
-      if (isTouchDevice) {
-        // Adicionar eventos touch específicos
-        document.querySelectorAll('.btn, .action-btn, .toggle-visibility').forEach(element => {
-          element.addEventListener('touchstart', function(e) {
-            this.style.transform = 'scale(0.95)';
-            this.style.transition = 'transform 0.1s ease';
-          });
-          
-          element.addEventListener('touchend', function(e) {
-            this.style.transform = 'scale(1)';
-            this.style.transition = 'transform 0.2s ease';
-          });
-        });
-      }
-    }
-
-    function salvarTudo() {
-      localStorage.setItem('barbapro_duo_v3', JSON.stringify({ 
-        ...dados, 
-        config,
-        estadoOlhos 
-      }));
-    }
-
-    function restaurarEstadoOlhos() {
-      Object.keys(estadoOlhos).forEach(id => {
-        if (estadoOlhos[id]) {
-          const elemento = document.getElementById(id);
-          const btn = document.getElementById(`btn${id.charAt(0).toUpperCase() + id.slice(1)}`);
-          if (elemento && btn) {
-            const hoje = new Date().toISOString().split('T')[0];
-            const lista = dados[usuarioAtual].filter(s => s.data === hoje);
-            
-            if (id === 'totalHoje') {
-              const totalHoje = lista.reduce((a, s) => a + (s.pago ? s.valor : 0), 0);
-              elemento.textContent = `R$ ${totalHoje.toFixed(2)}`;
-            } else if (id === 'servicosHoje') {
-              const servicosHoje = lista.length;
-              elemento.textContent = servicosHoje;
-            } else if (id === 'fiadoHoje') {
-              const fiadoHoje = lista.reduce((a, s) => a + (!s.pago ? s.valor : 0), 0);
-              elemento.textContent = `R$ ${fiadoHoje.toFixed(2)}`;
-            }
-            
-            elemento.classList.add('visible');
-            btn.classList.add('active');
-          }
+        try {
+          const temp = JSON.parse(salvo);
+          Object.assign(dados, temp);
+          if (temp.config) Object.assign(config, temp.config);
+          if (temp.estadoOlhos) Object.assign(estadoOlhos, temp.estadoOlhos);
+        } catch (e) {
+          console.error('Erro ao carregar dados:', e);
         }
-      });
+      }
     }
 
-    function aplicarConfig() {
+    function salvarDados() {
+      try {
+        localStorage.setItem('barbapro_duo_v3', JSON.stringify({ 
+          ...dados, 
+          config,
+          estadoOlhos 
+        }));
+      } catch (e) {
+        console.error('Erro ao salvar dados:', e);
+      }
+    }
+
+    function aplicarConfiguracoes() {
       document.getElementById('precoCorte').textContent = config.corte;
       document.getElementById('precoBarba').textContent = config.barba;
       document.getElementById('precoBarbaCabelo').textContent = config.combo;
     }
 
-    function toggleVisibility(id) {
-      // Se já está visível, oculta
-      if (estadoOlhos[id]) {
-        const elemento = document.getElementById(id);
-        const btn = document.getElementById(`btn${id.charAt(0).toUpperCase() + id.slice(1)}`);
-        
-        elemento.textContent = '•••••';
-        elemento.classList.remove('visible');
-        btn.classList.remove('active');
-        estadoOlhos[id] = false;
-        salvarTudo();
-        return;
+    function atualizarInterface() {
+      atualizarListaServicos();
+      atualizarEstatisticas();
+      restaurarEstadoOlhos();
+    }
+
+    // Funções de serviço
+    function registrarServico(tipo) {
+      let valor, nome;
+      
+      switch(tipo) {
+        case 'corte':
+          valor = config.corte;
+          nome = 'Corte';
+          break;
+        case 'barba':
+          valor = config.barba;
+          nome = 'Barba';
+          break;
+        case 'barba-cabelo':
+          valor = config.combo;
+          nome = 'Barba + Cabelo';
+          break;
+        default:
+          return;
+      }
+
+      const servico = {
+        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+        tipo: nome,
+        valor: valor,
+        cliente: 'Cliente',
+        pago: true,
+        data: new Date().toISOString().split('T')[0]
+      };
+
+      dados[usuarioAtual].unshift(servico);
+      salvarDados();
+      atualizarInterface();
+      
+      // Feedback tátil
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
       }
       
-      // Se não está visível, pede senha
-      elementoParaRevelar = id;
-      document.getElementById('modalSenhaOlho').style.display = 'flex';
-      document.getElementById('pinOlho').focus();
+      criarEfeitoRipple(event);
+    }
+
+    function abrirModalOutro() {
+      document.getElementById('modalOutro').style.display = 'flex';
+      setTimeout(() => {
+        const input = document.getElementById('valorCustom');
+        input.focus();
+        input.value = '';
+      }, 100);
+      criarEfeitoRipple(event);
+    }
+
+    function salvarServicoCustom() {
+      const valorInput = document.getElementById('valorCustom');
+      const nomeInput = document.getElementById('nomeCliente');
+      const pagoSelect = document.getElementById('pagoCustom');
+      
+      const valor = parseFloat(valorInput.value);
+      if (!valor || valor <= 0) {
+        alert('Por favor, insira um valor válido!');
+        valorInput.focus();
+        return;
+      }
+
+      const servico = {
+        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+        tipo: 'Outro',
+        valor: valor,
+        cliente: nomeInput.value.trim() || 'Cliente',
+        pago: pagoSelect.value === '1',
+        data: new Date().toISOString().split('T')[0]
+      };
+
+      dados[usuarioAtual].unshift(servico);
+      salvarDados();
+      atualizarInterface();
+      fecharModal('modalOutro');
+      
+      // Limpar campos
+      valorInput.value = '';
+      nomeInput.value = '';
+      pagoSelect.value = '1';
+    }
+
+    function apagarServico(index) {
+      if (confirm('Tem certeza que deseja apagar este serviço?')) {
+        dados[usuarioAtual].splice(index, 1);
+        salvarDados();
+        atualizarInterface();
+      }
+    }
+
+    // Funções de interface
+    function atualizarListaServicos() {
+      const hoje = new Date().toISOString().split('T')[0];
+      const lista = dados[usuarioAtual].filter(s => s.data === hoje);
+      const container = document.getElementById('listaServicos');
+      
+      if (lista.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum serviço hoje</p>';
+        return;
+      }
+
+      let html = `
+        <table>
+          <tr>
+            <th>Hora</th>
+            <th>Serviço</th>
+            <th>Cliente</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Ação</th>
+          </tr>
+      `;
+      
+      lista.forEach((servico, index) => {
+        const classe = servico.pago ? 'pago' : 'fiado';
+        const status = servico.pago ? 'PAGO' : 'FIADO';
+        
+        html += `
+          <tr class="${classe}">
+            <td>${servico.hora}</td>
+            <td>${servico.tipo}</td>
+            <td>${servico.cliente}</td>
+            <td>R$ ${servico.valor.toFixed(2)}</td>
+            <td>${status}</td>
+            <td>
+              <button class="action-btn" onclick="apagarServico(${index})">X</button>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += '</table>';
+      container.innerHTML = html;
+    }
+
+    function atualizarEstatisticas() {
+      const hoje = new Date().toISOString().split('T')[0];
+      const lista = dados[usuarioAtual].filter(s => s.data === hoje);
+      
+      const totalPago = lista.reduce((acc, s) => acc + (s.pago ? s.valor : 0), 0);
+      const totalFiado = lista.reduce((acc, s) => acc + (!s.pago ? s.valor : 0), 0);
+      const totalServicos = lista.length;
+
+      // Atualizar valores se estiverem visíveis
+      if (estadoOlhos.totalHoje) {
+        document.getElementById('totalHoje').textContent = `R$ ${totalPago.toFixed(2)}`;
+      }
+      if (estadoOlhos.servicosHoje) {
+        document.getElementById('servicosHoje').textContent = totalServicos;
+      }
+      if (estadoOlhos.fiadoHoje) {
+        document.getElementById('fiadoHoje').textContent = `R$ ${totalFiado.toFixed(2)}`;
+      }
+    }
+
+    // Funções dos olhos
+    function toggleVisibility(id) {
+      if (estadoOlhos[id]) {
+        // Já está visível, então oculta
+        ocultarValor(id);
+      } else {
+        // Precisa de senha para mostrar
+        elementoParaRevelar = id;
+        document.getElementById('modalSenhaOlho').style.display = 'flex';
+        setTimeout(() => document.getElementById('pinOlho').focus(), 100);
+      }
+      criarEfeitoRipple(event);
     }
 
     function verificarPinOlho() {
       const pin = document.getElementById('pinOlho').value;
       if (pin === config.pin) {
-        const elemento = document.getElementById(elementoParaRevelar);
-        const btn = document.getElementById(`btn${elementoParaRevelar.charAt(0).toUpperCase() + elementoParaRevelar.slice(1)}`);
-        const hoje = new Date().toISOString().split('T')[0];
-        const lista = dados[usuarioAtual].filter(s => s.data === hoje);
-        
-        if (elementoParaRevelar === 'totalHoje') {
-          const totalHoje = lista.reduce((a, s) => a + (s.pago ? s.valor : 0), 0);
-          elemento.textContent = `R$ ${totalHoje.toFixed(2)}`;
-        } else if (elementoParaRevelar === 'servicosHoje') {
-          const servicosHoje = lista.length;
-          elemento.textContent = servicosHoje;
-        } else if (elementoParaRevelar === 'fiadoHoje') {
-          const fiadoHoje = lista.reduce((a, s) => a + (!s.pago ? s.valor : 0), 0);
-          elemento.textContent = `R$ ${fiadoHoje.toFixed(2)}`;
-        }
-        
-        elemento.classList.add('visible');
-        btn.classList.add('active');
-        estadoOlhos[elementoParaRevelar] = true;
-        salvarTudo();
-        
+        mostrarValor(elementoParaRevelar);
         fecharModal('modalSenhaOlho');
         document.getElementById('pinOlho').value = '';
       } else {
@@ -934,185 +968,331 @@
       }
     }
 
+    function mostrarValor(id) {
+      const elemento = document.getElementById(id);
+      const botao = document.getElementById(`btn${id.charAt(0).toUpperCase() + id.slice(1)}`);
+      const hoje = new Date().toISOString().split('T')[0];
+      const lista = dados[usuarioAtual].filter(s => s.data === hoje);
+      
+      let valor = '';
+      switch(id) {
+        case 'totalHoje':
+          valor = `R$ ${lista.reduce((a, s) => a + (s.pago ? s.valor : 0), 0).toFixed(2)}`;
+          break;
+        case 'servicosHoje':
+          valor = lista.length.toString();
+          break;
+        case 'fiadoHoje':
+          valor = `R$ ${lista.reduce((a, s) => a + (!s.pago ? s.valor : 0), 0).toFixed(2)}`;
+          break;
+      }
+      
+      elemento.textContent = valor;
+      elemento.classList.add('visible');
+      botao.classList.add('active');
+      estadoOlhos[id] = true;
+      salvarDados();
+    }
+
+    function ocultarValor(id) {
+      const elemento = document.getElementById(id);
+      const botao = document.getElementById(`btn${id.charAt(0).toUpperCase() + id.slice(1)}`);
+      
+      elemento.textContent = '•••••';
+      elemento.classList.remove('visible');
+      botao.classList.remove('active');
+      estadoOlhos[id] = false;
+      salvarDados();
+    }
+
+    function restaurarEstadoOlhos() {
+      Object.keys(estadoOlhos).forEach(id => {
+        if (estadoOlhos[id]) {
+          mostrarValor(id);
+        }
+      });
+    }
+
+    // Funções de usuário
     function trocarUsuario() {
       usuarioAtual = usuarioAtual === 'Gabriel' ? 'Wagner' : 'Gabriel';
       document.getElementById('usuarioAtual').textContent = usuarioAtual;
       document.getElementById('nomeUsuario').textContent = usuarioAtual;
-      atualizarLista();
-      atualizarEstatisticas();
-      
-      // Atualizar valores baseados no estado dos olhos
-      restaurarEstadoOlhos();
+      atualizarInterface();
+      criarEfeitoRipple(event);
     }
 
-    function registrar(tipo) {
-      let valor = config.corte, nome = 'Corte';
-      if (tipo === 'barba') { valor = config.barba; nome = 'Barba'; }
-      if (tipo === 'barba-cabelo') { valor = config.combo; nome = 'Barba + Cabelo'; }
+    // Funções de modais
+    function abrirModalResumo() {
+      document.getElementById('modalResumo').style.display = 'flex';
+      document.getElementById('pinInput').value = '';
+      document.getElementById('conteudoResumo').style.display = 'none';
+      setTimeout(() => document.getElementById('pinInput').focus(), 100);
+      criarEfeitoRipple(event);
+    }
 
-      const servico = {
-        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
-        tipo: nome,
-        valor,
-        cliente: 'Cliente',
-        pago: true,
-        data: new Date().toISOString().split('T')[0]
-      };
-
-      dados[usuarioAtual].unshift(servico);
-      salvarTudo();
-      atualizarLista();
-      atualizarEstatisticas();
-      
-      // Feedback tátil
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
+    function verificarPinResumo() {
+      const pin = document.getElementById('pinInput').value;
+      if (pin === config.pin) {
+        document.getElementById('conteudoResumo').style.display = 'block';
+        exibirResumoCompleto();
+      } else {
+        alert('PIN incorreto!');
+        document.getElementById('pinInput').value = '';
+        document.getElementById('pinInput').focus();
       }
     }
 
-    function outroValor() { 
-      document.getElementById('modalOutro').style.display = 'flex'; 
-      setTimeout(() => {
-        document.getElementById('valorCustom').focus();
-      }, 300);
+    function abrirModalDespesas() {
+      document.getElementById('modalDespesas').style.display = 'flex';
+      atualizarListaDespesas();
+      criarEfeitoRipple(event);
     }
-    
-    function salvarOutro() {
-      const v = parseFloat(document.getElementById('valorCustom').value);
-      if (!v || v <= 0) return alert('Valor inválido');
+
+    function abrirModalConfiguracoes() {
+      document.getElementById('modalConfig').style.display = 'flex';
+      document.getElementById('numWhats').value = config.whatsapp;
+      document.getElementById('valCorte').value = config.corte;
+      document.getElementById('valBarba').value = config.barba;
+      document.getElementById('valCombo').value = config.combo;
+      document.getElementById('novoPin').value = '';
+      criarEfeitoRipple(event);
+    }
+
+    function fecharModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    // Funções de despesas
+    function atualizarListaDespesas() {
+      const container = document.getElementById('listaDespesas');
+      if (dados.despesas.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;">Nenhuma despesa registrada</p>';
+        return;
+      }
+
+      let html = '';
+      dados.despesas.forEach((despesa, index) => {
+        html += `
+          <div style="padding:10px;background:rgba(255,50,50,0.1);margin:6px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+            <span>${despesa.desc} - R$ ${despesa.valor.toFixed(2)}</span>
+            <button class="action-btn" onclick="removerDespesa(${index})">X</button>
+          </div>
+        `;
+      });
       
-      dados[usuarioAtual].unshift({
-        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
-        tipo: 'Outro',
-        valor: v,
-        cliente: document.getElementById('nomeCliente').value || 'Cliente',
-        pago: document.getElementById('pagoCustom').value === '1',
+      container.innerHTML = html;
+    }
+
+    function adicionarDespesa() {
+      const desc = document.getElementById('descDespesa').value.trim() || 'Despesa';
+      const valor = parseFloat(document.getElementById('valorDespesa').value);
+      
+      if (!valor || valor <= 0) {
+        alert('Por favor, insira um valor válido para a despesa.');
+        return;
+      }
+
+      dados.despesas.push({
+        desc: desc,
+        valor: valor,
         data: new Date().toISOString().split('T')[0]
       });
       
-      salvarTudo(); 
-      atualizarLista(); 
-      atualizarEstatisticas();
-      fecharModal('modalOutro');
+      salvarDados();
+      atualizarListaDespesas();
       
       // Limpar campos
-      document.getElementById('valorCustom').value = '';
-      document.getElementById('nomeCliente').value = '';
-      document.getElementById('pagoCustom').value = '1';
+      document.getElementById('descDespesa').value = '';
+      document.getElementById('valorDespesa').value = '';
+      document.getElementById('descDespesa').focus();
     }
 
-    function apagarServico(i) {
-      if (confirm('Tem certeza que deseja apagar este serviço?')) {
-        dados[usuarioAtual].splice(i, 1);
-        salvarTudo(); 
-        atualizarLista();
-        atualizarEstatisticas();
+    function removerDespesa(index) {
+      if (confirm('Remover esta despesa?')) {
+        dados.despesas.splice(index, 1);
+        salvarDados();
+        atualizarListaDespesas();
       }
     }
 
-    function atualizarLista() {
+    // Funções de configurações
+    function salvarConfiguracoes() {
+      const numWhats = document.getElementById('numWhats').value.replace(/\D/g,'');
+      const novoPin = document.getElementById('novoPin').value;
+      const valCorte = parseFloat(document.getElementById('valCorte').value) || config.corte;
+      const valBarba = parseFloat(document.getElementById('valBarba').value) || config.barba;
+      const valCombo = parseFloat(document.getElementById('valCombo').value) || config.combo;
+
+      if (numWhats && numWhats.length >= 10) {
+        config.whatsapp = numWhats;
+      }
+      
+      if (novoPin.length === 4) {
+        config.pin = novoPin;
+      }
+      
+      config.corte = valCorte;
+      config.barba = valBarba;
+      config.combo = valCombo;
+
+      salvarDados();
+      aplicarConfiguracoes();
+      fecharModal('modalConfig');
+      alert('Configurações salvas com sucesso!');
+    }
+
+    // Funções de relatório
+    function enviarResumoWhatsApp() {
+      const resumo = calcularResumoCompleto();
+      
+      const mensagem = `
+*BARBAPRO - RESUMO COMPLETO DO DIA*
+
+📅 ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+
+👨‍💼 *GABRIEL*
+💰 Recebido: R$ ${resumo.gabriel.totalPago.toFixed(2)}
+📝 Fiado: R$ ${resumo.gabriel.totalFiado.toFixed(2)}
+✂️ Serviços: ${resumo.gabriel.totalServicos}
+
+👨‍💼 *WAGNER*
+💰 Recebido: R$ ${resumo.wagner.totalPago.toFixed(2)}
+📝 Fiado: R$ ${resumo.wagner.totalFiado.toFixed(2)}
+✂️ Serviços: ${resumo.wagner.totalServicos}
+
+📊 *TOTAIS GERAIS*
+💰 Total Recebido: R$ ${resumo.geral.totalPago.toFixed(2)}
+📝 Total Fiado: R$ ${resumo.geral.totalFiado.toFixed(2)}
+✂️ Total Serviços: ${resumo.geral.totalServicos}
+
+_Enviado automaticamente pelo BarbaPRO Duo_
+      `.trim();
+
+      const url = `https://wa.me/55${config.whatsapp}?text=${encodeURIComponent(mensagem)}`;
+      window.open(url, '_blank');
+      criarEfeitoRipple(event);
+    }
+
+    function calcularResumoCompleto() {
       const hoje = new Date().toISOString().split('T')[0];
-      const lista = dados[usuarioAtual].filter(s => s.data === hoje);
-      let html = lista.length === 0 ? '<p style="text-align:center;color:#666;padding:30px;">Nenhum serviço hoje</p>' : 
-        `<table><tr><th>Hora</th><th>Serviço</th><th>Cliente</th><th>Valor</th><th>Status</th><th></th></tr>`;
-      
-      lista.forEach((s, i) => {
-        const cls = s.pago ? 'pago' : 'fiado';
-        html += `<tr class="${cls}"><td>${s.hora}</td><td>${s.tipo}</td><td>${s.cliente}</td><td>R$ ${Number(s.valor).toFixed(2)}</td><td>${s.pago?'PAGO':'FIADO'}</td><td><button class="action-btn" onclick="apagarServico(${i})">X</button></td></tr>`;
-      });
-      
-      if (lista.length > 0) html += '</table>';
-      document.getElementById('listaServicos').innerHTML = html;
-    }
+      const servicosGabriel = dados.Gabriel.filter(s => s.data === hoje);
+      const servicosWagner = dados.Wagner.filter(s => s.data === hoje);
 
-    function atualizarEstatisticas() {
-      const hoje = new Date().toISOString().split('T')[0];
-      const lista = dados[usuarioAtual].filter(s => s.data === hoje);
+      const totalGabrielPago = servicosGabriel.reduce((acc, s) => acc + (s.pago ? s.valor : 0), 0);
+      const totalGabrielFiado = servicosGabriel.reduce((acc, s) => acc + (!s.pago ? s.valor : 0), 0);
       
-      // Atualizar apenas se os valores estão visíveis
-      Object.keys(estadoOlhos).forEach(id => {
-        if (estadoOlhos[id]) {
-          const elemento = document.getElementById(id);
-          if (id === 'totalHoje') {
-            const totalHoje = lista.reduce((a, s) => a + (s.pago ? s.valor : 0), 0);
-            elemento.textContent = `R$ ${totalHoje.toFixed(2)}`;
-          } else if (id === 'servicosHoje') {
-            const servicosHoje = lista.length;
-            elemento.textContent = servicosHoje;
-          } else if (id === 'fiadoHoje') {
-            const fiadoHoje = lista.reduce((a, s) => a + (!s.pago ? s.valor : 0), 0);
-            elemento.textContent = `R$ ${fiadoHoje.toFixed(2)}`;
-          }
+      const totalWagnerPago = servicosWagner.reduce((acc, s) => acc + (s.pago ? s.valor : 0), 0);
+      const totalWagnerFiado = servicosWagner.reduce((acc, s) => acc + (!s.pago ? s.valor : 0), 0);
+
+      return {
+        gabriel: {
+          totalPago: totalGabrielPago,
+          totalFiado: totalGabrielFiado,
+          totalServicos: servicosGabriel.length
+        },
+        wagner: {
+          totalPago: totalWagnerPago,
+          totalFiado: totalWagnerFiado,
+          totalServicos: servicosWagner.length
+        },
+        geral: {
+          totalPago: totalGabrielPago + totalWagnerPago,
+          totalFiado: totalGabrielFiado + totalWagnerFiado,
+          totalServicos: servicosGabriel.length + servicosWagner.length
         }
-      });
+      };
     }
 
-    // ... (restante das funções permanecem iguais) ...
-
-    function fecharModal(id) { 
-      document.getElementById(id).style.display = 'none'; 
-    }
-
-    // Ripple effect melhorado para touch
-    document.querySelectorAll('.btn').forEach(b => {
-      b.addEventListener('click', e => {
-        const r = document.createElement('span');
-        const rect = b.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        r.style.width = r.style.height = size + 'px';
+    function exibirResumoCompleto() {
+      const resumo = calcularResumoCompleto();
+      const container = document.getElementById('conteudoResumo');
+      
+      const html = `
+        <div class="resumo-item">
+          <strong>GABRIEL</strong>
+          <div class="resumo-valor">R$ ${resumo.gabriel.totalPago.toFixed(2)} (Pago)</div>
+          <div class="resumo-detalhes">
+            Serviços: ${resumo.gabriel.totalServicos} | 
+            Fiado: R$ ${resumo.gabriel.totalFiado.toFixed(2)}
+          </div>
+        </div>
         
-        // Posicionar baseado no evento de touch ou mouse
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX) || rect.width / 2;
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY) || rect.height / 2;
+        <div class="resumo-item">
+          <strong>WAGNER</strong>
+          <div class="resumo-valor">R$ ${resumo.wagner.totalPago.toFixed(2)} (Pago)</div>
+          <div class="resumo-detalhes">
+            Serviços: ${resumo.wagner.totalServicos} | 
+            Fiado: R$ ${resumo.wagner.totalFiado.toFixed(2)}
+          </div>
+        </div>
         
-        r.style.left = (clientX - rect.left - size/2) + 'px';
-        r.style.top = (clientY - rect.top - size/2) + 'px';
-        r.classList.add('ripple');
-        b.appendChild(r);
-        setTimeout(() => r.remove(), 600);
+        <div class="resumo-item" style="border-left-color: #ffaa33;">
+          <strong>TOTAIS GERAIS</strong>
+          <div class="resumo-valor">R$ ${resumo.geral.totalPago.toFixed(2)} (Pago)</div>
+          <div class="resumo-detalhes">
+            Serviços: ${resumo.geral.totalServicos} | 
+            Fiado: R$ ${resumo.geral.totalFiado.toFixed(2)}
+          </div>
+        </div>
+      `;
+      
+      container.innerHTML = html;
+    }
+
+    // Efeitos visuais
+    function criarEfeitoRipple(event) {
+      if (!event) return;
+      
+      const button = event.currentTarget || event.target;
+      const ripple = document.createElement('span');
+      const rect = button.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (event.clientX - rect.left - size/2) + 'px';
+      ripple.style.top = (event.clientY - rect.top - size/2) + 'px';
+      ripple.classList.add('ripple');
+      
+      button.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    }
+
+    function configurarEventosTouch() {
+      // Adicionar eventos de toque a todos os botões
+      document.querySelectorAll('.btn, .action-btn, .toggle-visibility').forEach(btn => {
+        btn.addEventListener('touchstart', function(e) {
+          this.style.transform = 'scale(0.95)';
+        });
+        
+        btn.addEventListener('touchend', function() {
+          this.style.transform = 'scale(1)';
+        });
       });
+    }
+
+    // Fechar modais ao clicar fora
+    document.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
     });
 
-    // Fechar modal ao clicar fora - melhorado para touch
-    window.addEventListener('click', function(event) {
-      const modals = document.querySelectorAll('.modal');
-      modals.forEach(modal => {
-        if (event.target === modal) {
+    // Fechar com ESC
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        document.querySelectorAll('.modal').forEach(modal => {
           modal.style.display = 'none';
-        }
-      });
-    });
-
-    // Também fechar modal com touch
-    window.addEventListener('touchstart', function(event) {
-      const modals = document.querySelectorAll('.modal');
-      modals.forEach(modal => {
-        if (event.target === modal) {
-          modal.style.display = 'none';
-        }
-      });
-    });
-
-    // Permitir fechar com ESC
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-          if (modal.style.display === 'flex') {
-            modal.style.display = 'none';
-          }
         });
       }
     });
 
     // Prevenir zoom em inputs no iOS
-    document.addEventListener('touchstart', function(e) {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+    document.addEventListener('touchstart', function(event) {
+      if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT') {
         document.body.style.zoom = "100%";
       }
     });
-
-    carregarTudo();
   </script>
 </body>
 </html>
