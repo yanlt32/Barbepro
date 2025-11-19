@@ -26,47 +26,47 @@
     }
     
     .container { 
-      max-width:700px; 
+      max-width:900px; 
       margin:0 auto; 
-      padding:20px; 
+      padding:25px 20px; 
     }
 
     /* Header */
     .header { 
       text-align:center; 
-      margin-bottom:18px; 
+      margin-bottom:25px; 
       position:relative; 
-      padding: 10px 0;
+      padding: 15px 0;
     }
     
     h1 { 
       font-family:'Bebas Neue', cursive; 
-      font-size:12vw; 
+      font-size:clamp(48px, 10vw, 80px); 
       background:linear-gradient(45deg,#00ff88,#00cc77); 
       -webkit-background-clip:text; 
       background-clip:text; 
       -webkit-text-fill-color:transparent; 
-      margin:12px 0 6px; 
-      letter-spacing:2px; 
+      margin:15px 0 8px; 
+      letter-spacing:3px; 
       text-shadow: 0 2px 10px rgba(0, 255, 136, 0.2);
     }
     
     .subtitle { 
       color:#aaa; 
-      font-size:4.5vw; 
-      margin-bottom: 10px;
+      font-size:clamp(16px, 4vw, 20px); 
+      margin-bottom: 12px;
     }
 
     .trocar-usuario {
       position:absolute; 
-      top:10px; 
-      right:10px; 
+      top:15px; 
+      right:15px; 
       background:rgba(255,255,255,0.12); 
       border:1px solid rgba(0,255,136,0.4); 
-      padding:10px 18px; 
-      border-radius:14px; 
+      padding:12px 20px; 
+      border-radius:16px; 
       font-weight:700; 
-      font-size:4.2vw; 
+      font-size:clamp(14px, 3.5vw, 16px); 
       backdrop-filter:blur(10px); 
       color:#00ff88;
       cursor: pointer;
@@ -82,9 +82,9 @@
     .card {
       background: rgba(255,255,255,0.06); 
       backdrop-filter: blur(8px); 
-      border-radius:16px; 
-      padding:18px; 
-      margin:12px 0;
+      border-radius:20px; 
+      padding:22px; 
+      margin:15px 0;
       box-shadow: 0 8px 32px rgba(0,255,136,0.06); 
       border:1px solid rgba(0,255,136,0.08);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -98,11 +98,11 @@
     /* Botões */
     .btn {
       width:100%; 
-      padding:14px; 
-      margin:10px 0; 
+      padding:16px; 
+      margin:12px 0; 
       border:none; 
-      border-radius:12px; 
-      font-size:5.2vw; 
+      border-radius:14px; 
+      font-size:clamp(16px, 4.5vw, 18px); 
       font-weight:700; 
       cursor:pointer;
       transition: all .15s ease; 
@@ -112,7 +112,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
     }
     
     .btn:active { 
@@ -184,13 +184,13 @@
     table { 
       width:100%; 
       border-collapse:collapse; 
-      margin:12px 0; 
-      font-size:4.2vw; 
+      margin:15px 0; 
+      font-size:clamp(14px, 3.5vw, 16px); 
     }
     
     th, td { 
       border:1px solid #00ff8830; 
-      padding:8px; 
+      padding:10px; 
       text-align:center; 
     }
     
@@ -214,8 +214,8 @@
       color:white; 
       border:none; 
       border-radius:6px; 
-      width:28px; 
-      height:28px; 
+      width:30px; 
+      height:30px; 
       font-size:14px; 
       cursor:pointer; 
       display:inline-flex; 
@@ -231,13 +231,13 @@
 
     /* Títulos de seção */
     .section-title { 
-      font-size:6vw; 
-      margin:16px 0 10px; 
+      font-size:clamp(20px, 5vw, 24px); 
+      margin:18px 0 12px; 
       color:#00ff88; 
       font-weight:700; 
       display:flex; 
       align-items:center; 
-      gap:10px; 
+      gap:12px; 
     }
     
     .section-title::after { 
@@ -259,16 +259,16 @@
       z-index:1000; 
       align-items:center; 
       justify-content:center; 
-      padding:20px; 
+      padding:25px; 
       backdrop-filter: blur(5px);
     }
     
     .modal-content { 
       background:rgba(30,30,30,0.98); 
-      border-radius:16px; 
-      padding:20px; 
+      border-radius:20px; 
+      padding:25px; 
       width:100%; 
-      max-width:560px; 
+      max-width:600px; 
       max-height:90vh; 
       overflow-y:auto; 
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -290,9 +290,9 @@
     /* Inputs e selects */
     input, select {
       width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 8px;
+      padding: 14px;
+      margin: 10px 0;
+      border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.1);
       background: rgba(0,0,0,0.3);
       color: white;
@@ -308,39 +308,41 @@
     
     label {
       display: block;
-      margin-top: 15px;
-      margin-bottom: 5px;
+      margin-top: 18px;
+      margin-bottom: 8px;
       font-weight: 500;
       color: #ccc;
+      font-size: 15px;
     }
 
     /* Grid para botões em modais */
     .modal-buttons {
       display: flex;
-      gap: 10px;
-      margin-top: 15px;
+      gap: 12px;
+      margin-top: 18px;
     }
     
     .modal-buttons .btn {
       margin: 0;
       flex: 1;
+      padding: 14px;
     }
 
     /* Indicador de usuário ativo */
     .user-indicator {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 5px 10px;
+      gap: 8px;
+      padding: 8px 16px;
       border-radius: 20px;
       background: rgba(0,255,136,0.1);
-      font-size: 14px;
-      margin-top: 5px;
+      font-size: 15px;
+      margin-top: 8px;
     }
     
     .user-dot {
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: #00ff88;
     }
@@ -349,27 +351,32 @@
     .stats-container {
       display: flex;
       justify-content: space-between;
-      margin: 15px 0;
-      gap: 10px;
+      margin: 20px 0;
+      gap: 15px;
     }
     
     .stat-card {
       flex: 1;
       background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      padding: 10px;
+      border-radius: 12px;
+      padding: 15px;
       text-align: center;
       border: 1px solid rgba(255,255,255,0.05);
       position: relative;
+      min-height: 90px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
     
     .stat-value {
-      font-size: 18px;
+      font-size: clamp(18px, 4.5vw, 22px);
       font-weight: 700;
       color: #00ff88;
       -webkit-text-security: disc;
       text-security: disc;
       transition: all 0.3s ease;
+      margin-bottom: 5px;
     }
     
     .stat-value.visible {
@@ -378,25 +385,26 @@
     }
     
     .stat-label {
-      font-size: 12px;
+      font-size: 13px;
       color: #aaa;
     }
 
     /* Botão olhinho */
     .toggle-visibility {
       position: absolute;
-      top: 8px;
-      right: 8px;
-      background: none;
-      border: none;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,255,136,0.1);
+      border: 1px solid rgba(0,255,136,0.3);
+      border-radius: 8px;
       color: #00ff88;
       cursor: pointer;
       font-size: 16px;
-      opacity: 0.7;
-      transition: opacity 0.3s ease;
-      padding: 4px;
-      width: 24px;
-      height: 24px;
+      opacity: 0.8;
+      transition: all 0.3s ease;
+      padding: 6px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -404,12 +412,19 @@
     
     .toggle-visibility:hover {
       opacity: 1;
+      background: rgba(0,255,136,0.2);
+      transform: scale(1.05);
     }
     
     .eye-icon {
       width: 18px;
       height: 18px;
       fill: currentColor;
+      transition: transform 0.3s ease;
+    }
+    
+    .toggle-visibility.active .eye-icon {
+      transform: scale(1.1);
     }
 
     /* Gráficos */
@@ -417,15 +432,15 @@
       position: relative;
       height: 300px;
       width: 100%;
-      margin: 20px 0;
+      margin: 25px 0;
     }
 
     /* Resumo financeiro */
     .resumo-item {
       background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      padding: 15px;
-      margin: 10px 0;
+      border-radius: 12px;
+      padding: 18px;
+      margin: 12px 0;
       border-left: 4px solid #00ff88;
     }
     
@@ -433,57 +448,87 @@
       font-size: 18px;
       font-weight: 700;
       color: #00ff88;
-      margin-top: 5px;
+      margin-top: 8px;
     }
     
     .resumo-detalhes {
       font-size: 14px;
       color: #aaa;
-      margin-top: 5px;
+      margin-top: 8px;
+      line-height: 1.4;
     }
 
-    /* Responsividade */
-    @media(min-width:768px) {
-      h1 { 
-        font-size:72px; 
-      }
-      
-      .subtitle { 
-        font-size:18px; 
-      }
-      
-      .btn { 
-        font-size:18px; 
-        padding: 16px;
-      }
-      
-      table { 
-        font-size:14px; 
-      }
-      
-      .trocar-usuario { 
-        font-size:16px; 
-        padding:12px 24px; 
-      }
-      
-      .section-title {
-        font-size: 24px;
+    /* Responsividade para Tablets */
+    @media (min-width: 768px) and (max-width: 1024px) {
+      .container {
+        max-width: 95%;
+        padding: 30px 25px;
       }
       
       .stats-container {
-        margin: 20px 0;
+        gap: 20px;
+        margin: 25px 0;
       }
       
       .stat-card {
-        padding: 15px;
+        padding: 20px 15px;
+        min-height: 100px;
       }
       
       .stat-value {
         font-size: 22px;
       }
       
-      .stat-label {
-        font-size: 14px;
+      .btn {
+        padding: 18px;
+        font-size: 18px;
+      }
+      
+      .card {
+        padding: 25px;
+      }
+      
+      table {
+        font-size: 16px;
+      }
+      
+      th, td {
+        padding: 12px;
+      }
+    }
+
+    /* Responsividade para Desktop */
+    @media (min-width: 1025px) {
+      .container {
+        max-width: 900px;
+      }
+      
+      .stats-container {
+        gap: 25px;
+      }
+      
+      .stat-card {
+        padding: 20px;
+      }
+    }
+
+    /* Layout para telas muito pequenas */
+    @media (max-width: 480px) {
+      .container {
+        padding: 15px 12px;
+      }
+      
+      .stats-container {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .stat-card {
+        min-height: 80px;
+      }
+      
+      .modal-content {
+        padding: 20px;
       }
     }
 
@@ -553,7 +598,7 @@
         <div class="stat-card">
           <div class="stat-value" id="totalHoje">•••••</div>
           <div class="stat-label">HOJE</div>
-          <button class="toggle-visibility" onclick="toggleVisibility('totalHoje')">
+          <button class="toggle-visibility" onclick="toggleVisibility('totalHoje')" id="btnTotalHoje">
             <svg class="eye-icon" viewBox="0 0 24 24">
               <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
               <path d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7zm0 12c-5 0-9-5-9-5s4-5 9-5 9 5 9 5-4 5-9 5z"/>
@@ -561,9 +606,9 @@
           </button>
         </div>
         <div class="stat-card">
-          <div class="stat-value" id="servicosHoje">0</div>
+          <div class="stat-value" id="servicosHoje">•••••</div>
           <div class="stat-label">SERVIÇOS</div>
-          <button class="toggle-visibility" onclick="toggleVisibility('servicosHoje')">
+          <button class="toggle-visibility" onclick="toggleVisibility('servicosHoje')" id="btnServicosHoje">
             <svg class="eye-icon" viewBox="0 0 24 24">
               <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
               <path d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7zm0 12c-5 0-9-5-9-5s4-5 9-5 9 5 9 5-4 5-9 5z"/>
@@ -573,7 +618,7 @@
         <div class="stat-card">
           <div class="stat-value" id="fiadoHoje">•••••</div>
           <div class="stat-label">FIADO</div>
-          <button class="toggle-visibility" onclick="toggleVisibility('fiadoHoje')">
+          <button class="toggle-visibility" onclick="toggleVisibility('fiadoHoje')" id="btnFiadoHoje">
             <svg class="eye-icon" viewBox="0 0 24 24">
               <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
               <path d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7zm0 12c-5 0-9-5-9-5s4-5 9-5 9 5 9 5-4 5-9 5z"/>
@@ -646,7 +691,7 @@
       <input id="numWhats" placeholder="11962094589" maxlength="11" />
       <label>Novo PIN (4 dígitos):</label>
       <input id="novoPin" type="password" maxlength="4" placeholder="Novo PIN" />
-      <h4 style="margin:15px 0 10px;">Editar Valores</h4>
+      <h4 style="margin:18px 0 12px;">Editar Valores</h4>
       <input id="valCorte" type="number" placeholder="Corte (atual: 28)" min="1" step="0.01" />
       <input id="valBarba" type="number" placeholder="Barba (atual: 15)" min="1" step="0.01" />
       <input id="valCombo" type="number" placeholder="Barba + Cabelo (atual: 40)" min="1" step="0.01" />
@@ -676,6 +721,11 @@
     const dados = { Gabriel: [], Wagner: [], despesas: [] };
     let grafico = null;
     let elementoParaRevelar = null;
+    let estadoOlhos = {
+      totalHoje: false,
+      servicosHoje: false,
+      fiadoHoje: false
+    };
 
     function carregarTudo() {
       const salvo = localStorage.getItem('barbapro_duo_v3');
@@ -685,14 +735,47 @@
         dados.Wagner = temp.Wagner || [];
         dados.despesas = temp.despesas || [];
         if (temp.config) config = { ...config, ...temp.config };
+        if (temp.estadoOlhos) estadoOlhos = { ...estadoOlhos, ...temp.estadoOlhos };
       }
       aplicarConfig();
       atualizarLista();
       atualizarEstatisticas();
+      restaurarEstadoOlhos();
     }
 
     function salvarTudo() {
-      localStorage.setItem('barbapro_duo_v3', JSON.stringify({ ...dados, config }));
+      localStorage.setItem('barbapro_duo_v3', JSON.stringify({ 
+        ...dados, 
+        config,
+        estadoOlhos 
+      }));
+    }
+
+    function restaurarEstadoOlhos() {
+      Object.keys(estadoOlhos).forEach(id => {
+        if (estadoOlhos[id]) {
+          const elemento = document.getElementById(id);
+          const btn = document.getElementById(`btn${id.charAt(0).toUpperCase() + id.slice(1)}`);
+          if (elemento && btn) {
+            const hoje = new Date().toISOString().split('T')[0];
+            const lista = dados[usuarioAtual].filter(s => s.data === hoje);
+            
+            if (id === 'totalHoje') {
+              const totalHoje = lista.reduce((a, s) => a + (s.pago ? s.valor : 0), 0);
+              elemento.textContent = `R$ ${totalHoje.toFixed(2)}`;
+            } else if (id === 'servicosHoje') {
+              const servicosHoje = lista.length;
+              elemento.textContent = servicosHoje;
+            } else if (id === 'fiadoHoje') {
+              const fiadoHoje = lista.reduce((a, s) => a + (!s.pago ? s.valor : 0), 0);
+              elemento.textContent = `R$ ${fiadoHoje.toFixed(2)}`;
+            }
+            
+            elemento.classList.add('visible');
+            btn.classList.add('active');
+          }
+        }
+      });
     }
 
     function aplicarConfig() {
@@ -702,6 +785,20 @@
     }
 
     function toggleVisibility(id) {
+      // Se já está visível, oculta
+      if (estadoOlhos[id]) {
+        const elemento = document.getElementById(id);
+        const btn = document.getElementById(`btn${id.charAt(0).toUpperCase() + id.slice(1)}`);
+        
+        elemento.textContent = '•••••';
+        elemento.classList.remove('visible');
+        btn.classList.remove('active');
+        estadoOlhos[id] = false;
+        salvarTudo();
+        return;
+      }
+      
+      // Se não está visível, pede senha
       elementoParaRevelar = id;
       document.getElementById('modalSenhaOlho').style.display = 'flex';
       document.getElementById('pinOlho').focus();
@@ -711,22 +808,25 @@
       const pin = document.getElementById('pinOlho').value;
       if (pin === config.pin) {
         const elemento = document.getElementById(elementoParaRevelar);
+        const btn = document.getElementById(`btn${elementoParaRevelar.charAt(0).toUpperCase() + elementoParaRevelar.slice(1)}`);
         const hoje = new Date().toISOString().split('T')[0];
         const lista = dados[usuarioAtual].filter(s => s.data === hoje);
         
         if (elementoParaRevelar === 'totalHoje') {
           const totalHoje = lista.reduce((a, s) => a + (s.pago ? s.valor : 0), 0);
           elemento.textContent = `R$ ${totalHoje.toFixed(2)}`;
-          elemento.classList.add('visible');
         } else if (elementoParaRevelar === 'servicosHoje') {
           const servicosHoje = lista.length;
           elemento.textContent = servicosHoje;
-          elemento.classList.add('visible');
         } else if (elementoParaRevelar === 'fiadoHoje') {
           const fiadoHoje = lista.reduce((a, s) => a + (!s.pago ? s.valor : 0), 0);
           elemento.textContent = `R$ ${fiadoHoje.toFixed(2)}`;
-          elemento.classList.add('visible');
         }
+        
+        elemento.classList.add('visible');
+        btn.classList.add('active');
+        estadoOlhos[elementoParaRevelar] = true;
+        salvarTudo();
         
         fecharModal('modalSenhaOlho');
         document.getElementById('pinOlho').value = '';
@@ -744,10 +844,8 @@
       atualizarLista();
       atualizarEstatisticas();
       
-      // Resetar visibilidade dos valores ao trocar usuário
-      document.getElementById('totalHoje').classList.remove('visible');
-      document.getElementById('servicosHoje').classList.remove('visible');
-      document.getElementById('fiadoHoje').classList.remove('visible');
+      // Atualizar valores baseados no estado dos olhos
+      restaurarEstadoOlhos();
     }
 
     function registrar(tipo) {
@@ -828,20 +926,22 @@
       const hoje = new Date().toISOString().split('T')[0];
       const lista = dados[usuarioAtual].filter(s => s.data === hoje);
       
-      const totalHoje = lista.reduce((a, s) => a + (s.pago ? s.valor : 0), 0);
-      const fiadoHoje = lista.reduce((a, s) => a + (!s.pago ? s.valor : 0), 0);
-      const servicosHoje = lista.length;
-      
-      // Atualizar valores (ocultos por padrão)
-      if (!document.getElementById('totalHoje').classList.contains('visible')) {
-        document.getElementById('totalHoje').textContent = '•••••';
-      }
-      if (!document.getElementById('servicosHoje').classList.contains('visible')) {
-        document.getElementById('servicosHoje').textContent = '•••••';
-      }
-      if (!document.getElementById('fiadoHoje').classList.contains('visible')) {
-        document.getElementById('fiadoHoje').textContent = '•••••';
-      }
+      // Atualizar apenas se os valores estão visíveis
+      Object.keys(estadoOlhos).forEach(id => {
+        if (estadoOlhos[id]) {
+          const elemento = document.getElementById(id);
+          if (id === 'totalHoje') {
+            const totalHoje = lista.reduce((a, s) => a + (s.pago ? s.valor : 0), 0);
+            elemento.textContent = `R$ ${totalHoje.toFixed(2)}`;
+          } else if (id === 'servicosHoje') {
+            const servicosHoje = lista.length;
+            elemento.textContent = servicosHoje;
+          } else if (id === 'fiadoHoje') {
+            const fiadoHoje = lista.reduce((a, s) => a + (!s.pago ? s.valor : 0), 0);
+            elemento.textContent = `R$ ${fiadoHoje.toFixed(2)}`;
+          }
+        }
+      });
     }
 
     function calcularResumoCompleto() {
@@ -1078,7 +1178,7 @@ _Enviado automaticamente pelo BarbaPRO Duo_`);
     function abrirDespesas() {
       document.getElementById('modalDespesas').style.display='flex';
       const lista = dados.despesas.map((d,i) => 
-        `<div style="padding:8px;background:rgba(255,50,50,0.1);margin:5px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+        `<div style="padding:10px;background:rgba(255,50,50,0.1);margin:6px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
           <span>${d.desc} - R$ ${d.valor.toFixed(2)}</span>
           <button class="action-btn" onclick="removerDespesa(${i})">X</button>
         </div>`
