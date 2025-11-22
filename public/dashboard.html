@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BarbaPRO Duo - Dashboard</title>
+  <meta name="theme-color" content="#ffaa00" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap');
+
+    * { 
+      margin:0; 
+      padding:0; 
+      box-sizing:border-box; 
+      -webkit-tap-highlight-color:transparent; 
+      touch-action: manipulation;
+    }
+    
+    html, body { 
+      height:100%; 
+      background: linear-gradient(135deg,#0a0a0a 0%,#16213e 100%); 
+      color:#fff; 
+      font-family:'Inter', sans-serif; 
+      overflow-x: hidden;
+    }
+    
+    .container { 
+      max-width:900px; 
+      margin:0 auto; 
+      padding:25px 20px; 
+    }
+
+    .header { 
+      text-align:center; 
+      margin-bottom:25px; 
+      position:relative; 
+      padding: 15px 0;
+    }
+    
+    h1 { 
+      font-family:'Bebas Neue', cursive; 
+      font-size:clamp(48px, 10vw, 80px); 
+      background:linear-gradient(45deg,#ffaa00,#ff5500); 
+      -webkit-background-clip:text; 
+      background-clip:text; 
+      -webkit-text-fill-color:transparent; 
+      margin:15px 0 8px; 
+      letter-spacing:3px; 
+      text-shadow: 0 2px 10px rgba(255, 170, 0, 0.2);
+    }
+    
+    .subtitle { 
+      color:#aaa; 
+      font-size:clamp(16px, 4vw, 20px); 
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      width:100%; 
+      padding:16px; 
+      margin:12px 0; 
+      border:none; 
+      border-radius:14px; 
+      font-size:clamp(16px, 4.5vw, 18px); 
+      font-weight:700; 
+      cursor:pointer;
+      transition: all .15s ease; 
+      box-shadow:0 6px 18px rgba(0,0,0,0.35); 
+      position:relative; 
+      overflow:hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 54px;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+    }
+    
+    .btn:active { 
+      transform:scale(.95); 
+    }
+    
+    .voltar { 
+      background: linear-gradient(45deg,#3366ff,#0033cc); 
+      color:#fff; 
+    }
+    
+    .whatsapp { 
+      background: linear-gradient(45deg,#25D366,#128C7E); 
+      color:#fff; 
+    }
+    
+    .resumo { 
+      background: linear-gradient(45deg,#9933ff,#6600cc); 
+      color:#fff; 
+    }
+    
+    .despesas { 
+      background: linear-gradient(45deg,#ff3366,#cc0033); 
+      color:#fff; 
+    }
+    
+    .config { 
+      background: linear-gradient(45deg,#00aaff,#0066cc); 
+      color:#fff; 
+    }
+
+    .card {
+      background: rgba(255,255,255,0.06); 
+      backdrop-filter: blur(8px); 
+      border-radius:20px; 
+      padding:22px; 
+      margin:15px 0;
+      box-shadow: 0 8px 32px rgba(255,170,0,0.06); 
+      border:1px solid rgba(255,170,0,0.08);
+    }
+
+    .section-title { 
+      font-size:clamp(20px, 5vw, 24px); 
+      margin:18px 0 12px; 
+      color:#ffaa00; 
+      font-weight:700; 
+      display:flex; 
+      align-items:center; 
+      gap:12px; 
+    }
+    
+    .section-title::after { 
+      content:''; 
+      flex:1; 
+      height:2px; 
+      background: linear-gradient(90deg,#ffaa00,transparent); 
+    }
+
+    .stats-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin: 20px 0;
+      gap: 15px;
+    }
+    
+    .stat-card {
+      flex: 1 1 calc(50% - 15px);
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.05);
+      position: relative;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+    
+    .stat-value {
+      font-size: clamp(18px, 4.5vw, 22px);
+      font-weight: 700;
+      color: #ffaa00;
+      margin-bottom: 8px;
+    }
+    
+    .stat-label {
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    .barbeiro-stats {
+      display: flex;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .barbeiro-card {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .barbeiro-nome {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: #ffaa00;
+    }
+    
+    .barbeiro-detalhes {
+      font-size: 14px;
+      color: #ccc;
+      line-height: 1.6;
+    }
+
+    table { 
+      width:100%; 
+      border-collapse:collapse; 
+      margin:15px 0; 
+      font-size:clamp(14px, 3.5vw, 16px); 
+      touch-action: manipulation;
+    }
+    
+    th, td { 
+      border:1px solid #ffaa0030; 
+      padding:12px; 
+      text-align:center; 
+      min-height: 44px;
+    }
+    
+    th { 
+      background: rgba(255,170,0,0.12); 
+      font-weight:700; 
+    }
+
+    .modal { 
+      display:none; 
+      position:fixed; 
+      top:0; 
+      left:0; 
+      width:100%; 
+      height:100%; 
+      background:rgba(0,0,0,0.92); 
+      z-index:1000; 
+      align-items:center; 
+      justify-content:center; 
+      padding:25px; 
+      backdrop-filter: blur(5px);
+      touch-action: manipulation;
+    }
+    
+    .modal-content { 
+      background:rgba(30,30,30,0.98); 
+      border-radius:20px; 
+      padding:25px; 
+      width:100%; 
+      max-width:600px; 
+      max-height:90vh; 
+      overflow-y:auto; 
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,170,0,0.1);
+      animation: modalAppear 0.3s ease;
+    }
+    
+    @keyframes modalAppear {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    input, select {
+      width: 100%;
+      padding: 16px;
+      margin: 12px 0;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.3);
+      color: white;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      min-height: 50px;
+      touch-action: manipulation;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: #ffaa00;
+      box-shadow: 0 0 0 2px rgba(255,170,0,0.2);
+    }
+    
+    label {
+      display: block;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #ccc;
+      font-size: 16px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .modal-buttons .btn {
+      margin: 0;
+      flex: 1;
+      padding: 16px;
+      min-height: 54px;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      .container {
+        max-width: 95%;
+        padding: 30px 25px;
+      }
+      
+      .stats-container {
+        gap: 20px;
+        margin: 25px 0;
+      }
+      
+      .stat-card {
+        padding: 22px 18px;
+        min-height: 120px;
+      }
+      
+      .stat-value {
+        font-size: 24px;
+      }
+      
+      .btn {
+        padding: 18px;
+        font-size: 18px;
+        min-height: 60px;
+      }
+      
+      .card {
+        padding: 25px;
+      }
+      
+      table {
+        font-size: 16px;
+      }
+      
+      th, td {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container fade-in">
+    <div class="header">
+      <h1>BarbaPRO</h1>
+      <div class="subtitle">Dashboard Administrativo</div>
+    </div>
+
+    <div class="card">
+      <button class="btn voltar" onclick="voltarParaRegistro()">VOLTAR PARA REGISTRO</button>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Estatísticas dos Barbeiros</h3>
+      <div class="barbeiro-stats">
+        <div class="barbeiro-card">
+          <div class="barbeiro-nome">GABRIEL</div>
+          <div class="barbeiro-detalhes">
+            <div>Hoje: <span id="gabrielHoje">0</span> serviços</div>
+            <div>Total: R$ <span id="gabrielTotal">0,00</span></div>
+            <div>Fiado: R$ <span id="gabrielFiado">0,00</span></div>
+            <div>Serviços do Mês: <span id="gabrielMes">0</span></div>
+          </div>
+        </div>
+        <div class="barbeiro-card">
+          <div class="barbeiro-nome">WAGNER</div>
+          <div class="barbeiro-detalhes">
+            <div>Hoje: <span id="wagnerHoje">0</span> serviços</div>
+            <div>Total: R$ <span id="wagnerTotal">0,00</span></div>
+            <div>Fiado: R$ <span id="wagnerFiado">0,00</span></div>
+            <div>Serviços do Mês: <span id="wagnerMes">0</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Resumo do Dia</h3>
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-value" id="totalHoje">R$ 0,00</div>
+          <div class="stat-label">TOTAL HOJE</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="servicosHoje">0</div>
+          <div class="stat-label">SERVIÇOS HOJE</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="fiadoHoje">R$ 0,00</div>
+          <div class="stat-label">FIADO HOJE</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="despesasMes">R$ 0,00</div>
+          <div class="stat-label">DESPESAS MÊS</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Ações</h3>
+      <button class="btn whatsapp" onclick="enviarResumoWhatsApp()">ENVIAR RESUMO DO DIA</button>
+      <button class="btn resumo" onclick="abrirModalResumo()">VER RESUMO COMPLETO</button>
+      <button class="btn despesas" onclick="abrirModalDespesas()">DESPESAS</button>
+      <button class="btn config" onclick="abrirModalConfiguracoes()">CONFIGURAÇÕES</button>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Últimos Serviços</h3>
+      <div id="listaServicosRecentes"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Despesas do Mês</h3>
+      <div id="listaDespesasDashboard"></div>
+    </div>
+  </div>
+
+  <!-- Modal Resumo Completo -->
+  <div id="modalResumo" class="modal">
+    <div class="modal-content">
+      <h3 class="section-title">Resumo Completo</h3>
+      <input type="password" id="pinInput" placeholder="Digite o PIN" maxlength="4" />
+      <div class="modal-buttons">
+        <button class="btn resumo" onclick="verificarPinResumo()">ACESSAR</button>
+        <button class="btn voltar" onclick="fecharModal('modalResumo')">FECHAR</button>
+      </div>
+      <div id="conteudoResumo" style="display:none; margin-top:20px;"></div>
+    </div>
+  </div>
+
+  <!-- Modal Despesas -->
+  <div id="modalDespesas" class="modal">
+    <div class="modal-content">
+      <h3 class="section-title">Despesas do Mês</h3>
+      <div id="listaDespesas"></div>
+      <input id="descDespesa" placeholder="Descrição" maxlength="50" />
+      <input id="valorDespesa" type="number" placeholder="Valor" min="0.01" step="0.01" />
+      <div class="modal-buttons">
+        <button class="btn despesas" onclick="adicionarDespesa()">ADICIONAR</button>
+        <button class="btn voltar" onclick="fecharModal('modalDespesas')">FECHAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Configurações -->
+  <div id="modalConfig" class="modal">
+    <div class="modal-content">
+      <h3 class="section-title">Configurações</h3>
+      <label>Número WhatsApp (só números):</label>
+      <input id="numWhats" placeholder="11962094589" maxlength="11" />
+      <label>Novo PIN (4 dígitos):</label>
+      <input id="novoPin" type="password" maxlength="4" placeholder="Novo PIN" />
+      <h4 style="margin:18px 0 12px;">Editar Valores</h4>
+      <input id="valCorte" type="number" placeholder="Corte (atual: 28)" min="1" step="0.01" />
+      <input id="valBarba" type="number" placeholder="Barba (atual: 15)" min="1" step="0.01" />
+      <input id="valCombo" type="number" placeholder="Barba + Cabelo (atual: 40)" min="1" step="0.01" />
+      <div class="modal-buttons">
+        <button class="btn config" onclick="salvarConfiguracoes()">SALVAR TUDO</button>
+        <button class="btn voltar" onclick="fecharModal('modalConfig')">FECHAR</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Variáveis globais
+    let dados = { 
+      Gabriel: [], 
+      Wagner: [], 
+      despesas: [] 
+    };
+    
+    let config = { 
+      pin: '1234', 
+      whatsapp: '11962094589', 
+      corte: 28, 
+      barba: 15, 
+      combo: 40 
+    };
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+      carregarDados();
+      atualizarDashboard();
+    });
+
+    // Funções principais
+    function carregarDados() {
+      const salvo = localStorage.getItem('barbapro_duo_v3');
+      if (salvo) {
+        try {
+          const temp = JSON.parse(salvo);
+          Object.assign(dados, temp);
+          if (temp.config) Object.assign(config, temp.config);
+        } catch (e) {
+          console.error('Erro ao carregar dados:', e);
+        }
+      }
+    }
+
+    function salvarDados() {
+      try {
+        localStorage.setItem('barbapro_duo_v3', JSON.stringify({ 
+          ...dados, 
+          config
+        }));
+      } catch (e) {
+        console.error('Erro ao salvar dados:', e);
+      }
+    }
+
+    function atualizarDashboard() {
+      atualizarEstatisticasBarbeiros();
+      atualizarEstatisticasGerais();
+      atualizarListaServicosRecentes();
+      atualizarListaDespesas();
+    }
+
+    function atualizarEstatisticasBarbeiros() {
+      const hoje = new Date().toISOString().split('T')[0];
+      const mesAtual = new Date().getMonth();
+      const anoAtual = new Date().getFullYear();
+      
+      // Gabriel
+      const servicosGabrielHoje = dados.Gabriel.filter(s => s.data === hoje);
+      const servicosGabrielMes = dados.Gabriel.filter(s => {
+        const dataServico = new Date(s.data);
+        return dataServico.getMonth() === mesAtual && dataServico.getFullYear() === anoAtual;
+      });
+      
+      const totalGabrielHoje = servicosGabrielHoje.reduce((acc, s) => acc + s.valor, 0);
+      const totalGabrielMes = servicosGabrielMes.reduce((acc, s) => acc + s.valor, 0);
+      const fiadoGabrielHoje = servicosGabrielHoje.reduce((acc, s) => acc + (!s.pago ? s.valor : 0), 0);
+      
+      document.getElementById('gabrielHoje').textContent = servicosGabrielHoje.length;
+      document.getElementById('gabrielTotal').textContent = totalGabrielHoje.toFixed(2);
+      document.getElementById('gabrielFiado').textContent = fiadoGabrielHoje.toFixed(2);
+      document.getElementById('gabrielMes').textContent = servicosGabrielMes.length;
+      
+      // Wagner
+      const servicosWagnerHoje = dados.Wagner.filter(s => s.data === hoje);
+      const servicosWagnerMes = dados.Wagner.filter(s => {
+        const dataServico = new Date(s.data);
+        return dataServico.getMonth() === mesAtual && dataServico.getFullYear() === anoAtual;
+      });
+      
+      const totalWagnerHoje = servicosWagnerHoje.reduce((acc, s) => acc + s.valor, 0);
+      const totalWagnerMes = servicosWagnerMes.reduce((acc, s) => acc + s.valor, 0);
+      const fiadoWagnerHoje = servicosWagnerHoje.reduce((acc, s) => acc + (!s.pago ? s.valor : 0), 0);
+      
+      document.getElementById('wagnerHoje').textContent = servicosWagnerHoje.length;
+      document.getElementById('wagnerTotal').textContent = totalWagnerHoje.toFixed(2);
+      document.getElementById('wagnerFiado').textContent = fiadoWagnerHoje.toFixed(2);
+      document.getElementById('wagnerMes').textContent = servicosWagnerMes.length;
+    }
+
+    function atualizarEstatisticasGerais() {
+      const hoje = new Date().toISOString().split('T')[0];
+      const servicosGabriel = dados.Gabriel.filter(s => s.data === hoje);
+      const servicosWagner = dados.Wagner.filter(s => s.data === hoje);
+      
+      const totalPagoGabriel = servicosGabriel.reduce((acc, s) => acc + (s.pago ? s.valor : 0), 0);
+      const totalPagoWagner = servicosWagner.reduce((acc, s) => acc + (s.pago ? s.valor : 0), 0);
+      const totalFiadoGabriel = servicosGabriel.reduce((acc, s) => acc + (!s.pago ? s.valor : 0), 0);
+      const totalFiadoWagner = servicosWagner.reduce((acc, s) => acc + (!s.pago ? s.valor : 0), 0);
+      
+      const totalHoje = totalPagoGabriel + totalPagoWagner;
+      const totalServicosHoje = servicosGabriel.length + servicosWagner.length;
+      const totalFiadoHoje = totalFiadoGabriel + totalFiadoWagner;
+      
+      // Calcular despesas do mês
+      const mesAtual = new Date().getMonth();
+      const anoAtual = new Date().getFullYear();
+      const despesasMes = dados.despesas.filter(d => {
+        const dataDespesa = new Date(d.data);
+        return dataDespesa.getMonth() === mesAtual && dataDespesa.getFullYear() === anoAtual;
+      }).reduce((acc, d) => acc + d.valor, 0);
+      
+      document.getElementById('totalHoje').textContent = `R$ ${totalHoje.toFixed(2)}`;
+      document.getElementById('servicosHoje').textContent = totalServicosHoje;
+      document.getElementById('fiadoHoje').textContent = `R$ ${totalFiadoHoje.toFixed(2)}`;
+      document.getElementById('despesasMes').textContent = `R$ ${despesasMes.toFixed(2)}`;
+    }
+
+    function atualizarListaServicosRecentes() {
+      const container = document.getElementById('listaServicosRecentes');
+      
+      // Pegar os últimos 10 serviços
+      const todosServicos = [...dados.Gabriel, ...dados.Wagner];
+      todosServicos.sort((a, b) => new Date(b.data + ' ' + b.hora) - new Date(a.data + ' ' + a.hora));
+      const recentes = todosServicos.slice(0, 10);
+      
+      if (recentes.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum serviço registrado</p>';
+        return;
+      }
+      
+      let html = `
+        <table>
+          <tr>
+            <th>Data</th>
+            <th>Barbeiro</th>
+            <th>Serviço</th>
+            <th>Valor</th>
+            <th>Status</th>
+          </tr>
+      `;
+      
+      recentes.forEach(servico => {
+        const barbeiro = dados.Gabriel.includes(servico) ? 'Gabriel' : 'Wagner';
+        const status = servico.pago ? 'PAGO' : 'FIADO';
+        
+        html += `
+          <tr>
+            <td>${servico.data}</td>
+            <td>${barbeiro}</td>
+            <td>${servico.tipo}</td>
+            <td>R$ ${servico.valor.toFixed(2)}</td>
+            <td>${status}</td>
+          </tr>
+        `;
+      });
+      
+      html += '</table>';
+      container.innerHTML = html;
+    }
+
+    function atualizarListaDespesas() {
+      const container = document.getElementById('listaDespesasDashboard');
+      
+      if (dados.despesas.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhuma despesa registrada</p>';
+        return;
+      }
+      
+      // Ordenar por data (mais recente primeiro)
+      const despesasOrdenadas = [...dados.despesas].sort((a, b) => new Date(b.data) - new Date(a.data));
+      
+      let html = `
+        <table>
+          <tr>
+            <th>Data</th>
+            <th>Descrição</th>
+            <th>Valor</th>
+          </tr>
+      `;
+      
+      despesasOrdenadas.forEach(despesa => {
+        html += `
+          <tr>
+            <td>${despesa.data}</td>
+            <td>${despesa.desc}</td>
+            <td>R$ ${despesa.valor.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+      
+      html += '</table>';
+      container.innerHTML = html;
+    }
+
+    // Funções de navegação
+    function voltarParaRegistro() {
+      window.location.href = 'index.html';
+    }
+
+    // Funções de modais
+    function abrirModalResumo() {
+      document.getElementById('modalResumo').style.display = 'flex';
+      document.getElementById('pinInput').value = '';
+      document.getElementById('conteudoResumo').style.display = 'none';
+      setTimeout(() => document.getElementById('pinInput').focus(), 100);
+    }
+
+    function verificarPinResumo() {
+      const pin = document.getElementById('pinInput').value;
+      if (pin === config.pin) {
+        document.getElementById('conteudoResumo').style.display = 'block';
+        exibirResumoCompleto();
+      } else {
+        alert('PIN incorreto!');
+        document.getElementById('pinInput').value = '';
+        document.getElementById('pinInput').focus();
+      }
+    }
+
+    function exibirResumoCompleto() {
+      const resumo = calcularResumoCompleto();
+      const container = document.getElementById('conteudoResumo');
+      
+      const html = `
+        <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin:15px 0;border-left:4px solid #ffaa00;">
+          <strong>GABRIEL</strong>
+          <div style="font-size:18px;font-weight:700;color:#ffaa00;margin-top:8px;">R$ ${resumo.gabriel.totalPago.toFixed(2)} (Pago)</div>
+          <div style="font-size:14px;color:#aaa;margin-top:8px;line-height:1.4;">
+            Serviços: ${resumo.gabriel.totalServicos} | 
+            Fiado: R$ ${resumo.gabriel.totalFiado.toFixed(2)}
+          </div>
+        </div>
+        
+        <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin:15px 0;border-left:4px solid #ffaa00;">
+          <strong>WAGNER</strong>
+          <div style="font-size:18px;font-weight:700;color:#ffaa00;margin-top:8px;">R$ ${resumo.wagner.totalPago.toFixed(2)} (Pago)</div>
+          <div style="font-size:14px;color:#aaa;margin-top:8px;line-height:1.4;">
+            Serviços: ${resumo.wagner.totalServicos} | 
+            Fiado: R$ ${resumo.wagner.totalFiado.toFixed(2)}
+          </div>
+        </div>
+        
+        <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin:15px 0;border-left:4px solid #9933ff;">
+          <strong>TOTAIS GERAIS</strong>
+          <div style="font-size:18px;font-weight:700;color:#9933ff;margin-top:8px;">R$ ${resumo.geral.totalPago.toFixed(2)} (Pago)</div>
+          <div style="font-size:14px;color:#aaa;margin-top:8px;line-height:1.4;">
+            Serviços: ${resumo.geral.totalServicos} | 
+            Fiado: R$ ${resumo.geral.totalFiado.toFixed(2)}
+          </div>
+        </div>
+      `;
+      
+      container.innerHTML = html;
+    }
+
+    function calcularResumoCompleto() {
+      const hoje = new Date().toISOString().split('T')[0];
+      const servicosGabriel = dados.Gabriel.filter(s => s.data === hoje);
+      const servicosWagner = dados.Wagner.filter(s => s.data === hoje);
+
+      const totalGabrielPago = servicosGabriel.reduce((acc, s) => acc + (s.pago ? s.valor : 0), 0);
+      const totalGabrielFiado = servicosGabriel.reduce((acc, s) => acc + (!s.pago ? s.valor : 0), 0);
+      
+      const totalWagnerPago = servicosWagner.reduce((acc, s) => acc + (s.pago ? s.valor : 0), 0);
+      const totalWagnerFiado = servicosWagner.reduce((acc, s) => acc + (!s.pago ? s.valor : 0), 0);
+
+      return {
+        gabriel: {
+          totalPago: totalGabrielPago,
+          totalFiado: totalGabrielFiado,
+          totalServicos: servicosGabriel.length
+        },
+        wagner: {
+          totalPago: totalWagnerPago,
+          totalFiado: totalWagnerFiado,
+          totalServicos: servicosWagner.length
+        },
+        geral: {
+          totalPago: totalGabrielPago + totalWagnerPago,
+          totalFiado: totalGabrielFiado + totalWagnerFiado,
+          totalServicos: servicosGabriel.length + servicosWagner.length
+        }
+      };
+    }
+
+    function abrirModalDespesas() {
+      document.getElementById('modalDespesas').style.display = 'flex';
+      atualizarListaDespesasModal();
+    }
+
+    function atualizarListaDespesasModal() {
+      const container = document.getElementById('listaDespesas');
+      if (dados.despesas.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;">Nenhuma despesa registrada</p>';
+        return;
+      }
+
+      let html = '';
+      dados.despesas.forEach((despesa, index) => {
+        html += `
+          <div style="padding:10px;background:rgba(255,50,50,0.1);margin:6px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+            <span>${despesa.desc} - R$ ${despesa.valor.toFixed(2)}</span>
+            <button style="background:#ff3366;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:16px;cursor:pointer;" onclick="removerDespesa(${index})">X</button>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+    }
+
+    function adicionarDespesa() {
+      const desc = document.getElementById('descDespesa').value.trim() || 'Despesa';
+      const valor = parseFloat(document.getElementById('valorDespesa').value);
+      
+      if (!valor || valor <= 0) {
+        alert('Por favor, insira um valor válido para a despesa.');
+        return;
+      }
+
+      dados.despesas.push({
+        desc: desc,
+        valor: valor,
+        data: new Date().toISOString().split('T')[0]
+      });
+      
+      salvarDados();
+      atualizarListaDespesasModal();
+      atualizarDashboard();
+      
+      // Limpar campos
+      document.getElementById('descDespesa').value = '';
+      document.getElementById('valorDespesa').value = '';
+      document.getElementById('descDespesa').focus();
+    }
+
+    function removerDespesa(index) {
+      if (confirm('Remover esta despesa?')) {
+        dados.despesas.splice(index, 1);
+        salvarDados();
+        atualizarListaDespesasModal();
+        atualizarDashboard();
+      }
+    }
+
+    function abrirModalConfiguracoes() {
+      document.getElementById('modalConfig').style.display = 'flex';
+      document.getElementById('numWhats').value = config.whatsapp;
+      document.getElementById('valCorte').value = config.corte;
+      document.getElementById('valBarba').value = config.barba;
+      document.getElementById('valCombo').value = config.combo;
+      document.getElementById('novoPin').value = '';
+    }
+
+    function salvarConfiguracoes() {
+      const numWhats = document.getElementById('numWhats').value.replace(/\D/g,'');
+      const novoPin = document.getElementById('novoPin').value;
+      const valCorte = parseFloat(document.getElementById('valCorte').value) || config.corte;
+      const valBarba = parseFloat(document.getElementById('valBarba').value) || config.barba;
+      const valCombo = parseFloat(document.getElementById('valCombo').value) || config.combo;
+
+      if (numWhats && numWhats.length >= 10) {
+        config.whatsapp = numWhats;
+      }
+      
+      if (novoPin.length === 4) {
+        config.pin = novoPin;
+      }
+      
+      config.corte = valCorte;
+      config.barba = valBarba;
+      config.combo = valCombo;
+
+      salvarDados();
+      fecharModal('modalConfig');
+      alert('Configurações salvas com sucesso!');
+    }
+
+    function fecharModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    // Funções de relatório
+    function enviarResumoWhatsApp() {
+      const resumo = calcularResumoCompleto();
+      
+      const mensagem = `
+*BARBAPRO - RESUMO COMPLETO DO DIA*
+
+ ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+
+*GABRIEL*
+- Recebido: R$ ${resumo.gabriel.totalPago.toFixed(2)}
+- Fiado: R$ ${resumo.gabriel.totalFiado.toFixed(2)}
+- Serviços: ${resumo.gabriel.totalServicos}
+
+*WAGNER*
+- Recebido: R$ ${resumo.wagner.totalPago.toFixed(2)}
+- Fiado: R$ ${resumo.wagner.totalFiado.toFixed(2)}
+- Serviços: ${resumo.wagner.totalServicos}
+
+*TOTAIS GERAIS*
+- Total Recebido: R$ ${resumo.geral.totalPago.toFixed(2)}
+- Total Fiado: R$ ${resumo.geral.totalFiado.toFixed(2)}
+- Total Serviços: ${resumo.geral.totalServicos}
+
+
+_Enviado automaticamente pelo BarbaPRO Duo_
+      `.trim();
+
+      const url = `https://wa.me/55${config.whatsapp}?text=${encodeURIComponent(mensagem)}`;
+      window.open(url, '_blank');
+    }
+
+    // Fechar modais ao clicar fora
+    document.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+
+    // Fechar com ESC
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        document.querySelectorAll('.modal').forEach(modal => {
+          modal.style.display = 'none';
+        });
+      }
+    });
+  </script>
+</body>
+</html>
