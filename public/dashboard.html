@@ -316,6 +316,172 @@
       }
     }
 
+    /* Melhorias visuais */
+    .card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(255,170,0,0.1);
+    }
+    
+    .stat-card {
+      transition: all 0.2s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-3px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,170,0,0.2);
+    }
+    
+    .barbeiro-card {
+      transition: all 0.2s ease;
+    }
+    
+    .barbeiro-card:hover {
+      transform: translateY(-3px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,170,0,0.2);
+    }
+    
+    .btn {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.5);
+      opacity: 0;
+      border-radius: 100%;
+      transform: scale(1, 1) translate(-50%);
+      transform-origin: 50% 50%;
+    }
+    
+    .btn:active::after {
+      animation: ripple 0.6s ease-out;
+    }
+    
+    @keyframes ripple {
+      0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+      }
+      100% {
+        transform: scale(20, 20);
+        opacity: 0;
+      }
+    }
+    
+    .status-bar {
+      height: 44px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid rgba(255,170,0,0.1);
+    }
+    
+    .status-time {
+      font-weight: 600;
+      font-size: 15px;
+      color: #ffaa00;
+    }
+    
+    .home-indicator {
+      height: 34px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-top: 1px solid rgba(255,170,0,0.1);
+    }
+    
+    .home-line {
+      width: 134px;
+      height: 5px;
+      background: #ffaa00;
+      border-radius: 3px;
+      opacity: 0.7;
+    }
+    
+    .servico-pago {
+      color: #25D366;
+      font-weight: 600;
+    }
+    
+    .servico-fiado {
+      color: #FF9500;
+      font-weight: 600;
+    }
+    
+    .despesa-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: rgba(255,50,50,0.1);
+      margin: 8px 0;
+      border-radius: 10px;
+      border-left: 4px solid #ff3366;
+    }
+    
+    .despesa-valor {
+      color: #ff3366;
+      font-weight: 600;
+    }
+    
+    .calendario-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .calendario-container input {
+      flex: 1;
+      min-width: 140px;
+    }
+    
+    .grafico-container {
+      width: 100%;
+      max-width: 400px;
+      margin: 20px auto;
+      height: 300px;
+    }
+    
+    .info-box {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 4px solid #ffaa00;
+    }
+    
+    .info-box h4 {
+      color: #ffaa00;
+      margin-bottom: 8px;
+    }
+
     @media (min-width: 768px) and (max-width: 1024px) {
       .container {
         max-width: 95%;
@@ -357,6 +523,10 @@
   </style>
 </head>
 <body>
+  <div class="status-bar">
+    <div class="status-time" id="currentTime">9:41</div>
+  </div>
+  
   <div class="container fade-in">
     <div class="header">
       <h1>BarbaPRO</h1>
@@ -423,6 +593,11 @@
 
     <div class="card">
       <h3 class="section-title">Últimos Serviços</h3>
+      <div class="calendario-container">
+        <input type="date" id="dataInicio" />
+        <input type="date" id="dataFim" />
+        <button class="btn resumo" onclick="filtrarServicos()" style="padding: 10px 15px; min-height: auto;">FILTRAR</button>
+      </div>
       <div id="listaServicosRecentes"></div>
     </div>
 
@@ -430,18 +605,27 @@
       <h3 class="section-title">Despesas do Mês</h3>
       <div id="listaDespesasDashboard"></div>
     </div>
+    
+    <div class="card">
+      <h3 class="section-title">Gráfico de Distribuição</h3>
+      <div class="grafico-container">
+        <canvas id="graficoPizza"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-indicator">
+    <div class="home-line"></div>
   </div>
 
   <!-- Modal Resumo Completo -->
   <div id="modalResumo" class="modal">
     <div class="modal-content">
       <h3 class="section-title">Resumo Completo</h3>
-      <input type="password" id="pinInput" placeholder="Digite o PIN" maxlength="4" />
+      <div id="conteudoResumo"></div>
       <div class="modal-buttons">
-        <button class="btn resumo" onclick="verificarPinResumo()">ACESSAR</button>
         <button class="btn voltar" onclick="fecharModal('modalResumo')">FECHAR</button>
       </div>
-      <div id="conteudoResumo" style="display:none; margin-top:20px;"></div>
     </div>
   </div>
 
@@ -463,14 +647,33 @@
   <div id="modalConfig" class="modal">
     <div class="modal-content">
       <h3 class="section-title">Configurações</h3>
-      <label>Número WhatsApp (só números):</label>
-      <input id="numWhats" placeholder="11962094589" maxlength="11" />
-      <label>Novo PIN (4 dígitos):</label>
-      <input id="novoPin" type="password" maxlength="4" placeholder="Novo PIN" />
-      <h4 style="margin:18px 0 12px;">Editar Valores</h4>
-      <input id="valCorte" type="number" placeholder="Corte (atual: 28)" min="1" step="0.01" />
-      <input id="valBarba" type="number" placeholder="Barba (atual: 15)" min="1" step="0.01" />
-      <input id="valCombo" type="number" placeholder="Barba + Cabelo (atual: 40)" min="1" step="0.01" />
+      
+      <div class="info-box">
+        <h4>Configurações do WhatsApp</h4>
+        <label>Número WhatsApp (só números):</label>
+        <input id="numWhats" placeholder="11962094589" maxlength="11" />
+      </div>
+      
+      <div class="info-box">
+        <h4>Alterar PIN de Segurança</h4>
+        <label>Novo PIN (4 dígitos):</label>
+        <input id="novoPin" type="password" maxlength="4" placeholder="Novo PIN" />
+      </div>
+      
+      <div class="info-box">
+        <h4>Editar Valores dos Serviços</h4>
+        <p style="color:#aaa; margin-bottom:10px; font-size:14px;">Aqui você pode atualizar os valores cobrados por cada tipo de serviço</p>
+        
+        <label>Corte de Cabelo (valor atual: R$ <span id="corteAtual">28,00</span>):</label>
+        <input id="valCorte" type="number" placeholder="Novo valor para Corte" min="1" step="0.01" />
+        
+        <label>Barba (valor atual: R$ <span id="barbaAtual">15,00</span>):</label>
+        <input id="valBarba" type="number" placeholder="Novo valor para Barba" min="1" step="0.01" />
+        
+        <label>Combo Barba + Cabelo (valor atual: R$ <span id="comboAtual">40,00</span>):</label>
+        <input id="valCombo" type="number" placeholder="Novo valor para Combo" min="1" step="0.01" />
+      </div>
+      
       <div class="modal-buttons">
         <button class="btn config" onclick="salvarConfiguracoes()">SALVAR TUDO</button>
         <button class="btn voltar" onclick="fecharModal('modalConfig')">FECHAR</button>
@@ -479,6 +682,16 @@
   </div>
 
   <script>
+    // Atualizar hora no status bar
+    function updateTime() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('currentTime').textContent = timeString;
+    }
+    
+    setInterval(updateTime, 60000);
+    updateTime();
+
     // Variáveis globais
     let dados = { 
       Gabriel: [], 
@@ -493,11 +706,21 @@
       barba: 15, 
       combo: 40 
     };
+    
+    let graficoPizza = null;
 
     // Inicialização
     document.addEventListener('DOMContentLoaded', function() {
       carregarDados();
       atualizarDashboard();
+      
+      // Definir datas padrão para o filtro (últimos 7 dias)
+      const hoje = new Date();
+      const umaSemanaAtras = new Date();
+      umaSemanaAtras.setDate(hoje.getDate() - 7);
+      
+      document.getElementById('dataInicio').value = umaSemanaAtras.toISOString().split('T')[0];
+      document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
     });
 
     // Funções principais
@@ -530,6 +753,7 @@
       atualizarEstatisticasGerais();
       atualizarListaServicosRecentes();
       atualizarListaDespesas();
+      atualizarGraficoPizza();
     }
 
     function atualizarEstatisticasBarbeiros() {
@@ -599,15 +823,22 @@
     }
 
     function atualizarListaServicosRecentes() {
+      const dataInicio = document.getElementById('dataInicio').value;
+      const dataFim = document.getElementById('dataFim').value;
+      
       const container = document.getElementById('listaServicosRecentes');
       
-      // Pegar os últimos 10 serviços
+      // Filtrar serviços por data
       const todosServicos = [...dados.Gabriel, ...dados.Wagner];
-      todosServicos.sort((a, b) => new Date(b.data + ' ' + b.hora) - new Date(a.data + ' ' + a.hora));
-      const recentes = todosServicos.slice(0, 10);
+      const servicosFiltrados = todosServicos.filter(s => {
+        return s.data >= dataInicio && s.data <= dataFim;
+      });
       
-      if (recentes.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum serviço registrado</p>';
+      // Ordenar por data (mais recente primeiro)
+      servicosFiltrados.sort((a, b) => new Date(b.data + ' ' + b.hora) - new Date(a.data + ' ' + a.hora));
+      
+      if (servicosFiltrados.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum serviço encontrado no período selecionado</p>';
         return;
       }
       
@@ -622,9 +853,10 @@
           </tr>
       `;
       
-      recentes.forEach(servico => {
+      servicosFiltrados.forEach(servico => {
         const barbeiro = dados.Gabriel.includes(servico) ? 'Gabriel' : 'Wagner';
         const status = servico.pago ? 'PAGO' : 'FIADO';
+        const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
         
         html += `
           <tr>
@@ -632,13 +864,17 @@
             <td>${barbeiro}</td>
             <td>${servico.tipo}</td>
             <td>R$ ${servico.valor.toFixed(2)}</td>
-            <td>${status}</td>
+            <td class="${statusClass}">${status}</td>
           </tr>
         `;
       });
       
       html += '</table>';
       container.innerHTML = html;
+    }
+    
+    function filtrarServicos() {
+      atualizarListaServicosRecentes();
     }
 
     function atualizarListaDespesas() {
@@ -652,27 +888,84 @@
       // Ordenar por data (mais recente primeiro)
       const despesasOrdenadas = [...dados.despesas].sort((a, b) => new Date(b.data) - new Date(a.data));
       
-      let html = `
-        <table>
-          <tr>
-            <th>Data</th>
-            <th>Descrição</th>
-            <th>Valor</th>
-          </tr>
-      `;
+      let html = '';
       
       despesasOrdenadas.forEach(despesa => {
         html += `
-          <tr>
-            <td>${despesa.data}</td>
-            <td>${despesa.desc}</td>
-            <td>R$ ${despesa.valor.toFixed(2)}</td>
-          </tr>
+          <div class="despesa-item">
+            <div>
+              <div style="font-weight:600;">${despesa.desc}</div>
+              <div style="font-size:12px;color:#aaa;">${despesa.data}</div>
+            </div>
+            <div class="despesa-valor">R$ ${despesa.valor.toFixed(2)}</div>
+          </div>
         `;
       });
       
-      html += '</table>';
       container.innerHTML = html;
+    }
+    
+    function atualizarGraficoPizza() {
+      const ctx = document.getElementById('graficoPizza').getContext('2d');
+      
+      // Destruir gráfico anterior se existir
+      if (graficoPizza) {
+        graficoPizza.destroy();
+      }
+      
+      // Calcular dados para o gráfico
+      const hoje = new Date().toISOString().split('T')[0];
+      const servicosGabriel = dados.Gabriel.filter(s => s.data === hoje);
+      const servicosWagner = dados.Wagner.filter(s => s.data === hoje);
+      
+      const totalGabriel = servicosGabriel.reduce((acc, s) => acc + s.valor, 0);
+      const totalWagner = servicosWagner.reduce((acc, s) => acc + s.valor, 0);
+      const totalFiado = servicosGabriel.reduce((acc, s) => acc + (!s.pago ? s.valor : 0), 0) + 
+                         servicosWagner.reduce((acc, s) => acc + (!s.pago ? s.valor : 0), 0);
+      
+      // Criar novo gráfico
+      graficoPizza = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Gabriel', 'Wagner', 'Fiado'],
+          datasets: [{
+            data: [totalGabriel, totalWagner, totalFiado],
+            backgroundColor: [
+              '#ffaa00',
+              '#3366ff',
+              '#ff3366'
+            ],
+            borderColor: '#0a0a0a',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#fff',
+                font: {
+                  size: 14
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.raw || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = Math.round((value / total) * 100);
+                  return `${label}: R$ ${value.toFixed(2)} (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
     }
 
     // Funções de navegação
@@ -683,52 +976,87 @@
     // Funções de modais
     function abrirModalResumo() {
       document.getElementById('modalResumo').style.display = 'flex';
-      document.getElementById('pinInput').value = '';
-      document.getElementById('conteudoResumo').style.display = 'none';
-      setTimeout(() => document.getElementById('pinInput').focus(), 100);
-    }
-
-    function verificarPinResumo() {
-      const pin = document.getElementById('pinInput').value;
-      if (pin === config.pin) {
-        document.getElementById('conteudoResumo').style.display = 'block';
-        exibirResumoCompleto();
-      } else {
-        alert('PIN incorreto!');
-        document.getElementById('pinInput').value = '';
-        document.getElementById('pinInput').focus();
-      }
+      exibirResumoCompleto();
     }
 
     function exibirResumoCompleto() {
       const resumo = calcularResumoCompleto();
       const container = document.getElementById('conteudoResumo');
       
+      // Calcular totais do mês
+      const mesAtual = new Date().getMonth();
+      const anoAtual = new Date().getFullYear();
+      
+      const servicosGabrielMes = dados.Gabriel.filter(s => {
+        const dataServico = new Date(s.data);
+        return dataServico.getMonth() === mesAtual && dataServico.getFullYear() === anoAtual;
+      });
+      
+      const servicosWagnerMes = dados.Wagner.filter(s => {
+        const dataServico = new Date(s.data);
+        return dataServico.getMonth() === mesAtual && dataServico.getFullYear() === anoAtual;
+      });
+      
+      const totalGabrielMes = servicosGabrielMes.reduce((acc, s) => acc + s.valor, 0);
+      const totalWagnerMes = servicosWagnerMes.reduce((acc, s) => acc + s.valor, 0);
+      
+      const despesasMes = dados.despesas.filter(d => {
+        const dataDespesa = new Date(d.data);
+        return dataDespesa.getMonth() === mesAtual && dataDespesa.getFullYear() === anoAtual;
+      }).reduce((acc, d) => acc + d.valor, 0);
+      
+      const lucroMes = (totalGabrielMes + totalWagnerMes) - despesasMes;
+      
       const html = `
         <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin:15px 0;border-left:4px solid #ffaa00;">
-          <strong>GABRIEL</strong>
-          <div style="font-size:18px;font-weight:700;color:#ffaa00;margin-top:8px;">R$ ${resumo.gabriel.totalPago.toFixed(2)} (Pago)</div>
-          <div style="font-size:14px;color:#aaa;margin-top:8px;line-height:1.4;">
-            Serviços: ${resumo.gabriel.totalServicos} | 
-            Fiado: R$ ${resumo.gabriel.totalFiado.toFixed(2)}
+          <h4 style="color:#ffaa00; margin-bottom:15px;">RESUMO DO DIA - ${new Date().toLocaleDateString('pt-BR')}</h4>
+          
+          <div style="display:flex; gap:15px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:200px;">
+              <h5 style="color:#ffaa00; margin-bottom:10px;">GABRIEL</h5>
+              <div style="font-size:16px; margin-bottom:5px;">Recebido: <span style="color:#25D366; font-weight:600;">R$ ${resumo.gabriel.totalPago.toFixed(2)}</span></div>
+              <div style="font-size:16px; margin-bottom:5px;">Fiado: <span style="color:#FF9500; font-weight:600;">R$ ${resumo.gabriel.totalFiado.toFixed(2)}</span></div>
+              <div style="font-size:16px; margin-bottom:5px;">Serviços: <span style="font-weight:600;">${resumo.gabriel.totalServicos}</span></div>
+            </div>
+            
+            <div style="flex:1; min-width:200px;">
+              <h5 style="color:#ffaa00; margin-bottom:10px;">WAGNER</h5>
+              <div style="font-size:16px; margin-bottom:5px;">Recebido: <span style="color:#25D366; font-weight:600;">R$ ${resumo.wagner.totalPago.toFixed(2)}</span></div>
+              <div style="font-size:16px; margin-bottom:5px;">Fiado: <span style="color:#FF9500; font-weight:600;">R$ ${resumo.wagner.totalFiado.toFixed(2)}</span></div>
+              <div style="font-size:16px; margin-bottom:5px;">Serviços: <span style="font-weight:600;">${resumo.wagner.totalServicos}</span></div>
+            </div>
           </div>
-        </div>
-        
-        <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin:15px 0;border-left:4px solid #ffaa00;">
-          <strong>WAGNER</strong>
-          <div style="font-size:18px;font-weight:700;color:#ffaa00;margin-top:8px;">R$ ${resumo.wagner.totalPago.toFixed(2)} (Pago)</div>
-          <div style="font-size:14px;color:#aaa;margin-top:8px;line-height:1.4;">
-            Serviços: ${resumo.wagner.totalServicos} | 
-            Fiado: R$ ${resumo.wagner.totalFiado.toFixed(2)}
+          
+          <div style="margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1);">
+            <h5 style="color:#9933ff; margin-bottom:10px;">TOTAIS GERAIS</h5>
+            <div style="font-size:18px; margin-bottom:5px; font-weight:600;">Total Recebido: <span style="color:#25D366;">R$ ${resumo.geral.totalPago.toFixed(2)}</span></div>
+            <div style="font-size:16px; margin-bottom:5px;">Total Fiado: <span style="color:#FF9500;">R$ ${resumo.geral.totalFiado.toFixed(2)}</span></div>
+            <div style="font-size:16px; margin-bottom:5px;">Total Serviços: <span style="font-weight:600;">${resumo.geral.totalServicos}</span></div>
           </div>
         </div>
         
         <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin:15px 0;border-left:4px solid #9933ff;">
-          <strong>TOTAIS GERAIS</strong>
-          <div style="font-size:18px;font-weight:700;color:#9933ff;margin-top:8px;">R$ ${resumo.geral.totalPago.toFixed(2)} (Pago)</div>
-          <div style="font-size:14px;color:#aaa;margin-top:8px;line-height:1.4;">
-            Serviços: ${resumo.geral.totalServicos} | 
-            Fiado: R$ ${resumo.geral.totalFiado.toFixed(2)}
+          <h4 style="color:#9933ff; margin-bottom:15px;">RESUMO DO MÊS - ${new Date().toLocaleDateString('pt-BR', {month: 'long', year: 'numeric'})}</h4>
+          
+          <div style="display:flex; gap:15px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:200px;">
+              <h5 style="color:#ffaa00; margin-bottom:10px;">GABRIEL</h5>
+              <div style="font-size:16px; margin-bottom:5px;">Total: <span style="font-weight:600;">R$ ${totalGabrielMes.toFixed(2)}</span></div>
+              <div style="font-size:16px; margin-bottom:5px;">Serviços: <span style="font-weight:600;">${servicosGabrielMes.length}</span></div>
+            </div>
+            
+            <div style="flex:1; min-width:200px;">
+              <h5 style="color:#ffaa00; margin-bottom:10px;">WAGNER</h5>
+              <div style="font-size:16px; margin-bottom:5px;">Total: <span style="font-weight:600;">R$ ${totalWagnerMes.toFixed(2)}</span></div>
+              <div style="font-size:16px; margin-bottom:5px;">Serviços: <span style="font-weight:600;">${servicosWagnerMes.length}</span></div>
+            </div>
+          </div>
+          
+          <div style="margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1);">
+            <h5 style="color:#9933ff; margin-bottom:10px;">TOTAIS DO MÊS</h5>
+            <div style="font-size:18px; margin-bottom:5px; font-weight:600;">Faturamento: <span style="color:#25D366;">R$ ${(totalGabrielMes + totalWagnerMes).toFixed(2)}</span></div>
+            <div style="font-size:16px; margin-bottom:5px;">Despesas: <span style="color:#ff3366;">R$ ${despesasMes.toFixed(2)}</span></div>
+            <div style="font-size:18px; margin-bottom:5px; font-weight:600;">Lucro: <span style="color:#25D366;">R$ ${lucroMes.toFixed(2)}</span></div>
           </div>
         </div>
       `;
@@ -781,9 +1109,15 @@
       let html = '';
       dados.despesas.forEach((despesa, index) => {
         html += `
-          <div style="padding:10px;background:rgba(255,50,50,0.1);margin:6px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
-            <span>${despesa.desc} - R$ ${despesa.valor.toFixed(2)}</span>
-            <button style="background:#ff3366;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:16px;cursor:pointer;" onclick="removerDespesa(${index})">X</button>
+          <div class="despesa-item">
+            <div>
+              <div style="font-weight:600;">${despesa.desc}</div>
+              <div style="font-size:12px;color:#aaa;">${despesa.data}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="despesa-valor">R$ ${despesa.valor.toFixed(2)}</div>
+              <button style="background:#ff3366;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:16px;cursor:pointer;font-weight:600;" onclick="removerDespesa(${index})">×</button>
+            </div>
           </div>
         `;
       });
@@ -828,10 +1162,15 @@
     function abrirModalConfiguracoes() {
       document.getElementById('modalConfig').style.display = 'flex';
       document.getElementById('numWhats').value = config.whatsapp;
-      document.getElementById('valCorte').value = config.corte;
-      document.getElementById('valBarba').value = config.barba;
-      document.getElementById('valCombo').value = config.combo;
+      document.getElementById('valCorte').value = '';
+      document.getElementById('valBarba').value = '';
+      document.getElementById('valCombo').value = '';
       document.getElementById('novoPin').value = '';
+      
+      // Atualizar valores atuais
+      document.getElementById('corteAtual').textContent = config.corte.toFixed(2);
+      document.getElementById('barbaAtual').textContent = config.barba.toFixed(2);
+      document.getElementById('comboAtual').textContent = config.combo.toFixed(2);
     }
 
     function salvarConfiguracoes() {
