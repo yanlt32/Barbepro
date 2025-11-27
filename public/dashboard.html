@@ -108,6 +108,11 @@
       background: linear-gradient(45deg,#00aaff,#0066cc); 
       color:#fff; 
     }
+    
+    .pagamentos { 
+      background: linear-gradient(45deg,#ffaa00,#ff7733); 
+      color:#000; 
+    }
 
     .card {
       background: rgba(255,255,255,0.06); 
@@ -316,70 +321,6 @@
       }
     }
 
-    /* Melhorias visuais */
-    .card {
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 28px rgba(255,170,0,0.1);
-    }
-    
-    .stat-card {
-      transition: all 0.2s ease;
-    }
-    
-    .stat-card:hover {
-      transform: translateY(-3px);
-      background: rgba(255,255,255,0.08);
-      border-color: rgba(255,170,0,0.2);
-    }
-    
-    .barbeiro-card {
-      transition: all 0.2s ease;
-    }
-    
-    .barbeiro-card:hover {
-      transform: translateY(-3px);
-      background: rgba(255,255,255,0.08);
-      border-color: rgba(255,170,0,0.2);
-    }
-    
-    .btn {
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .btn::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 5px;
-      height: 5px;
-      background: rgba(255, 255, 255, 0.5);
-      opacity: 0;
-      border-radius: 100%;
-      transform: scale(1, 1) translate(-50%);
-      transform-origin: 50% 50%;
-    }
-    
-    .btn:active::after {
-      animation: ripple 0.6s ease-out;
-    }
-    
-    @keyframes ripple {
-      0% {
-        transform: scale(0, 0);
-        opacity: 0.5;
-      }
-      100% {
-        transform: scale(20, 20);
-        opacity: 0;
-      }
-    }
-    
     .status-bar {
       height: 44px;
       background: rgba(0,0,0,0.5);
@@ -481,6 +422,106 @@
       color: #ffaa00;
       margin-bottom: 8px;
     }
+    
+    .resumo-pagamentos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .resumo-pagamento-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .resumo-pagamento-valor {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffaa00;
+      margin: 8px 0;
+    }
+    
+    .resumo-pagamento-label {
+      font-size: 14px;
+      color: #aaa;
+    }
+    
+    .servico-resumo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .servico-resumo-item {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .servico-resumo-tipo {
+      font-size: 12px;
+      color: #ffaa00;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .servico-resumo-detalhes {
+      font-size: 11px;
+      color: #ccc;
+      line-height: 1.4;
+    }
+    
+    .barbeiro-comparacao {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .barbeiro-metodos {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .barbeiro-metodos-nome {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffaa00;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    .metodo-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .metodo-item:last-child {
+      border-bottom: none;
+    }
+    
+    .metodo-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .metodo-valor {
+      font-weight: 600;
+      color: #ffaa00;
+    }
 
     @media (min-width: 768px) and (max-width: 1024px) {
       .container {
@@ -519,13 +560,21 @@
       th, td {
         padding: 14px;
       }
+      
+      .servico-resumo-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      
+      .barbeiro-comparacao {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="status-bar">
-    <div class="status-time" id="currentTime">9:41</div>
-  </div>
+
   
   <div class="container fade-in">
     <div class="header">
@@ -584,9 +633,46 @@
     </div>
 
     <div class="card">
+      <h3 class="section-title">Resumo de Pagamentos</h3>
+      <div class="resumo-pagamentos">
+        <div class="resumo-pagamento-card">
+          <div class="pagamento-icon">💵</div>
+          <div class="resumo-pagamento-valor" id="totalDinheiro">R$ 0,00</div>
+          <div class="resumo-pagamento-label">DINHEIRO</div>
+        </div>
+        <div class="resumo-pagamento-card">
+          <div class="pagamento-icon">📱</div>
+          <div class="resumo-pagamento-valor" id="totalPix">R$ 0,00</div>
+          <div class="resumo-pagamento-label">PIX</div>
+        </div>
+        <div class="resumo-pagamento-card">
+          <div class="pagamento-icon">💳</div>
+          <div class="resumo-pagamento-valor" id="totalDebito">R$ 0,00</div>
+          <div class="resumo-pagamento-label">DÉBITO</div>
+        </div>
+        <div class="resumo-pagamento-card">
+          <div class="pagamento-icon">💳</div>
+          <div class="resumo-pagamento-valor" id="totalCredito">R$ 0,00</div>
+          <div class="resumo-pagamento-label">CRÉDITO</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Comparação por Barbeiro</h3>
+      <div class="barbeiro-comparacao" id="comparacaoBarbeiros"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Serviços por Tipo</h3>
+      <div class="servico-resumo-grid" id="servicosPorTipo"></div>
+    </div>
+
+    <div class="card">
       <h3 class="section-title">Ações</h3>
       <button class="btn whatsapp" onclick="enviarResumoWhatsApp()">ENVIAR RESUMO DO DIA</button>
       <button class="btn resumo" onclick="abrirModalResumo()">VER RESUMO COMPLETO</button>
+      <button class="btn pagamentos" onclick="abrirModalPagamentos()">RELATÓRIO PAGAMENTOS</button>
       <button class="btn despesas" onclick="abrirModalDespesas()">DESPESAS</button>
       <button class="btn config" onclick="abrirModalConfiguracoes()">CONFIGURAÇÕES</button>
     </div>
@@ -625,6 +711,23 @@
       <div id="conteudoResumo"></div>
       <div class="modal-buttons">
         <button class="btn voltar" onclick="fecharModal('modalResumo')">FECHAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Relatório de Pagamentos -->
+  <div id="modalPagamentos" class="modal">
+    <div class="modal-content">
+      <h3 class="section-title">Relatório de Pagamentos</h3>
+      <div class="calendario-container">
+        <input type="date" id="dataInicioPagamentos" />
+        <input type="date" id="dataFimPagamentos" />
+        <button class="btn pagamentos" onclick="filtrarPagamentos()" style="padding: 10px 15px; min-height: auto;">FILTRAR</button>
+      </div>
+      <div id="relatorioPagamentos"></div>
+      <div class="modal-buttons">
+        <button class="btn whatsapp" onclick="enviarRelatorioPagamentosWhatsApp()">ENVIAR POR WHATSAPP</button>
+        <button class="btn voltar" onclick="fecharModal('modalPagamentos')">FECHAR</button>
       </div>
     </div>
   </div>
@@ -682,15 +785,7 @@
   </div>
 
   <script>
-    // Atualizar hora no status bar
-    function updateTime() {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      document.getElementById('currentTime').textContent = timeString;
-    }
-    
-    setInterval(updateTime, 60000);
-    updateTime();
+
 
     // Variáveis globais
     let dados = { 
@@ -721,6 +816,11 @@
       
       document.getElementById('dataInicio').value = umaSemanaAtras.toISOString().split('T')[0];
       document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+      
+      // Datas para pagamentos (mês atual)
+      const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+      document.getElementById('dataInicioPagamentos').value = primeiroDiaMes.toISOString().split('T')[0];
+      document.getElementById('dataFimPagamentos').value = hoje.toISOString().split('T')[0];
     });
 
     // Funções principais
@@ -751,6 +851,9 @@
     function atualizarDashboard() {
       atualizarEstatisticasBarbeiros();
       atualizarEstatisticasGerais();
+      atualizarResumoPagamentos();
+      atualizarComparacaoBarbeiros();
+      atualizarServicosPorTipo();
       atualizarListaServicosRecentes();
       atualizarListaDespesas();
       atualizarGraficoPizza();
@@ -822,6 +925,214 @@
       document.getElementById('despesasMes').textContent = `R$ ${despesasMes.toFixed(2)}`;
     }
 
+    function atualizarResumoPagamentos() {
+      const hoje = new Date().toISOString().split('T')[0];
+      const todosServicosHoje = [
+        ...dados.Gabriel.filter(s => s.data === hoje && s.pago),
+        ...dados.Wagner.filter(s => s.data === hoje && s.pago)
+      ];
+      
+      const totalDinheiro = todosServicosHoje
+        .filter(s => s.metodoPagamento === 'dinheiro')
+        .reduce((acc, s) => acc + s.valor, 0);
+      
+      const totalPix = todosServicosHoje
+        .filter(s => s.metodoPagamento === 'pix')
+        .reduce((acc, s) => acc + s.valor, 0);
+      
+      const totalDebito = todosServicosHoje
+        .filter(s => s.metodoPagamento === 'debito')
+        .reduce((acc, s) => acc + s.valor, 0);
+      
+      const totalCredito = todosServicosHoje
+        .filter(s => s.metodoPagamento === 'credito')
+        .reduce((acc, s) => acc + s.valor, 0);
+      
+      document.getElementById('totalDinheiro').textContent = `R$ ${totalDinheiro.toFixed(2)}`;
+      document.getElementById('totalPix').textContent = `R$ ${totalPix.toFixed(2)}`;
+      document.getElementById('totalDebito').textContent = `R$ ${totalDebito.toFixed(2)}`;
+      document.getElementById('totalCredito').textContent = `R$ ${totalCredito.toFixed(2)}`;
+    }
+
+    function atualizarComparacaoBarbeiros() {
+      const hoje = new Date().toISOString().split('T')[0];
+      const servicosGabriel = dados.Gabriel.filter(s => s.data === hoje && s.pago);
+      const servicosWagner = dados.Wagner.filter(s => s.data === hoje && s.pago);
+      
+      // Calcular métodos de pagamento para Gabriel
+      const gabrielMetodos = {
+        dinheiro: servicosGabriel.filter(s => s.metodoPagamento === 'dinheiro').reduce((acc, s) => acc + s.valor, 0),
+        pix: servicosGabriel.filter(s => s.metodoPagamento === 'pix').reduce((acc, s) => acc + s.valor, 0),
+        debito: servicosGabriel.filter(s => s.metodoPagamento === 'debito').reduce((acc, s) => acc + s.valor, 0),
+        credito: servicosGabriel.filter(s => s.metodoPagamento === 'credito').reduce((acc, s) => acc + s.valor, 0)
+      };
+      
+      // Calcular métodos de pagamento para Wagner
+      const wagnerMetodos = {
+        dinheiro: servicosWagner.filter(s => s.metodoPagamento === 'dinheiro').reduce((acc, s) => acc + s.valor, 0),
+        pix: servicosWagner.filter(s => s.metodoPagamento === 'pix').reduce((acc, s) => acc + s.valor, 0),
+        debito: servicosWagner.filter(s => s.metodoPagamento === 'debito').reduce((acc, s) => acc + s.valor, 0),
+        credito: servicosWagner.filter(s => s.metodoPagamento === 'credito').reduce((acc, s) => acc + s.valor, 0)
+      };
+      
+      const container = document.getElementById('comparacaoBarbeiros');
+      
+      let html = `
+        <div class="barbeiro-metodos">
+          <div class="barbeiro-metodos-nome">GABRIEL</div>
+          <div class="metodo-item">
+            <div class="metodo-info">
+              <span>💵</span>
+              <span>Dinheiro:</span>
+            </div>
+            <div class="metodo-valor">R$ ${gabrielMetodos.dinheiro.toFixed(2)}</div>
+          </div>
+          <div class="metodo-item">
+            <div class="metodo-info">
+              <span>📱</span>
+              <span>PIX:</span>
+            </div>
+            <div class="metodo-valor">R$ ${gabrielMetodos.pix.toFixed(2)}</div>
+          </div>
+          <div class="metodo-item">
+            <div class="metodo-info">
+              <span>💳</span>
+              <span>Débito:</span>
+            </div>
+            <div class="metodo-valor">R$ ${gabrielMetodos.debito.toFixed(2)}</div>
+          </div>
+          <div class="metodo-item">
+            <div class="metodo-info">
+              <span>💳</span>
+              <span>Crédito:</span>
+            </div>
+            <div class="metodo-valor">R$ ${gabrielMetodos.credito.toFixed(2)}</div>
+          </div>
+          <div class="metodo-item" style="margin-top:10px; padding-top:10px; border-top:2px solid #ffaa00;">
+            <div class="metodo-info">
+              <span>💰</span>
+              <span style="font-weight:600;">TOTAL:</span>
+            </div>
+            <div class="metodo-valor" style="color:#25D366;">R$ ${(gabrielMetodos.dinheiro + gabrielMetodos.pix + gabrielMetodos.debito + gabrielMetodos.credito).toFixed(2)}</div>
+          </div>
+        </div>
+        
+        <div class="barbeiro-metodos">
+          <div class="barbeiro-metodos-nome">WAGNER</div>
+          <div class="metodo-item">
+            <div class="metodo-info">
+              <span>💵</span>
+              <span>Dinheiro:</span>
+            </div>
+            <div class="metodo-valor">R$ ${wagnerMetodos.dinheiro.toFixed(2)}</div>
+          </div>
+          <div class="metodo-item">
+            <div class="metodo-info">
+              <span>📱</span>
+              <span>PIX:</span>
+            </div>
+            <div class="metodo-valor">R$ ${wagnerMetodos.pix.toFixed(2)}</div>
+          </div>
+          <div class="metodo-item">
+            <div class="metodo-info">
+              <span>💳</span>
+              <span>Débito:</span>
+            </div>
+            <div class="metodo-valor">R$ ${wagnerMetodos.debito.toFixed(2)}</div>
+          </div>
+          <div class="metodo-item">
+            <div class="metodo-info">
+              <span>💳</span>
+              <span>Crédito:</span>
+            </div>
+            <div class="metodo-valor">R$ ${wagnerMetodos.credito.toFixed(2)}</div>
+          </div>
+          <div class="metodo-item" style="margin-top:10px; padding-top:10px; border-top:2px solid #ffaa00;">
+            <div class="metodo-info">
+              <span>💰</span>
+              <span style="font-weight:600;">TOTAL:</span>
+            </div>
+            <div class="metodo-valor" style="color:#25D366;">R$ ${(wagnerMetodos.dinheiro + wagnerMetodos.pix + wagnerMetodos.debito + wagnerMetodos.credito).toFixed(2)}</div>
+          </div>
+        </div>
+      `;
+      
+      container.innerHTML = html;
+    }
+
+    function atualizarServicosPorTipo() {
+      const hoje = new Date().toISOString().split('T')[0];
+      const todosServicosHoje = [
+        ...dados.Gabriel.filter(s => s.data === hoje),
+        ...dados.Wagner.filter(s => s.data === hoje)
+      ];
+      
+      // Agrupar por tipo de serviço
+      const servicosPorTipo = {};
+      
+      todosServicosHoje.forEach(servico => {
+        if (!servicosPorTipo[servico.tipo]) {
+          servicosPorTipo[servico.tipo] = {
+            total: 0,
+            dinheiro: 0,
+            pix: 0,
+            debito: 0,
+            credito: 0,
+            fiado: 0,
+            count: 0
+          };
+        }
+        
+        servicosPorTipo[servico.tipo].total += servico.valor;
+        servicosPorTipo[servico.tipo].count += 1;
+        
+        if (!servico.pago) {
+          servicosPorTipo[servico.tipo].fiado += servico.valor;
+        } else {
+          switch(servico.metodoPagamento) {
+            case 'dinheiro':
+              servicosPorTipo[servico.tipo].dinheiro += servico.valor;
+              break;
+            case 'pix':
+              servicosPorTipo[servico.tipo].pix += servico.valor;
+              break;
+            case 'debito':
+              servicosPorTipo[servico.tipo].debito += servico.valor;
+              break;
+            case 'credito':
+              servicosPorTipo[servico.tipo].credito += servico.valor;
+              break;
+          }
+        }
+      });
+      
+      const container = document.getElementById('servicosPorTipo');
+      let html = '';
+      
+      Object.entries(servicosPorTipo).forEach(([tipo, dados]) => {
+        html += `
+          <div class="servico-resumo-item">
+            <div class="servico-resumo-tipo">${tipo}</div>
+            <div class="servico-resumo-detalhes">
+              <div>Total: R$ ${dados.total.toFixed(2)}</div>
+              <div>Qtd: ${dados.count}</div>
+              ${dados.dinheiro > 0 ? `<div>💵: R$ ${dados.dinheiro.toFixed(2)}</div>` : ''}
+              ${dados.pix > 0 ? `<div>📱: R$ ${dados.pix.toFixed(2)}</div>` : ''}
+              ${dados.debito > 0 ? `<div>💳: R$ ${dados.debito.toFixed(2)}</div>` : ''}
+              ${dados.credito > 0 ? `<div>💳: R$ ${dados.credito.toFixed(2)}</div>` : ''}
+              ${dados.fiado > 0 ? `<div>⏰: R$ ${dados.fiado.toFixed(2)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      });
+      
+      if (html === '') {
+        html = '<p style="text-align:center;color:#666;grid-column:1/-1;">Nenhum serviço registrado hoje</p>';
+      }
+      
+      container.innerHTML = html;
+    }
+
     function atualizarListaServicosRecentes() {
       const dataInicio = document.getElementById('dataInicio').value;
       const dataFim = document.getElementById('dataFim').value;
@@ -849,6 +1160,7 @@
             <th>Barbeiro</th>
             <th>Serviço</th>
             <th>Valor</th>
+            <th>Pagamento</th>
             <th>Status</th>
           </tr>
       `;
@@ -858,12 +1170,23 @@
         const status = servico.pago ? 'PAGO' : 'FIADO';
         const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
         
+        // Mapear método de pagamento para ícone
+        let metodoIcon = '';
+        switch(servico.metodoPagamento) {
+          case 'dinheiro': metodoIcon = '💵'; break;
+          case 'pix': metodoIcon = '📱'; break;
+          case 'debito': metodoIcon = '💳'; break;
+          case 'credito': metodoIcon = '💳'; break;
+          default: metodoIcon = '⚫';
+        }
+        
         html += `
           <tr>
             <td>${servico.data}</td>
             <td>${barbeiro}</td>
             <td>${servico.tipo}</td>
             <td>R$ ${servico.valor.toFixed(2)}</td>
+            <td>${metodoIcon}</td>
             <td class="${statusClass}">${status}</td>
           </tr>
         `;
@@ -1007,6 +1330,69 @@
       
       const lucroMes = (totalGabrielMes + totalWagnerMes) - despesasMes;
       
+      // Calcular detalhes por tipo de serviço e método de pagamento
+      const hoje = new Date().toISOString().split('T')[0];
+      const servicosHoje = [
+        ...dados.Gabriel.filter(s => s.data === hoje),
+        ...dados.Wagner.filter(s => s.data === hoje)
+      ];
+      
+      const detalhesServicos = {};
+      
+      servicosHoje.forEach(servico => {
+        if (!detalhesServicos[servico.tipo]) {
+          detalhesServicos[servico.tipo] = {
+            total: 0,
+            dinheiro: 0,
+            pix: 0,
+            debito: 0,
+            credito: 0,
+            fiado: 0,
+            count: 0
+          };
+        }
+        
+        detalhesServicos[servico.tipo].total += servico.valor;
+        detalhesServicos[servico.tipo].count += 1;
+        
+        if (!servico.pago) {
+          detalhesServicos[servico.tipo].fiado += servico.valor;
+        } else {
+          switch(servico.metodoPagamento) {
+            case 'dinheiro':
+              detalhesServicos[servico.tipo].dinheiro += servico.valor;
+              break;
+            case 'pix':
+              detalhesServicos[servico.tipo].pix += servico.valor;
+              break;
+            case 'debito':
+              detalhesServicos[servico.tipo].debito += servico.valor;
+              break;
+            case 'credito':
+              detalhesServicos[servico.tipo].credito += servico.valor;
+              break;
+          }
+        }
+      });
+      
+      let detalhesHTML = '';
+      Object.entries(detalhesServicos).forEach(([tipo, dados]) => {
+        detalhesHTML += `
+          <div style="margin-bottom:15px; padding:12px; background:rgba(255,255,255,0.05); border-radius:8px;">
+            <div style="font-weight:600; color:#ffaa00; margin-bottom:8px;">${tipo}</div>
+            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:5px; font-size:12px;">
+              <div>Total: R$ ${dados.total.toFixed(2)}</div>
+              <div>Quantidade: ${dados.count}</div>
+              ${dados.dinheiro > 0 ? `<div>💵 Dinheiro: R$ ${dados.dinheiro.toFixed(2)}</div>` : ''}
+              ${dados.pix > 0 ? `<div>📱 PIX: R$ ${dados.pix.toFixed(2)}</div>` : ''}
+              ${dados.debito > 0 ? `<div>💳 Débito: R$ ${dados.debito.toFixed(2)}</div>` : ''}
+              ${dados.credito > 0 ? `<div>💳 Crédito: R$ ${dados.credito.toFixed(2)}</div>` : ''}
+              ${dados.fiado > 0 ? `<div>⏰ Fiado: R$ ${dados.fiado.toFixed(2)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      });
+      
       const html = `
         <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin:15px 0;border-left:4px solid #ffaa00;">
           <h4 style="color:#ffaa00; margin-bottom:15px;">RESUMO DO DIA - ${new Date().toLocaleDateString('pt-BR')}</h4>
@@ -1033,6 +1419,11 @@
             <div style="font-size:16px; margin-bottom:5px;">Total Fiado: <span style="color:#FF9500;">R$ ${resumo.geral.totalFiado.toFixed(2)}</span></div>
             <div style="font-size:16px; margin-bottom:5px;">Total Serviços: <span style="font-weight:600;">${resumo.geral.totalServicos}</span></div>
           </div>
+        </div>
+        
+        <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin:15px 0;border-left:4px solid #9933ff;">
+          <h4 style="color:#9933ff; margin-bottom:15px;">DETALHES POR SERVIÇO</h4>
+          ${detalhesHTML || '<p style="text-align:center;color:#666;">Nenhum serviço registrado hoje</p>'}
         </div>
         
         <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin:15px 0;border-left:4px solid #9933ff;">
@@ -1092,6 +1483,172 @@
           totalServicos: servicosGabriel.length + servicosWagner.length
         }
       };
+    }
+
+    function abrirModalPagamentos() {
+      document.getElementById('modalPagamentos').style.display = 'flex';
+      gerarRelatorioPagamentos();
+    }
+
+    function gerarRelatorioPagamentos() {
+      const dataInicio = document.getElementById('dataInicioPagamentos').value;
+      const dataFim = document.getElementById('dataFimPagamentos').value;
+      
+      const container = document.getElementById('relatorioPagamentos');
+      
+      // Filtrar serviços por data
+      const todosServicos = [...dados.Gabriel, ...dados.Wagner];
+      const servicosFiltrados = todosServicos.filter(s => {
+        return s.data >= dataInicio && s.data <= dataFim && s.pago;
+      });
+      
+      if (servicosFiltrados.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum pagamento encontrado no período selecionado</p>';
+        return;
+      }
+      
+      // Calcular totais por método de pagamento
+      const totais = {
+        dinheiro: 0,
+        pix: 0,
+        debito: 0,
+        credito: 0,
+        total: 0
+      };
+      
+      servicosFiltrados.forEach(servico => {
+        if (servico.metodoPagamento && servico.pago) {
+          totais[servico.metodoPagamento] += servico.valor;
+          totais.total += servico.valor;
+        }
+      });
+      
+      let html = `
+        <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin-bottom:20px;">
+          <h4 style="color:#ffaa00; margin-bottom:15px; text-align:center;">TOTAIS POR MÉTODO DE PAGAMENTO</h4>
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:15px;">
+            <div style="text-align:center;">
+              <div style="font-size:14px;color:#aaa;">DINHEIRO</div>
+              <div style="font-size:18px;font-weight:700;color:#ffaa00;">R$ ${totais.dinheiro.toFixed(2)}</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:14px;color:#aaa;">PIX</div>
+              <div style="font-size:18px;font-weight:700;color:#25D366;">R$ ${totais.pix.toFixed(2)}</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:14px;color:#aaa;">DÉBITO</div>
+              <div style="font-size:18px;font-weight:700;color:#3366ff;">R$ ${totais.debito.toFixed(2)}</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:14px;color:#aaa;">CRÉDITO</div>
+              <div style="font-size:18px;font-weight:700;color:#9933ff;">R$ ${totais.credito.toFixed(2)}</div>
+            </div>
+          </div>
+          <div style="text-align:center; margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1);">
+            <div style="font-size:14px;color:#aaa;">TOTAL GERAL</div>
+            <div style="font-size:24px;font-weight:700;color:#ffaa00;">R$ ${totais.total.toFixed(2)}</div>
+          </div>
+        </div>
+        
+        <h4 style="color:#ffaa00; margin:20px 0 10px;">DETALHES DOS PAGAMENTOS</h4>
+        <table>
+          <tr>
+            <th>Data</th>
+            <th>Barbeiro</th>
+            <th>Serviço</th>
+            <th>Valor</th>
+            <th>Método</th>
+          </tr>
+      `;
+      
+      servicosFiltrados.forEach(servico => {
+        const barbeiro = dados.Gabriel.includes(servico) ? 'Gabriel' : 'Wagner';
+        let metodoIcon = '';
+        switch(servico.metodoPagamento) {
+          case 'dinheiro': metodoIcon = '💵 DINHEIRO'; break;
+          case 'pix': metodoIcon = '📱 PIX'; break;
+          case 'debito': metodoIcon = '💳 DÉBITO'; break;
+          case 'credito': metodoIcon = '💳 CRÉDITO'; break;
+          default: metodoIcon = '⚫ OUTRO';
+        }
+        
+        html += `
+          <tr>
+            <td>${servico.data}</td>
+            <td>${barbeiro}</td>
+            <td>${servico.tipo}</td>
+            <td>R$ ${servico.valor.toFixed(2)}</td>
+            <td>${metodoIcon}</td>
+          </tr>
+        `;
+      });
+      
+      html += '</table>';
+      container.innerHTML = html;
+    }
+
+    function filtrarPagamentos() {
+      gerarRelatorioPagamentos();
+    }
+
+    function enviarRelatorioPagamentosWhatsApp() {
+      const dataInicio = document.getElementById('dataInicioPagamentos').value;
+      const dataFim = document.getElementById('dataFimPagamentos').value;
+      
+      // Filtrar serviços por data
+      const todosServicos = [...dados.Gabriel, ...dados.Wagner];
+      const servicosFiltrados = todosServicos.filter(s => {
+        return s.data >= dataInicio && s.data <= dataFim && s.pago;
+      });
+      
+      // Calcular totais
+      const totais = {
+        dinheiro: 0,
+        pix: 0,
+        debito: 0,
+        credito: 0,
+        total: 0
+      };
+      
+      servicosFiltrados.forEach(servico => {
+        if (servico.metodoPagamento && servico.pago) {
+          totais[servico.metodoPagamento] += servico.valor;
+          totais.total += servico.valor;
+        }
+      });
+      
+      const mensagem = `
+*BARBAPRO - RELATÓRIO DE PAGAMENTOS*
+
+Período: ${new Date(dataInicio).toLocaleDateString('pt-BR')} a ${new Date(dataFim).toLocaleDateString('pt-BR')}
+
+*TOTAIS POR MÉTODO:*
+💵 Dinheiro: R$ ${totais.dinheiro.toFixed(2)}
+📱 PIX: R$ ${totais.pix.toFixed(2)}
+💳 Débito: R$ ${totais.debito.toFixed(2)}
+💳 Crédito: R$ ${totais.credito.toFixed(2)}
+
+*TOTAL GERAL:* R$ ${totais.total.toFixed(2)}
+
+*DETALHES:*
+${servicosFiltrados.map(s => {
+  const barbeiro = dados.Gabriel.includes(s) ? 'Gabriel' : 'Wagner';
+  let metodo = '';
+  switch(s.metodoPagamento) {
+    case 'dinheiro': metodo = '💵'; break;
+    case 'pix': metodo = '📱'; break;
+    case 'debito': metodo = '💳 D'; break;
+    case 'credito': metodo = '💳 C'; break;
+    default: metodo = '⚫';
+  }
+  return `${s.data} - ${barbeiro} - ${s.tipo} - R$ ${s.valor.toFixed(2)} - ${metodo}`;
+}).join('\n')}
+
+_Enviado automaticamente pelo BarbaPRO Duo_
+      `.trim();
+
+      const url = `https://wa.me/55${config.whatsapp}?text=${encodeURIComponent(mensagem)}`;
+      window.open(url, '_blank');
     }
 
     function abrirModalDespesas() {
@@ -1204,27 +1761,57 @@
     // Funções de relatório
     function enviarResumoWhatsApp() {
       const resumo = calcularResumoCompleto();
+      const hoje = new Date().toISOString().split('T')[0];
+      const servicosGabriel = dados.Gabriel.filter(s => s.data === hoje && s.pago);
+      const servicosWagner = dados.Wagner.filter(s => s.data === hoje && s.pago);
+      
+      // Calcular métodos de pagamento para Gabriel
+      const gabrielMetodos = {
+        dinheiro: servicosGabriel.filter(s => s.metodoPagamento === 'dinheiro').reduce((acc, s) => acc + s.valor, 0),
+        pix: servicosGabriel.filter(s => s.metodoPagamento === 'pix').reduce((acc, s) => acc + s.valor, 0),
+        debito: servicosGabriel.filter(s => s.metodoPagamento === 'debito').reduce((acc, s) => acc + s.valor, 0),
+        credito: servicosGabriel.filter(s => s.metodoPagamento === 'credito').reduce((acc, s) => acc + s.valor, 0)
+      };
+      
+      // Calcular métodos de pagamento para Wagner
+      const wagnerMetodos = {
+        dinheiro: servicosWagner.filter(s => s.metodoPagamento === 'dinheiro').reduce((acc, s) => acc + s.valor, 0),
+        pix: servicosWagner.filter(s => s.metodoPagamento === 'pix').reduce((acc, s) => acc + s.valor, 0),
+        debito: servicosWagner.filter(s => s.metodoPagamento === 'debito').reduce((acc, s) => acc + s.valor, 0),
+        credito: servicosWagner.filter(s => s.metodoPagamento === 'credito').reduce((acc, s) => acc + s.valor, 0)
+      };
       
       const mensagem = `
 *BARBAPRO - RESUMO COMPLETO DO DIA*
 
- ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+${new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
 
 *GABRIEL*
-- Recebido: R$ ${resumo.gabriel.totalPago.toFixed(2)}
+- Total Recebido: R$ ${resumo.gabriel.totalPago.toFixed(2)}
 - Fiado: R$ ${resumo.gabriel.totalFiado.toFixed(2)}
 - Serviços: ${resumo.gabriel.totalServicos}
 
+*Métodos de Pagamento - Gabriel:*
+💵 Dinheiro: R$ ${gabrielMetodos.dinheiro.toFixed(2)}
+📱 PIX: R$ ${gabrielMetodos.pix.toFixed(2)}
+💳 Débito: R$ ${gabrielMetodos.debito.toFixed(2)}
+💳 Crédito: R$ ${gabrielMetodos.credito.toFixed(2)}
+
 *WAGNER*
-- Recebido: R$ ${resumo.wagner.totalPago.toFixed(2)}
+- Total Recebido: R$ ${resumo.wagner.totalPago.toFixed(2)}
 - Fiado: R$ ${resumo.wagner.totalFiado.toFixed(2)}
 - Serviços: ${resumo.wagner.totalServicos}
+
+*Métodos de Pagamento - Wagner:*
+💵 Dinheiro: R$ ${wagnerMetodos.dinheiro.toFixed(2)}
+📱 PIX: R$ ${wagnerMetodos.pix.toFixed(2)}
+💳 Débito: R$ ${wagnerMetodos.debito.toFixed(2)}
+💳 Crédito: R$ ${wagnerMetodos.credito.toFixed(2)}
 
 *TOTAIS GERAIS*
 - Total Recebido: R$ ${resumo.geral.totalPago.toFixed(2)}
 - Total Fiado: R$ ${resumo.geral.totalFiado.toFixed(2)}
 - Total Serviços: ${resumo.geral.totalServicos}
-
 
 _Enviado automaticamente pelo BarbaPRO Duo_
       `.trim();

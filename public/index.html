@@ -476,6 +476,58 @@
       color: #FF9500;
       font-weight: 600;
     }
+    
+    .metodo-pagamento-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 15px 0;
+    }
+    
+    .metodo-pagamento-btn {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 80px;
+    }
+    
+    .metodo-pagamento-btn:active {
+      transform: scale(0.95);
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .metodo-pagamento-btn.selecionado {
+      background: rgba(255,170,0,0.2);
+      border-color: #ffaa00;
+    }
+    
+    .metodo-pagamento-nome {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+    
+    .metodo-pagamento-desc {
+      font-size: 11px;
+      color: #aaa;
+    }
+    
+    .submodal {
+      display: none;
+    }
+    
+    .submodal.active {
+      display: block;
+    }
 
     @media (min-width: 768px) and (max-width: 1024px) {
       .container {
@@ -514,13 +566,20 @@
       th, td {
         padding: 14px;
       }
+      
+      .metodo-pagamento-grid {
+        gap: 15px;
+      }
+      
+      .metodo-pagamento-btn {
+        padding: 18px;
+        min-height: 90px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="status-bar">
-    <div class="status-time" id="currentTime">9:41</div>
-  </div>
+
   
   <div class="container fade-in">
     <div class="header">
@@ -538,17 +597,17 @@
     <div class="card">
       <h3 class="section-title">Registrar Serviço</h3>
       <div class="servicos-grid">
-        <div class="servico-btn corte" onclick="registrarServico('corte')">
+        <div class="servico-btn corte" onclick="abrirModalPagamento('corte')">
           <div class="servico-nome">CORTE</div>
           <div class="servico-valor">R$ <span id="precoCorte">28</span></div>
           <div class="servico-desc">Corte de cabelo</div>
         </div>
-        <div class="servico-btn barba" onclick="registrarServico('barba')">
+        <div class="servico-btn barba" onclick="abrirModalPagamento('barba')">
           <div class="servico-nome">BARBA</div>
           <div class="servico-valor">R$ <span id="precoBarba">15</span></div>
           <div class="servico-desc">Aparar barba</div>
         </div>
-        <div class="servico-btn barba-cabelo" onclick="registrarServico('barba-cabelo')">
+        <div class="servico-btn barba-cabelo" onclick="abrirModalPagamento('barba-cabelo')">
           <div class="servico-nome">COMBO</div>
           <div class="servico-valor">R$ <span id="precoBarbaCabelo">40</span></div>
           <div class="servico-desc">Barba + Cabelo</div>
@@ -571,6 +630,43 @@
 
   <div class="home-indicator">
     <div class="home-line"></div>
+  </div>
+
+  <!-- Modal Pagamento -->
+  <div id="modalPagamento" class="modal">
+    <div class="modal-content">
+      <h3 class="section-title" id="tituloModalPagamento">Forma de Pagamento</h3>
+      <p style="margin-bottom: 15px; color: #ccc; text-align: center;">
+        Serviço: <span id="servicoSelecionadoNome" style="color: #ffaa00; font-weight: 600;"></span><br>
+        Valor: <span id="servicoSelecionadoValor" style="color: #ffaa00; font-weight: 600;"></span>
+      </p>
+      
+      <div class="metodo-pagamento-grid">
+        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('dinheiro')">
+          <div class="metodo-pagamento-nome">💵 DINHEIRO</div>
+          <div class="metodo-pagamento-desc">Pagamento em espécie</div>
+        </div>
+        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('pix')">
+          <div class="metodo-pagamento-nome">📱 PIX</div>
+          <div class="metodo-pagamento-desc">Transferência instantânea</div>
+        </div>
+        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('debito')">
+          <div class="metodo-pagamento-nome">💳 DÉBITO</div>
+          <div class="metodo-pagamento-desc">Cartão de débito</div>
+        </div>
+        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('credito')">
+          <div class="metodo-pagamento-nome">💳 CRÉDITO</div>
+          <div class="metodo-pagamento-desc">Cartão de crédito</div>
+        </div>
+      </div>
+      
+      <input id="nomeClientePagamento" placeholder="Nome do cliente (opcional)" maxlength="30" />
+      
+      <div class="modal-buttons">
+        <button class="btn corte" onclick="confirmarServico()">CONFIRMAR</button>
+        <button class="btn secundario" onclick="fecharModal('modalPagamento')">CANCELAR</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal Outro Valor -->
@@ -604,15 +700,6 @@
   </div>
 
   <script>
-    // Atualizar hora no status bar
-    function updateTime() {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      document.getElementById('currentTime').textContent = timeString;
-    }
-    
-    setInterval(updateTime, 60000);
-    updateTime();
 
     // Variáveis globais
     let usuarioAtual = 'Gabriel';
@@ -629,6 +716,10 @@
       Wagner: [], 
       despesas: [] 
     };
+
+    // Variáveis para controle do modal de pagamento
+    let servicoSelecionado = null;
+    let metodoPagamentoSelecionado = null;
 
     // Inicialização
     document.addEventListener('DOMContentLoaded', function() {
@@ -673,10 +764,62 @@
     }
 
     // Funções de serviço
-    function registrarServico(tipo) {
-      let valor, nome;
+    function abrirModalPagamento(tipo) {
+      servicoSelecionado = tipo;
+      metodoPagamentoSelecionado = null;
+      
+      // Resetar seleção de métodos
+      document.querySelectorAll('.metodo-pagamento-btn').forEach(btn => {
+        btn.classList.remove('selecionado');
+      });
+      
+      let nome, valor;
       
       switch(tipo) {
+        case 'corte':
+          nome = 'Corte';
+          valor = config.corte;
+          break;
+        case 'barba':
+          nome = 'Barba';
+          valor = config.barba;
+          break;
+        case 'barba-cabelo':
+          nome = 'Barba + Cabelo';
+          valor = config.combo;
+          break;
+        default:
+          return;
+      }
+      
+      document.getElementById('servicoSelecionadoNome').textContent = nome;
+      document.getElementById('servicoSelecionadoValor').textContent = `R$ ${valor}`;
+      document.getElementById('nomeClientePagamento').value = '';
+      
+      document.getElementById('modalPagamento').style.display = 'flex';
+      criarEfeitoRipple(event);
+    }
+
+    function selecionarMetodoPagamento(metodo) {
+      metodoPagamentoSelecionado = metodo;
+      
+      // Atualizar visual dos botões
+      document.querySelectorAll('.metodo-pagamento-btn').forEach(btn => {
+        btn.classList.remove('selecionado');
+      });
+      
+      event.currentTarget.classList.add('selecionado');
+    }
+
+    function confirmarServico() {
+      if (!metodoPagamentoSelecionado) {
+        alert('Por favor, selecione uma forma de pagamento!');
+        return;
+      }
+      
+      let valor, nome;
+      
+      switch(servicoSelecionado) {
         case 'corte':
           valor = config.corte;
           nome = 'Corte';
@@ -692,21 +835,32 @@
         default:
           return;
       }
-
+      
+      const nomeCliente = document.getElementById('nomeClientePagamento').value.trim() || 'Cliente';
+      
       const servico = {
         hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
         tipo: nome,
         valor: valor,
-        cliente: 'Cliente',
+        cliente: nomeCliente,
         pago: true,
+        metodoPagamento: metodoPagamentoSelecionado,
         data: new Date().toISOString().split('T')[0]
       };
 
       dados[usuarioAtual].unshift(servico);
       salvarDados();
       atualizarInterface();
+      fecharModal('modalPagamento');
       
-      criarEfeitoRipple(event);
+      // Resetar seleções
+      servicoSelecionado = null;
+      metodoPagamentoSelecionado = null;
+    }
+
+    function registrarServico(tipo) {
+      // Função mantida para compatibilidade, mas agora usa o modal de pagamento
+      abrirModalPagamento(tipo);
     }
 
     function abrirModalOutro() {
@@ -737,6 +891,7 @@
         valor: valor,
         cliente: nomeInput.value.trim() || 'Cliente',
         pago: pagoSelect.value === '1',
+        metodoPagamento: 'outro',
         data: new Date().toISOString().split('T')[0]
       };
 
@@ -777,7 +932,7 @@
             <th>Serviço</th>
             <th>Cliente</th>
             <th>Valor</th>
-            <th>Status</th>
+            <th>Pagamento</th>
             <th>Ação</th>
           </tr>
       `;
@@ -786,13 +941,23 @@
         const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
         const status = servico.pago ? 'PAGO' : 'FIADO';
         
+        // Mapear método de pagamento para ícone
+        let metodoIcon = '';
+        switch(servico.metodoPagamento) {
+          case 'dinheiro': metodoIcon = '💵'; break;
+          case 'pix': metodoIcon = '📱'; break;
+          case 'debito': metodoIcon = '💳'; break;
+          case 'credito': metodoIcon = '💳'; break;
+          default: metodoIcon = '⚫';
+        }
+        
         html += `
           <tr>
             <td>${servico.hora}</td>
             <td>${servico.tipo}</td>
             <td>${servico.cliente}</td>
             <td>R$ ${servico.valor.toFixed(2)}</td>
-            <td class="${statusClass}">${status}</td>
+            <td class="${statusClass}">${metodoIcon} ${status}</td>
             <td>
               <button class="action-btn" onclick="apagarServico(${index})">×</button>
             </td>
