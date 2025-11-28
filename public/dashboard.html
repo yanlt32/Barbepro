@@ -5,572 +5,930 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BarbaPRO Duo - Dashboard</title>
   <meta name="theme-color" content="#ffaa00" />
+  <link rel="shortcut icon" href="image.png" type="image/x-icon">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap');
+/* BarbaPRO Dashboard - CSS Otimizado */
+:root {
+  --primary: #ffaa00;
+  --primary-dark: #ff5500;
+  --secondary: #16213e;
+  --dark: #0a0a0a;
+  --light: #ffffff;
+  --gray: #aaaaaa;
+  --success: #25D366;
+  --danger: #ff3366;
+  --info: #3366ff;
+  --warning: #ff9500;
+  --purple: #9933ff;
+  
+  --card-bg: rgba(255, 255, 255, 0.06);
+  --card-border: rgba(255, 170, 0, 0.08);
+  --card-shadow: 0 8px 32px rgba(255, 170, 0, 0.06);
+  
+  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --border-radius: 16px;
+  --border-radius-sm: 12px;
+}
 
-    * { 
-      margin:0; 
-      padding:0; 
-      box-sizing:border-box; 
-      -webkit-tap-highlight-color:transparent; 
-      touch-action: manipulation;
-    }
-    
-    html, body { 
-      height:100%; 
-      background: linear-gradient(135deg,#0a0a0a 0%,#16213e 100%); 
-      color:#fff; 
-      font-family:'Inter', sans-serif; 
-      overflow-x: hidden;
-    }
-    
-    .container { 
-      max-width:900px; 
-      margin:0 auto; 
-      padding:25px 20px; 
-    }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
 
-    .header { 
-      text-align:center; 
-      margin-bottom:25px; 
-      position:relative; 
-      padding: 15px 0;
-    }
-    
-    h1 { 
-      font-family:'Bebas Neue', cursive; 
-      font-size:clamp(48px, 10vw, 80px); 
-      background:linear-gradient(45deg,#ffaa00,#ff5500); 
-      -webkit-background-clip:text; 
-      background-clip:text; 
-      -webkit-text-fill-color:transparent; 
-      margin:15px 0 8px; 
-      letter-spacing:3px; 
-      text-shadow: 0 2px 10px rgba(255, 170, 0, 0.2);
-    }
-    
-    .subtitle { 
-      color:#aaa; 
-      font-size:clamp(16px, 4vw, 20px); 
-      margin-bottom: 12px;
-    }
+html, body {
+  height: 100%;
+  background: linear-gradient(135deg, var(--dark) 0%, var(--secondary) 100%);
+  color: var(--light);
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
 
-    .btn {
-      width:100%; 
-      padding:16px; 
-      margin:12px 0; 
-      border:none; 
-      border-radius:14px; 
-      font-size:clamp(16px, 4.5vw, 18px); 
-      font-weight:700; 
-      cursor:pointer;
-      transition: all .15s ease; 
-      box-shadow:0 6px 18px rgba(0,0,0,0.35); 
-      position:relative; 
-      overflow:hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      min-height: 54px;
-      touch-action: manipulation;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      user-select: none;
-    }
-    
-    .btn:active { 
-      transform:scale(.95); 
-    }
-    
-    .voltar { 
-      background: linear-gradient(45deg,#3366ff,#0033cc); 
-      color:#fff; 
-    }
-    
-    .whatsapp { 
-      background: linear-gradient(45deg,#25D366,#128C7E); 
-      color:#fff; 
-    }
-    
-    .resumo { 
-      background: linear-gradient(45deg,#9933ff,#6600cc); 
-      color:#fff; 
-    }
-    
-    .despesas { 
-      background: linear-gradient(45deg,#ff3366,#cc0033); 
-      color:#fff; 
-    }
-    
-    .config { 
-      background: linear-gradient(45deg,#00aaff,#0066cc); 
-      color:#fff; 
-    }
-    
-    .pagamentos { 
-      background: linear-gradient(45deg,#ffaa00,#ff7733); 
-      color:#000; 
-    }
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 25px 20px;
+}
 
-    .card {
-      background: rgba(255,255,255,0.06); 
-      backdrop-filter: blur(8px); 
-      border-radius:20px; 
-      padding:22px; 
-      margin:15px 0;
-      box-shadow: 0 8px 32px rgba(255,170,0,0.06); 
-      border:1px solid rgba(255,170,0,0.08);
-    }
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 25px;
+  position: relative;
+  padding: 15px 0;
+}
 
-    .section-title { 
-      font-size:clamp(20px, 5vw, 24px); 
-      margin:18px 0 12px; 
-      color:#ffaa00; 
-      font-weight:700; 
-      display:flex; 
-      align-items:center; 
-      gap:12px; 
-    }
-    
-    .section-title::after { 
-      content:''; 
-      flex:1; 
-      height:2px; 
-      background: linear-gradient(90deg,#ffaa00,transparent); 
-    }
+h1 {
+  font-family: 'Bebas Neue', cursive;
+  font-size: clamp(48px, 10vw, 80px);
+  background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 15px 0 8px;
+  letter-spacing: 3px;
+  text-shadow: 0 2px 10px rgba(255, 170, 0, 0.2);
+  position: relative;
+  display: inline-block;
+}
 
-    .stats-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      margin: 20px 0;
-      gap: 15px;
-    }
-    
-    .stat-card {
-      flex: 1 1 calc(50% - 15px);
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 18px;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.05);
-      position: relative;
-      min-height: 110px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      touch-action: manipulation;
-    }
-    
-    .stat-value {
-      font-size: clamp(18px, 4.5vw, 22px);
-      font-weight: 700;
-      color: #ffaa00;
-      margin-bottom: 8px;
-    }
-    
-    .stat-label {
-      font-size: 14px;
-      color: #aaa;
-    }
+h1::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 10%;
+  width: 80%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  border-radius: 3px;
+}
 
-    .barbeiro-stats {
-      display: flex;
-      gap: 15px;
-      margin: 20px 0;
-    }
-    
-    .barbeiro-card {
-      flex: 1;
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-    
-    .barbeiro-nome {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 15px;
-      color: #ffaa00;
-    }
-    
-    .barbeiro-detalhes {
-      font-size: 14px;
-      color: #ccc;
-      line-height: 1.6;
-    }
+.subtitle {
+  color: var(--gray);
+  font-size: clamp(16px, 4vw, 20px);
+  margin-bottom: 12px;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
 
-    table { 
-      width:100%; 
-      border-collapse:collapse; 
-      margin:15px 0; 
-      font-size:clamp(14px, 3.5vw, 16px); 
-      touch-action: manipulation;
-    }
-    
-    th, td { 
-      border:1px solid #ffaa0030; 
-      padding:12px; 
-      text-align:center; 
-      min-height: 44px;
-    }
-    
-    th { 
-      background: rgba(255,170,0,0.12); 
-      font-weight:700; 
-    }
+/* Cards */
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(8px);
+  border-radius: var(--border-radius);
+  padding: 22px;
+  margin: 15px 0;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
 
-    .modal { 
-      display:none; 
-      position:fixed; 
-      top:0; 
-      left:0; 
-      width:100%; 
-      height:100%; 
-      background:rgba(0,0,0,0.92); 
-      z-index:1000; 
-      align-items:center; 
-      justify-content:center; 
-      padding:25px; 
-      backdrop-filter: blur(5px);
-      touch-action: manipulation;
-    }
-    
-    .modal-content { 
-      background:rgba(30,30,30,0.98); 
-      border-radius:20px; 
-      padding:25px; 
-      width:100%; 
-      max-width:600px; 
-      max-height:90vh; 
-      overflow-y:auto; 
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,170,0,0.1);
-      animation: modalAppear 0.3s ease;
-    }
-    
-    @keyframes modalAppear {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s ease;
+}
 
-    input, select {
-      width: 100%;
-      padding: 16px;
-      margin: 12px 0;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(0,0,0,0.3);
-      color: white;
-      font-family: 'Inter', sans-serif;
-      font-size: 16px;
-      min-height: 50px;
-      touch-action: manipulation;
-    }
-    
-    input:focus, select:focus {
-      outline: none;
-      border-color: #ffaa00;
-      box-shadow: 0 0 0 2px rgba(255,170,0,0.2);
-    }
-    
-    label {
-      display: block;
-      margin-top: 18px;
-      margin-bottom: 8px;
-      font-weight: 500;
-      color: #ccc;
-      font-size: 16px;
-    }
+.card:hover::before {
+  transform: scaleX(1);
+}
 
-    .modal-buttons {
-      display: flex;
-      gap: 15px;
-      margin-top: 20px;
-    }
-    
-    .modal-buttons .btn {
-      margin: 0;
-      flex: 1;
-      padding: 16px;
-      min-height: 54px;
-    }
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(255, 170, 0, 0.1);
+}
 
-    .fade-in {
-      animation: fadeIn 0.5s ease;
-    }
-    
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+/* Section Titles */
+.section-title {
+  font-size: clamp(20px, 5vw, 24px);
+  margin: 18px 0 12px;
+  color: var(--primary);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-    .status-bar {
-      height: 44px;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(10px);
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-bottom: 1px solid rgba(255,170,0,0.1);
-    }
-    
-    .status-time {
-      font-weight: 600;
-      font-size: 15px;
-      color: #ffaa00;
-    }
-    
-    .home-indicator {
-      height: 34px;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(10px);
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-top: 1px solid rgba(255,170,0,0.1);
-    }
-    
-    .home-line {
-      width: 134px;
-      height: 5px;
-      background: #ffaa00;
-      border-radius: 3px;
-      opacity: 0.7;
-    }
-    
-    .servico-pago {
-      color: #25D366;
-      font-weight: 600;
-    }
-    
-    .servico-fiado {
-      color: #FF9500;
-      font-weight: 600;
-    }
-    
-    .despesa-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      background: rgba(255,50,50,0.1);
-      margin: 8px 0;
-      border-radius: 10px;
-      border-left: 4px solid #ff3366;
-    }
-    
-    .despesa-valor {
-      color: #ff3366;
-      font-weight: 600;
-    }
-    
-    .calendario-container {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-    }
-    
-    .calendario-container input {
-      flex: 1;
-      min-width: 140px;
-    }
-    
-    .grafico-container {
-      width: 100%;
-      max-width: 400px;
-      margin: 20px auto;
-      height: 300px;
-    }
-    
-    .info-box {
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 15px;
-      margin: 10px 0;
-      border-left: 4px solid #ffaa00;
-    }
-    
-    .info-box h4 {
-      color: #ffaa00;
-      margin-bottom: 8px;
-    }
-    
-    .resumo-pagamentos {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-      margin: 20px 0;
-    }
-    
-    .resumo-pagamento-card {
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 18px;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-    
-    .resumo-pagamento-valor {
-      font-size: 20px;
-      font-weight: 700;
-      color: #ffaa00;
-      margin: 8px 0;
-    }
-    
-    .resumo-pagamento-label {
-      font-size: 14px;
-      color: #aaa;
-    }
-    
-    .servico-resumo-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin: 15px 0;
-    }
-    
-    .servico-resumo-item {
-      background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      padding: 12px;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-    
-    .servico-resumo-tipo {
-      font-size: 12px;
-      color: #ffaa00;
-      font-weight: 600;
-      margin-bottom: 5px;
-    }
-    
-    .servico-resumo-detalhes {
-      font-size: 11px;
-      color: #ccc;
-      line-height: 1.4;
-    }
-    
-    .barbeiro-comparacao {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-      margin: 20px 0;
-    }
-    
-    .barbeiro-metodos {
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 15px;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-    
-    .barbeiro-metodos-nome {
-      font-size: 16px;
-      font-weight: 700;
-      color: #ffaa00;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-    
-    .metodo-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .metodo-item:last-child {
-      border-bottom: none;
-    }
-    
-    .metodo-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .metodo-valor {
-      font-weight: 600;
-      color: #ffaa00;
-    }
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), transparent);
+}
 
-    @media (min-width: 768px) and (max-width: 1024px) {
-      .container {
-        max-width: 95%;
-        padding: 30px 25px;
-      }
-      
-      .stats-container {
-        gap: 20px;
-        margin: 25px 0;
-      }
-      
-      .stat-card {
-        padding: 22px 18px;
-        min-height: 120px;
-      }
-      
-      .stat-value {
-        font-size: 24px;
-      }
-      
-      .btn {
-        padding: 18px;
-        font-size: 18px;
-        min-height: 60px;
-      }
-      
-      .card {
-        padding: 25px;
-      }
-      
-      table {
-        font-size: 16px;
-      }
-      
-      th, td {
-        padding: 14px;
-      }
-      
-      .servico-resumo-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-      }
-      
-      .barbeiro-comparacao {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-      }
-    }
+/* Buttons */
+.btn {
+  width: 100%;
+  padding: 16px;
+  margin: 12px 0;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-size: clamp(16px, 4.5vw, 18px);
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  letter-spacing: 0.5px;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.voltar {
+  background: linear-gradient(45deg, var(--info), #0033cc);
+  color: var(--light);
+}
+
+.whatsapp {
+  background: linear-gradient(45deg, var(--success), #128C7E);
+  color: var(--light);
+}
+
+.resumo {
+  background: linear-gradient(45deg, var(--purple), #6600cc);
+  color: var(--light);
+}
+
+.despesas {
+  background: linear-gradient(45deg, var(--danger), #cc0033);
+  color: var(--light);
+}
+
+.config {
+  background: linear-gradient(45deg, #00aaff, #0066cc);
+  color: var(--light);
+}
+
+.pagamentos {
+  background: linear-gradient(45deg, var(--primary), #ff7733);
+  color: var(--dark);
+}
+
+.mensalistas {
+  background: linear-gradient(45deg, #00cc99, #009966);
+  color: var(--light);
+}
+
+/* Stats Container */
+.stats-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin: 20px 0;
+  gap: 15px;
+}
+
+.stat-card {
+  flex: 1 1 calc(50% - 15px);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius-sm);
+  padding: 18px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  touch-action: manipulation;
+  transition: var(--transition);
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 170, 0, 0.05), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stat-value {
+  font-size: clamp(18px, 4.5vw, 22px);
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--gray);
+}
+
+/* Barbeiro Stats */
+.barbeiro-stats {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.barbeiro-card {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius-sm);
+  padding: 20px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: var(--transition);
+}
+
+.barbeiro-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.barbeiro-nome {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: var(--primary);
+  position: relative;
+  display: inline-block;
+}
+
+.barbeiro-nome::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.barbeiro-card:hover .barbeiro-nome::after {
+  transform: scaleX(1);
+}
+
+.barbeiro-detalhes {
+  font-size: 14px;
+  color: #ccc;
+  line-height: 1.6;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+  font-size: clamp(14px, 3.5vw, 16px);
+  touch-action: manipulation;
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+}
+
+th, td {
+  border: 1px solid rgba(255, 170, 0, 0.3);
+  padding: 12px;
+  text-align: center;
+  min-height: 44px;
+}
+
+th {
+  background: rgba(255, 170, 0, 0.12);
+  font-weight: 700;
+  color: var(--primary);
+}
+
+tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+tr:hover {
+  background: rgba(255, 170, 0, 0.05);
+}
+
+/* Modals */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  backdrop-filter: blur(5px);
+  touch-action: manipulation;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: rgba(30, 30, 30, 0.98);
+  border-radius: var(--border-radius);
+  padding: 25px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 170, 0, 0.1);
+  animation: modalAppear 0.3s ease;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Form Elements */
+input, select {
+  width: 100%;
+  padding: 16px;
+  margin: 12px 0;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--light);
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  min-height: 50px;
+  touch-action: manipulation;
+  transition: var(--transition);
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(255, 170, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+label {
+  display: block;
+  margin-top: 18px;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #ccc;
+  font-size: 16px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.modal-buttons .btn {
+  margin: 0;
+  flex: 1;
+  padding: 16px;
+  min-height: 54px;
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Status Bar & Home Indicator */
+.status-bar {
+  height: 44px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid rgba(255, 170, 0, 0.1);
+}
+
+.status-time {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--primary);
+}
+
+.home-indicator {
+  height: 34px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 170, 0, 0.1);
+}
+
+.home-line {
+  width: 134px;
+  height: 5px;
+  background: var(--primary);
+  border-radius: 3px;
+  opacity: 0.7;
+}
+
+/* Status Classes */
+.servico-pago {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.servico-fiado {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+/* Despesas */
+.despesa-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 50, 50, 0.1);
+  margin: 8px 0;
+  border-radius: 10px;
+  border-left: 4px solid var(--danger);
+  transition: var(--transition);
+}
+
+.despesa-item:hover {
+  transform: translateX(5px);
+  background: rgba(255, 50, 50, 0.15);
+}
+
+.despesa-valor {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* Calendário */
+.calendario-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.calendario-container input {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* Gráfico */
+.grafico-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 20px auto;
+  height: 300px;
+}
+
+/* Info Box */
+.info-box {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius-sm);
+  padding: 15px;
+  margin: 10px 0;
+  border-left: 4px solid var(--primary);
+  transition: var(--transition);
+}
+
+.info-box:hover {
+  transform: translateX(5px);
+}
+
+.info-box h4 {
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+/* Resumo Pagamentos */
+.resumo-pagamentos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.resumo-pagamento-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius-sm);
+  padding: 18px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.resumo-pagamento-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.resumo-pagamento-card:hover::before {
+  opacity: 1;
+}
+
+.resumo-pagamento-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.resumo-pagamento-valor {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 8px 0;
+}
+
+.resumo-pagamento-label {
+  font-size: 14px;
+  color: var(--gray);
+}
+
+/* Serviços por Tipo */
+.servico-resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.servico-resumo-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: var(--transition);
+}
+
+.servico-resumo-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.servico-resumo-tipo {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.servico-resumo-detalhes {
+  font-size: 11px;
+  color: #ccc;
+  line-height: 1.4;
+}
+
+/* Comparação Barbeiros */
+.barbeiro-comparacao {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.barbeiro-metodos {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius-sm);
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: var(--transition);
+}
+
+.barbeiro-metodos:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.barbeiro-metodos-nome {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.metodo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: var(--transition);
+}
+
+.metodo-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.metodo-item:last-child {
+  border-bottom: none;
+}
+
+.metodo-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metodo-valor {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Action Buttons */
+.action-btn {
+  background: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  min-height: 36px;
+  min-width: 36px;
+  touch-action: manipulation;
+}
+
+.action-btn:hover {
+  background: #ff0044;
+  transform: scale(1.05);
+}
+
+.action-btn:active {
+  background: #ff0044;
+  transform: scale(0.95);
+}
+
+/* Seção Mensalistas */
+.mensalistas-section {
+  margin: 20px 0;
+}
+
+.mensalista-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius-sm);
+  padding: 18px;
+  margin: 12px 0;
+  border: 1px solid rgba(255, 170, 0, 0.2);
+  transition: var(--transition);
+}
+
+.mensalista-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(255, 170, 0, 0.1);
+}
+
+.mensalista-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.mensalista-nome {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.mensalista-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-pago {
+  background: rgba(37, 211, 102, 0.2);
+  color: var(--success);
+}
+
+.status-pendente {
+  background: rgba(255, 149, 0, 0.2);
+  color: var(--warning);
+}
+
+.mensalista-detalhes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.mensalista-valor {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Modal Mensalistas */
+.mensalista-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+/* Responsividade */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .container {
+    max-width: 95%;
+    padding: 30px 25px;
+  }
+  
+  .stats-container {
+    gap: 20px;
+    margin: 25px 0;
+  }
+  
+  .stat-card {
+    padding: 22px 18px;
+    min-height: 120px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+  }
+  
+  .btn {
+    padding: 18px;
+    font-size: 18px;
+    min-height: 60px;
+  }
+  
+  .card {
+    padding: 25px;
+  }
+  
+  table {
+    font-size: 16px;
+  }
+  
+  th, td {
+    padding: 14px;
+  }
+  
+  .servico-resumo-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  
+  .barbeiro-comparacao {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 767px) {
+  .barbeiro-stats {
+    flex-direction: column;
+  }
+  
+  .resumo-pagamentos {
+    grid-template-columns: 1fr;
+  }
+  
+  .barbeiro-comparacao {
+    grid-template-columns: 1fr;
+  }
+  
+  .servico-resumo-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-buttons {
+    flex-direction: column;
+  }
+  
+  .calendario-container {
+    flex-direction: column;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .mensalista-detalhes {
+    grid-template-columns: 1fr;
+  }
+}
   </style>
 </head>
 <body>
@@ -668,6 +1026,13 @@
       <div class="servico-resumo-grid" id="servicosPorTipo"></div>
     </div>
 
+    <!-- NOVA SEÇÃO: Mensalistas -->
+    <div class="card">
+      <h3 class="section-title">Mensalistas</h3>
+      <div id="listaMensalistas"></div>
+      <button class="btn mensalistas" onclick="abrirModalMensalistas()">GERENCIAR MENSALISTAS</button>
+    </div>
+
     <div class="card">
       <h3 class="section-title">Ações</h3>
       <button class="btn whatsapp" onclick="enviarResumoWhatsApp()">ENVIAR RESUMO DO DIA</button>
@@ -678,7 +1043,7 @@
     </div>
 
     <div class="card">
-      <h3 class="section-title">Últimos Serviços</h3>
+      <h3 class="section-title">Histórico de Serviços</h3>
       <div class="calendario-container">
         <input type="date" id="dataInicio" />
         <input type="date" id="dataFim" />
@@ -784,14 +1149,48 @@
     </div>
   </div>
 
+  <!-- NOVO MODAL: Mensalistas -->
+  <div id="modalMensalistas" class="modal">
+    <div class="modal-content">
+      <h3 class="section-title">Gerenciar Mensalistas</h3>
+      
+      <div class="calendario-container">
+        <input type="date" id="dataInicioMensalistas" />
+        <input type="date" id="dataFimMensalistas" />
+        <button class="btn mensalistas" onclick="filtrarMensalistas()" style="padding: 10px 15px; min-height: auto;">FILTRAR</button>
+      </div>
+      
+      <div id="listaMensalistasModal"></div>
+      
+      <div class="info-box" style="margin-top: 20px;">
+        <h4>Adicionar Novo Mensalista</h4>
+        <div class="mensalista-form">
+          <input id="nomeMensalista" placeholder="Nome do Cliente" maxlength="50" />
+          <div class="form-row">
+            <input id="valorMensalista" type="number" placeholder="Valor Mensal" min="1" step="0.01" />
+            <input id="vencimentoMensalista" type="number" placeholder="Dia Vencimento (1-31)" min="1" max="31" />
+          </div>
+          <select id="statusMensalista">
+            <option value="pago">Pago</option>
+            <option value="pendente">Pendente</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="modal-buttons">
+        <button class="btn mensalistas" onclick="adicionarMensalista()">ADICIONAR MENSALISTA</button>
+        <button class="btn voltar" onclick="fecharModal('modalMensalistas')">FECHAR</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-
-
     // Variáveis globais
     let dados = { 
       Gabriel: [], 
       Wagner: [], 
-      despesas: [] 
+      despesas: [],
+      mensalistas: []  // Adicionado array para mensalistas
     };
     
     let config = { 
@@ -821,6 +1220,10 @@
       const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
       document.getElementById('dataInicioPagamentos').value = primeiroDiaMes.toISOString().split('T')[0];
       document.getElementById('dataFimPagamentos').value = hoje.toISOString().split('T')[0];
+      
+      // Datas para mensalistas (mês atual)
+      document.getElementById('dataInicioMensalistas').value = primeiroDiaMes.toISOString().split('T')[0];
+      document.getElementById('dataFimMensalistas').value = hoje.toISOString().split('T')[0];
     });
 
     // Funções principais
@@ -856,6 +1259,7 @@
       atualizarServicosPorTipo();
       atualizarListaServicosRecentes();
       atualizarListaDespesas();
+      atualizarListaMensalistas();
       atualizarGraficoPizza();
     }
 
@@ -1162,10 +1566,11 @@
             <th>Valor</th>
             <th>Pagamento</th>
             <th>Status</th>
+            <th>Ação</th>
           </tr>
       `;
       
-      servicosFiltrados.forEach(servico => {
+      servicosFiltrados.forEach((servico, index) => {
         const barbeiro = dados.Gabriel.includes(servico) ? 'Gabriel' : 'Wagner';
         const status = servico.pago ? 'PAGO' : 'FIADO';
         const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
@@ -1188,6 +1593,9 @@
             <td>R$ ${servico.valor.toFixed(2)}</td>
             <td>${metodoIcon}</td>
             <td class="${statusClass}">${status}</td>
+            <td>
+              <button class="action-btn" onclick="excluirServico('${barbeiro}', ${index})">×</button>
+            </td>
           </tr>
         `;
       });
@@ -1198,6 +1606,30 @@
     
     function filtrarServicos() {
       atualizarListaServicosRecentes();
+    }
+
+    function excluirServico(barbeiro, index) {
+      if (confirm('Tem certeza que deseja excluir este serviço?')) {
+        // Encontrar o índice correto no array original
+        const servicosFiltrados = [...dados[barbeiro]];
+        const servicoParaExcluir = servicosFiltrados[index];
+        
+        // Encontrar o índice no array original
+        const indexOriginal = dados[barbeiro].findIndex(s => 
+          s.data === servicoParaExcluir.data && 
+          s.hora === servicoParaExcluir.hora && 
+          s.tipo === servicoParaExcluir.tipo &&
+          s.valor === servicoParaExcluir.valor
+        );
+        
+        if (indexOriginal !== -1) {
+          dados[barbeiro].splice(indexOriginal, 1);
+          salvarDados();
+          atualizarListaServicosRecentes();
+          atualizarDashboard();
+          alert('Serviço excluído com sucesso!');
+        }
+      }
     }
 
     function atualizarListaDespesas() {
@@ -1221,6 +1653,53 @@
               <div style="font-size:12px;color:#aaa;">${despesa.data}</div>
             </div>
             <div class="despesa-valor">R$ ${despesa.valor.toFixed(2)}</div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+    }
+    
+    // NOVA FUNÇÃO: Atualizar lista de mensalistas no dashboard
+    function atualizarListaMensalistas() {
+      const container = document.getElementById('listaMensalistas');
+      
+      if (dados.mensalistas.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum mensalista cadastrado</p>';
+        return;
+      }
+      
+      // Filtrar mensalistas do mês atual
+      const mesAtual = new Date().getMonth();
+      const anoAtual = new Date().getFullYear();
+      const mensalistasMes = dados.mensalistas.filter(m => {
+        const dataMensalista = new Date(m.dataInicio);
+        return dataMensalista.getMonth() === mesAtual && dataMensalista.getFullYear() === anoAtual;
+      });
+      
+      if (mensalistasMes.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum mensalista ativo este mês</p>';
+        return;
+      }
+      
+      let html = '';
+      
+      mensalistasMes.forEach(mensalista => {
+        const statusClass = mensalista.status === 'pago' ? 'status-pago' : 'status-pendente';
+        const statusText = mensalista.status === 'pago' ? 'PAGO' : 'PENDENTE';
+        
+        html += `
+          <div class="mensalista-card">
+            <div class="mensalista-header">
+              <div class="mensalista-nome">${mensalista.nome}</div>
+              <div class="mensalista-status ${statusClass}">${statusText}</div>
+            </div>
+            <div class="mensalista-detalhes">
+              <div>Valor: <span class="mensalista-valor">R$ ${mensalista.valor.toFixed(2)}</span></div>
+              <div>Vencimento: dia ${mensalista.vencimento}</div>
+              <div>Início: ${formatarDataBrasileira(mensalista.dataInicio)}</div>
+              <div>Status: ${mensalista.status === 'pago' ? '✅ Pago' : '⏳ Pendente'}</div>
+            </div>
           </div>
         `;
       });
@@ -1555,35 +2034,38 @@
           <tr>
             <th>Data</th>
             <th>Barbeiro</th>
-            <th>Serviço</th>
+                        <th>Serviço</th>
             <th>Valor</th>
-            <th>Método</th>
+            <th>Metodo</th>
           </tr>
       `;
-      
+
+      // Ordenar por data/hora decrescente
+      servicosFiltrados.sort((a, b) => new Date(b.data + ' ' + b.hora) - new Date(a.data + ' ' + a.hora));
+
       servicosFiltrados.forEach(servico => {
         const barbeiro = dados.Gabriel.includes(servico) ? 'Gabriel' : 'Wagner';
         let metodoIcon = '';
+        let metodoTexto = '';
         switch(servico.metodoPagamento) {
-          case 'dinheiro': metodoIcon = '💵 DINHEIRO'; break;
-          case 'pix': metodoIcon = '📱 PIX'; break;
-          case 'debito': metodoIcon = '💳 DÉBITO'; break;
-          case 'credito': metodoIcon = '💳 CRÉDITO'; break;
-          default: metodoIcon = '⚫ OUTRO';
+          case 'dinheiro': metodoIcon = '💵'; metodoTexto = 'Dinheiro'; break;
+          case 'pix': metodoIcon = '📱'; metodoTexto = 'PIX'; break;
+          case 'debito': metodoIcon = '💳'; metodoTexto = 'Débito'; break;
+          case 'credito': metodoIcon = '💳'; metodoTexto = 'Crédito'; break;
         }
-        
+
         html += `
           <tr>
-            <td>${servico.data}</td>
+            <td>${servico.data}<br><small>${servico.hora}</small></td>
             <td>${barbeiro}</td>
             <td>${servico.tipo}</td>
             <td>R$ ${servico.valor.toFixed(2)}</td>
-            <td>${metodoIcon}</td>
+            <td>${metodoIcon} ${metodoTexto}</td>
           </tr>
         `;
       });
-      
-      html += '</table>';
+
+      html += `</table>`;
       container.innerHTML = html;
     }
 
@@ -1594,86 +2076,199 @@
     function enviarRelatorioPagamentosWhatsApp() {
       const dataInicio = document.getElementById('dataInicioPagamentos').value;
       const dataFim = document.getElementById('dataFimPagamentos').value;
-      
-      // Filtrar serviços por data
-      const todosServicos = [...dados.Gabriel, ...dados.Wagner];
-      const servicosFiltrados = todosServicos.filter(s => {
-        return s.data >= dataInicio && s.data <= dataFim && s.pago;
-      });
-      
-      // Calcular totais
+      const periodo = dataInicio === dataFim 
+        ? `dia ${formatarDataBrasileira(dataInicio)}` 
+        : `período ${formatarDataBrasileira(dataInicio)} a ${formatarDataBrasileira(dataFim)}`;
+
+      const todosServicos = [...dados.Gabriel, ...dados.Wagner].filter(s => 
+        s.data >= dataInicio && s.data <= dataFim && s.pago
+      );
+
+      if (todosServicos.length === 0) {
+        alert('Nenhum pagamento no período selecionado!');
+        return;
+      }
+
       const totais = {
-        dinheiro: 0,
-        pix: 0,
-        debito: 0,
-        credito: 0,
-        total: 0
+        dinheiro: 0, pix: 0, debito: 0, credito: 0, total: 0
       };
-      
-      servicosFiltrados.forEach(servico => {
-        if (servico.metodoPagamento && servico.pago) {
-          totais[servico.metodoPagamento] += servico.valor;
-          totais.total += servico.valor;
+
+      todosServicos.forEach(s => {
+        if (s.metodoPagamento && s.pago) {
+          totais[s.metodoPagamento] += s.valor;
+          totais.total += s.valor;
         }
       });
-      
-      const mensagem = `
-*BARBAPRO - RELATÓRIO DE PAGAMENTOS*
 
-Período: ${new Date(dataInicio).toLocaleDateString('pt-BR')} a ${new Date(dataFim).toLocaleDateString('pt-BR')}
+      const mensagem = `*RELATÓRIO DE PAGAMENTOS*\n` +
+        `Período: ${periodo}\n\n` +
+        `💵 Dinheiro: R$ ${totais.dinheiro.toFixed(2)}\n` +
+        `📱 PIX: R$ ${totais.pix.toFixed(2)}\n` +
+        `💳 Débito: R$ ${totais.debito.toFixed(2)}\n` +
+        `💳 Crédito: R$ ${totais.credito.toFixed(2)}\n\n` +
+        `💰 *TOTAL RECEBIDO: R$ ${totais.total.toFixed(2)}*`;
 
-*TOTAIS POR MÉTODO:*
-💵 Dinheiro: R$ ${totais.dinheiro.toFixed(2)}
-📱 PIX: R$ ${totais.pix.toFixed(2)}
-💳 Débito: R$ ${totais.debito.toFixed(2)}
-💳 Crédito: R$ ${totais.credito.toFixed(2)}
-
-*TOTAL GERAL:* R$ ${totais.total.toFixed(2)}
-
-*DETALHES:*
-${servicosFiltrados.map(s => {
-  const barbeiro = dados.Gabriel.includes(s) ? 'Gabriel' : 'Wagner';
-  let metodo = '';
-  switch(s.metodoPagamento) {
-    case 'dinheiro': metodo = '💵'; break;
-    case 'pix': metodo = '📱'; break;
-    case 'debito': metodo = '💳 D'; break;
-    case 'credito': metodo = '💳 C'; break;
-    default: metodo = '⚫';
-  }
-  return `${s.data} - ${barbeiro} - ${s.tipo} - R$ ${s.valor.toFixed(2)} - ${metodo}`;
-}).join('\n')}
-
-_Enviado automaticamente pelo BarbaPRO Duo_
-      `.trim();
-
-      const url = `https://wa.me/55${config.whatsapp}?text=${encodeURIComponent(mensagem)}`;
+      const url = `https://wa.me/${config.whatsapp}?text=${encodeURIComponent(mensagem)}`;
       window.open(url, '_blank');
     }
 
     function abrirModalDespesas() {
       document.getElementById('modalDespesas').style.display = 'flex';
-      atualizarListaDespesasModal();
+      listarDespesasModal();
     }
 
-    function atualizarListaDespesasModal() {
+    function listarDespesasModal() {
       const container = document.getElementById('listaDespesas');
       if (dados.despesas.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;">Nenhuma despesa registrada</p>';
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhuma despesa cadastrada este mês</p>';
         return;
       }
 
-      let html = '';
-      dados.despesas.forEach((despesa, index) => {
+      const mesAtual = new Date().getMonth();
+      const anoAtual = new Date().getFullYear();
+      const despesasMes = dados.despesas.filter(d => {
+        const data = new Date(d.data);
+        return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
+      });
+
+      const totalDespesas = despesasMes.reduce((acc, d) => acc + d.valor, 0);
+
+      let html = `<div style="margin-bottom:15px; padding:12px; background:rgba(255,50,50,0.15); border-radius:10px; text-align:center;">
+        <div style="color:#ff3366; font-size:18px; font-weight:700;">Total de Despesas do Mês: R$ ${totalDespesas.toFixed(2)}</div>
+      </div>`;
+
+      despesasMes.sort((a, b) => new Date(b.data) - new Date(a.data)).forEach((d, i) => {
         html += `
           <div class="despesa-item">
             <div>
-              <div style="font-weight:600;">${despesa.desc}</div>
-              <div style="font-size:12px;color:#aaa;">${despesa.data}</div>
+              <div style="font-weight:600;">${d.desc}</div>
+              <div style="font-size:12px;color:#aaa;">${formatarDataBrasileira(d.data)}</div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div class="despesa-valor">R$ ${despesa.valor.toFixed(2)}</div>
-              <button style="background:#ff3366;color:white;border:none;border-radius:8px;width:36px;height:36px;font-size:16px;cursor:pointer;font-weight:600;" onclick="removerDespesa(${index})">×</button>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="despesa-valor">R$ ${d.valor.toFixed(2)}</div>
+              <button class="action-btn" onclick="excluirDespesa(${i})">×</button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function adicionarDespesa() {
+      const desc = document.getElementById('descDespesa').value.trim();
+      const valorStr = document.getElementById('valorDespesa').value;
+      
+      if (!desc || !valorStr) {
+        alert('Preencha descrição e valor!');
+        return;
+      }
+
+      const valor = parseFloat(valorStr);
+      if (isNaN(valor) || valor <= 0) {
+        alert('Valor inválido!');
+        return;
+      }
+
+      const hoje = new Date().toISOString().split('T')[0];
+      dados.despesas.push({ desc, valor, data: hoje });
+      salvarDados();
+      document.getElementById('descDespesa').value = '';
+      document.getElementById('valorDespesa').value = '';
+      listarDespesasModal();
+      atualizarListaDespesas();
+      atualizarDashboard();
+      alert('Despesa adicionada com sucesso!');
+    }
+
+    function excluirDespesa(index) {
+      if (confirm('Excluir esta despesa?')) {
+        dados.despesas.splice(index, 1);
+        salvarDados();
+        listarDespesasModal();
+        atualizarListaDespesas();
+        atualizarDashboard();
+      }
+    }
+
+    // NOVAS FUNÇÕES: Mensalistas
+    function abrirModalMensalistas() {
+      document.getElementById('modalMensalistas').style.display = 'flex';
+      listarMensalistasModal();
+    }
+
+    function listarMensalistasModal() {
+      const container = document.getElementById('listaMensalistasModal');
+      
+      if (dados.mensalistas.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum mensalista cadastrado</p>';
+        return;
+      }
+      
+      // Filtrar mensalistas por data
+      const dataInicio = document.getElementById('dataInicioMensalistas').value;
+      const dataFim = document.getElementById('dataFimMensalistas').value;
+      
+      const mensalistasFiltrados = dados.mensalistas.filter(m => {
+        return m.dataInicio >= dataInicio && m.dataInicio <= dataFim;
+      });
+      
+      if (mensalistasFiltrados.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum mensalista encontrado no período selecionado</p>';
+        return;
+      }
+      
+      // Calcular totais
+      const totalMensalistas = mensalistasFiltrados.length;
+      const totalValor = mensalistasFiltrados.reduce((acc, m) => acc + m.valor, 0);
+      const totalPagos = mensalistasFiltrados.filter(m => m.status === 'pago').length;
+      const totalPendentes = mensalistasFiltrados.filter(m => m.status === 'pendente').length;
+      
+      let html = `
+        <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;margin-bottom:20px;">
+          <h4 style="color:#00cc99; margin-bottom:15px; text-align:center;">RESUMO DE MENSALISTAS</h4>
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:15px;">
+            <div style="text-align:center;">
+              <div style="font-size:14px;color:#aaa;">TOTAL</div>
+              <div style="font-size:18px;font-weight:700;color:#00cc99;">${totalMensalistas}</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:14px;color:#aaa;">VALOR TOTAL</div>
+              <div style="font-size:18px;font-weight:700;color:#00cc99;">R$ ${totalValor.toFixed(2)}</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:14px;color:#aaa;">PAGOS</div>
+              <div style="font-size:18px;font-weight:700;color:#25D366;">${totalPagos}</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:14px;color:#aaa;">PENDENTES</div>
+              <div style="font-size:18px;font-weight:700;color:#FF9500;">${totalPendentes}</div>
+            </div>
+          </div>
+        </div>
+        
+        <h4 style="color:#00cc99; margin:20px 0 10px;">LISTA DE MENSALISTAS</h4>
+      `;
+      
+      mensalistasFiltrados.sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio)).forEach((mensalista, index) => {
+        const statusClass = mensalista.status === 'pago' ? 'status-pago' : 'status-pendente';
+        const statusText = mensalista.status === 'pago' ? 'PAGO' : 'PENDENTE';
+        
+        html += `
+          <div class="mensalista-card">
+            <div class="mensalista-header">
+              <div class="mensalista-nome">${mensalista.nome}</div>
+              <div class="mensalista-status ${statusClass}">${statusText}</div>
+            </div>
+            <div class="mensalista-detalhes">
+              <div>Valor: <span class="mensalista-valor">R$ ${mensalista.valor.toFixed(2)}</span></div>
+              <div>Vencimento: dia ${mensalista.vencimento}</div>
+              <div>Início: ${formatarDataBrasileira(mensalista.dataInicio)}</div>
+              <div>Status: ${mensalista.status === 'pago' ? '✅ Pago' : '⏳ Pendente'}</div>
+            </div>
+            <div style="margin-top:10px; display:flex; gap:10px;">
+              <button class="action-btn" style="background:#25D366;" onclick="alterarStatusMensalista(${index})">✓</button>
+              <button class="action-btn" onclick="excluirMensalista(${index})">×</button>
             </div>
           </div>
         `;
@@ -1682,159 +2277,151 @@ _Enviado automaticamente pelo BarbaPRO Duo_
       container.innerHTML = html;
     }
 
-    function adicionarDespesa() {
-      const desc = document.getElementById('descDespesa').value.trim() || 'Despesa';
-      const valor = parseFloat(document.getElementById('valorDespesa').value);
+    function filtrarMensalistas() {
+      listarMensalistasModal();
+    }
+
+    function adicionarMensalista() {
+      const nome = document.getElementById('nomeMensalista').value.trim();
+      const valorStr = document.getElementById('valorMensalista').value;
+      const vencimento = document.getElementById('vencimentoMensalista').value;
+      const status = document.getElementById('statusMensalista').value;
       
-      if (!valor || valor <= 0) {
-        alert('Por favor, insira um valor válido para a despesa.');
+      if (!nome || !valorStr || !vencimento) {
+        alert('Preencha todos os campos!');
         return;
       }
 
-      dados.despesas.push({
-        desc: desc,
-        valor: valor,
-        data: new Date().toISOString().split('T')[0]
+      const valor = parseFloat(valorStr);
+      if (isNaN(valor) || valor <= 0) {
+        alert('Valor inválido!');
+        return;
+      }
+
+      if (vencimento < 1 || vencimento > 31) {
+        alert('Dia de vencimento deve ser entre 1 e 31!');
+        return;
+      }
+
+      const hoje = new Date().toISOString().split('T')[0];
+      dados.mensalistas.push({ 
+        nome, 
+        valor, 
+        vencimento: parseInt(vencimento), 
+        status,
+        dataInicio: hoje
       });
       
       salvarDados();
-      atualizarListaDespesasModal();
-      atualizarDashboard();
       
       // Limpar campos
-      document.getElementById('descDespesa').value = '';
-      document.getElementById('valorDespesa').value = '';
-      document.getElementById('descDespesa').focus();
+      document.getElementById('nomeMensalista').value = '';
+      document.getElementById('valorMensalista').value = '';
+      document.getElementById('vencimentoMensalista').value = '';
+      document.getElementById('statusMensalista').value = 'pago';
+      
+      listarMensalistasModal();
+      atualizarListaMensalistas();
+      alert('Mensalista adicionado com sucesso!');
     }
 
-    function removerDespesa(index) {
-      if (confirm('Remover esta despesa?')) {
-        dados.despesas.splice(index, 1);
+    function alterarStatusMensalista(index) {
+      const mensalista = dados.mensalistas[index];
+      mensalista.status = mensalista.status === 'pago' ? 'pendente' : 'pago';
+      salvarDados();
+      listarMensalistasModal();
+      atualizarListaMensalistas();
+    }
+
+    function excluirMensalista(index) {
+      if (confirm('Tem certeza que deseja excluir este mensalista?')) {
+        dados.mensalistas.splice(index, 1);
         salvarDados();
-        atualizarListaDespesasModal();
-        atualizarDashboard();
+        listarMensalistasModal();
+        atualizarListaMensalistas();
+        alert('Mensalista excluído com sucesso!');
       }
     }
 
     function abrirModalConfiguracoes() {
       document.getElementById('modalConfig').style.display = 'flex';
       document.getElementById('numWhats').value = config.whatsapp;
+      document.getElementById('corteAtual').textContent = config.corte.toFixed(2);
+      document.getElementById('barbaAtual').textContent = config.barba.toFixed(2);
+      document.getElementById('comboAtual').textContent = config.combo.toFixed(2);
       document.getElementById('valCorte').value = '';
       document.getElementById('valBarba').value = '';
       document.getElementById('valCombo').value = '';
       document.getElementById('novoPin').value = '';
-      
-      // Atualizar valores atuais
-      document.getElementById('corteAtual').textContent = config.corte.toFixed(2);
-      document.getElementById('barbaAtual').textContent = config.barba.toFixed(2);
-      document.getElementById('comboAtual').textContent = config.combo.toFixed(2);
     }
 
     function salvarConfiguracoes() {
-      const numWhats = document.getElementById('numWhats').value.replace(/\D/g,'');
+      const numWhats = document.getElementById('numWhats').value.replace(/\D/g, '');
       const novoPin = document.getElementById('novoPin').value;
-      const valCorte = parseFloat(document.getElementById('valCorte').value) || config.corte;
-      const valBarba = parseFloat(document.getElementById('valBarba').value) || config.barba;
-      const valCombo = parseFloat(document.getElementById('valCombo').value) || config.combo;
 
       if (numWhats && numWhats.length >= 10) {
         config.whatsapp = numWhats;
       }
-      
-      if (novoPin.length === 4) {
+
+      if (novoPin && novoPin.length === 4 && /^\d+$/.test(novoPin)) {
         config.pin = novoPin;
+        alert('PIN alterado com sucesso!');
       }
-      
-      config.corte = valCorte;
-      config.barba = valBarba;
-      config.combo = valCombo;
+
+      const valCorte = parseFloat(document.getElementById('valCorte').value);
+      const valBarba = parseFloat(document.getElementById('valBarba').value);
+      const valCombo = parseFloat(document.getElementById('valCombo').value);
+
+      if (!isNaN(valCorte) && valCorte > 0) config.corte = valCorte;
+      if (!isNaN(valBarba) && valBarba > 0) config.barba = valBarba;
+      if (!isNaN(valCombo) && valCombo > 0) config.combo = valCombo;
 
       salvarDados();
-      fecharModal('modalConfig');
       alert('Configurações salvas com sucesso!');
+      fecharModal('modalConfig');
+    }
+
+    function enviarResumoWhatsApp() {
+      const resumo = calcularResumoCompleto();
+      const hoje = new Date().toLocaleDateString('pt-BR');
+      
+      const mensagem = `*RESUMO DO DIA - BarbaPRO Duo*\n` +
+        `${hoje}\n\n` +
+        `*GABRIEL*\n` +
+        `Recebido: R$ ${resumo.gabriel.totalPago.toFixed(2)}\n` +
+        `Fiado: R$ ${resumo.gabriel.totalFiado.toFixed(2)}\n` +
+        `Serviços: ${resumo.gabriel.totalServicos}\n\n` +
+        `*WAGNER*\n` +
+        `Recebido: R$ ${resumo.wagner.totalPago.toFixed(2)}\n` +
+        `Fiado: R$ ${resumo.wagner.totalFiado.toFixed(2)}\n` +
+        `Serviços: ${resumo.wagner.totalServicos}\n\n` +
+        `*TOTAL DO DIA*\n` +
+        `Recebido: R$ ${resumo.geral.totalPago.toFixed(2)}\n` +
+        `Fiado: R$ ${resumo.geral.totalFiado.toFixed(2)}\n` +
+        `Serviços: ${resumo.geral.totalServicos}`;
+
+      const url = `https://wa.me/${config.whatsapp}?text=${encodeURIComponent(mensagem)}`;
+      window.open(url, '_blank');
     }
 
     function fecharModal(id) {
       document.getElementById(id).style.display = 'none';
     }
 
-    // Funções de relatório
-    function enviarResumoWhatsApp() {
-      const resumo = calcularResumoCompleto();
-      const hoje = new Date().toISOString().split('T')[0];
-      const servicosGabriel = dados.Gabriel.filter(s => s.data === hoje && s.pago);
-      const servicosWagner = dados.Wagner.filter(s => s.data === hoje && s.pago);
-      
-      // Calcular métodos de pagamento para Gabriel
-      const gabrielMetodos = {
-        dinheiro: servicosGabriel.filter(s => s.metodoPagamento === 'dinheiro').reduce((acc, s) => acc + s.valor, 0),
-        pix: servicosGabriel.filter(s => s.metodoPagamento === 'pix').reduce((acc, s) => acc + s.valor, 0),
-        debito: servicosGabriel.filter(s => s.metodoPagamento === 'debito').reduce((acc, s) => acc + s.valor, 0),
-        credito: servicosGabriel.filter(s => s.metodoPagamento === 'credito').reduce((acc, s) => acc + s.valor, 0)
-      };
-      
-      // Calcular métodos de pagamento para Wagner
-      const wagnerMetodos = {
-        dinheiro: servicosWagner.filter(s => s.metodoPagamento === 'dinheiro').reduce((acc, s) => acc + s.valor, 0),
-        pix: servicosWagner.filter(s => s.metodoPagamento === 'pix').reduce((acc, s) => acc + s.valor, 0),
-        debito: servicosWagner.filter(s => s.metodoPagamento === 'debito').reduce((acc, s) => acc + s.valor, 0),
-        credito: servicosWagner.filter(s => s.metodoPagamento === 'credito').reduce((acc, s) => acc + s.valor, 0)
-      };
-      
-      const mensagem = `
-*BARBAPRO - RESUMO COMPLETO DO DIA*
-
-${new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-
-*GABRIEL*
-- Total Recebido: R$ ${resumo.gabriel.totalPago.toFixed(2)}
-- Fiado: R$ ${resumo.gabriel.totalFiado.toFixed(2)}
-- Serviços: ${resumo.gabriel.totalServicos}
-
-*Métodos de Pagamento - Gabriel:*
-💵 Dinheiro: R$ ${gabrielMetodos.dinheiro.toFixed(2)}
-📱 PIX: R$ ${gabrielMetodos.pix.toFixed(2)}
-💳 Débito: R$ ${gabrielMetodos.debito.toFixed(2)}
-💳 Crédito: R$ ${gabrielMetodos.credito.toFixed(2)}
-
-*WAGNER*
-- Total Recebido: R$ ${resumo.wagner.totalPago.toFixed(2)}
-- Fiado: R$ ${resumo.wagner.totalFiado.toFixed(2)}
-- Serviços: ${resumo.wagner.totalServicos}
-
-*Métodos de Pagamento - Wagner:*
-💵 Dinheiro: R$ ${wagnerMetodos.dinheiro.toFixed(2)}
-📱 PIX: R$ ${wagnerMetodos.pix.toFixed(2)}
-💳 Débito: R$ ${wagnerMetodos.debito.toFixed(2)}
-💳 Crédito: R$ ${wagnerMetodos.credito.toFixed(2)}
-
-*TOTAIS GERAIS*
-- Total Recebido: R$ ${resumo.geral.totalPago.toFixed(2)}
-- Total Fiado: R$ ${resumo.geral.totalFiado.toFixed(2)}
-- Total Serviços: ${resumo.geral.totalServicos}
-
-_Enviado automaticamente pelo BarbaPRO Duo_
-      `.trim();
-
-      const url = `https://wa.me/55${config.whatsapp}?text=${encodeURIComponent(mensagem)}`;
-      window.open(url, '_blank');
+    function formatarDataBrasileira(dataISO) {
+      const [ano, mes, dia] = dataISO.split('-');
+      return `${dia}/${mes}/${ano}`;
     }
 
-    // Fechar modais ao clicar fora
-    document.addEventListener('click', function(event) {
-      if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
-      }
+    // Fechar modal ao clicar fora
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.style.display = 'none';
+        }
+      });
     });
 
-    // Fechar com ESC
-    document.addEventListener('keydown', function(event) {
-      if (event.key === 'Escape') {
-        document.querySelectorAll('.modal').forEach(modal => {
-          modal.style.display = 'none';
-        });
-      }
-    });
   </script>
 </body>
 </html>
