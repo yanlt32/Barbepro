@@ -1,7 +1,16 @@
 {
   "Gabriel": [
     {
-      "hora": "16:34",
+      "hora": "17:36",
+      "tipo": "Corte",
+      "valor": 28,
+      "cliente": "Cliente",
+      "pago": true,
+      "metodoPagamento": "dinheiro",
+      "data": "2025-11-30"
+    },
+    {
+      "hora": "17:15",
       "tipo": "Corte",
       "valor": 28,
       "cliente": "Cliente",

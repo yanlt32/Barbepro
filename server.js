@@ -1,7 +1,13 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const WebSocket = require('ws');
+
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -49,6 +55,62 @@ function saveData(data) {
     }
 }
 
+// WebSocket - Notificações em tempo real
+wss.on('connection', function connection(ws) {
+    console.log('📱 Novo dispositivo conectado');
+    
+    ws.on('message', function message(data) {
+        try {
+            const message = JSON.parse(data);
+            
+            if (message.type === 'novo_servico') {
+                // Enviar notificação para TODOS os outros dispositivos
+                wss.clients.forEach(function each(client) {
+                    if (client !== ws && client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({
+                            type: 'notificacao',
+                            barbeiro: message.barbeiro,
+                            servico: message.servico,
+                            cliente: message.cliente,
+                            valor: message.valor,
+                            timestamp: new Date().toLocaleTimeString('pt-BR')
+                        }));
+                    }
+                });
+            }
+            
+            if (message.type === 'atualizar_dashboard') {
+                // Forçar atualização do dashboard em todos os dispositivos
+                wss.clients.forEach(function each(client) {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({
+                            type: 'atualizar'
+                        }));
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Erro ao processar mensagem WebSocket:', error);
+        }
+    });
+});
+
+// Função para enviar notificação
+function enviarNotificacao(barbeiro, servico, cliente, valor) {
+    wss.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({
+                type: 'notificacao',
+                barbeiro: barbeiro,
+                servico: servico,
+                cliente: cliente,
+                valor: valor,
+                timestamp: new Date().toLocaleTimeString('pt-BR')
+            }));
+        }
+    });
+}
+
 // Rotas principais
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -66,8 +128,19 @@ app.get('/api/data', (req, res) => {
 
 app.post('/api/save', (req, res) => {
     try {
-        const { data } = req.body;
+        const { data, notificar } = req.body;
+        
         if (saveData(data)) {
+            // Se for para notificar (novo serviço)
+            if (notificar && notificar.barbeiro && notificar.servico) {
+                enviarNotificacao(
+                    notificar.barbeiro,
+                    notificar.servico,
+                    notificar.cliente,
+                    notificar.valor
+                );
+            }
+            
             res.json({ success: true, message: 'Dados salvos com sucesso' });
         } else {
             res.status(500).json({ success: false, error: 'Erro ao salvar dados' });
@@ -77,11 +150,12 @@ app.post('/api/save', (req, res) => {
     }
 });
 
-// Health check para Render
+// Health check
 app.get('/health', (req, res) => {
     res.json({ 
         status: 'online', 
         service: 'BarbaPRO Duo',
+        websocket: 'ativo',
         timestamp: new Date().toISOString(),
         version: '1.0.0'
     });
@@ -93,9 +167,9 @@ app.get('*', (req, res) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor BarbaPRO rodando na porta ${PORT}`);
-    console.log(`📱 Acesse: http://localhost:${PORT}`);
-    console.log(`💈 Barbearia Online - Sistema de Gestão`);
+    console.log(`📱 WebSocket ativo para notificações em tempo real`);
+    console.log(`💈 Acesse: http://localhost:${PORT}`);
     console.log(`💾 Dados salvos em: ${DATA_FILE}`);
 });

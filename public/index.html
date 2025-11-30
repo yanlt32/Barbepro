@@ -491,19 +491,22 @@ input, select {
     let metodoPagamentoSelecionado = null;
     let metodoPagamentoCustomSelecionado = null;
     let dataFiltroAtual = null;
+    let ws = null;
 
     // Inicialização
     document.addEventListener('DOMContentLoaded', function() {
       carregarDados();
       aplicarConfiguracoes();
       atualizarInterface();
+      conectarWebSocket();
       
       const hoje = new Date().toISOString().split('T')[0];
       document.getElementById('dataFiltro').value = hoje;
       dataFiltroAtual = hoje;
     });
 
-    // Funções principais
+    // ========== FUNÇÕES PRINCIPAIS ==========
+
     async function carregarDados() {
       try {
         const response = await fetch('/api/data');
@@ -515,7 +518,6 @@ input, select {
         }
       } catch (error) {
         console.log('Usando dados locais');
-        // Se falhar, usa localStorage como fallback
         const salvo = localStorage.getItem('barbapro_duo');
         if (salvo) {
           Object.assign(dados, JSON.parse(salvo));
@@ -525,7 +527,6 @@ input, select {
 
     async function salvarDados() {
       try {
-        // Tenta salvar no servidor primeiro
         const response = await fetch('/api/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -536,7 +537,6 @@ input, select {
           throw new Error('Falha ao salvar no servidor');
         }
       } catch (error) {
-        // Fallback para localStorage
         console.log('Salvando localmente');
         localStorage.setItem('barbapro_duo', JSON.stringify(dados));
       }
@@ -552,7 +552,8 @@ input, select {
       atualizarListaServicos();
     }
 
-    // Funções de serviço
+    // ========== FUNÇÕES DE SERVIÇOS ==========
+
     function abrirModalPagamento(tipo) {
       servicoSelecionado = tipo;
       metodoPagamentoSelecionado = null;
@@ -637,7 +638,8 @@ input, select {
       };
 
       dados[usuarioAtual].unshift(servico);
-      await salvarDados();
+      
+      await salvarDadosComNotificacao(usuarioAtual, nome, nomeCliente, valor);
       atualizarInterface();
       fecharModal('modalPagamento');
       
@@ -648,14 +650,20 @@ input, select {
     function abrirModalOutro() {
       document.getElementById('modalOutro').style.display = 'flex';
       metodoPagamentoCustomSelecionado = null;
+      document.getElementById('valorCustom').value = '';
+      document.getElementById('nomeCliente').value = '';
+      document.getElementById('pagoCustom').value = '1';
+      
       document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
     }
 
     async function salvarServicoCustom() {
-      const valor = parseFloat(document.getElementById('valorCustom').value);
-      if (!valor || valor <= 0) {
+      const valorInput = document.getElementById('valorCustom').value;
+      const valor = parseFloat(valorInput);
+      
+      if (!valorInput || valor <= 0 || isNaN(valor)) {
         alert('Insira um valor válido!');
         return;
       }
@@ -665,32 +673,52 @@ input, select {
         return;
       }
 
+      const nomeCliente = document.getElementById('nomeCliente').value.trim() || 'Cliente';
+      const pago = document.getElementById('pagoCustom').value === '1';
+
       const servico = {
         hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
         tipo: 'Outro',
         valor: valor,
-        cliente: document.getElementById('nomeCliente').value.trim() || 'Cliente',
-        pago: document.getElementById('pagoCustom').value === '1',
+        cliente: nomeCliente,
+        pago: pago,
         metodoPagamento: metodoPagamentoCustomSelecionado,
         data: new Date().toISOString().split('T')[0]
       };
 
       dados[usuarioAtual].unshift(servico);
-      await salvarDados();
+      
+      if (pago) {
+        await salvarDadosComNotificacao(usuarioAtual, 'Outro', nomeCliente, valor);
+      } else {
+        await salvarDados();
+      }
+      
       atualizarInterface();
       fecharModal('modalOutro');
       
-      document.getElementById('valorCustom').value = '';
-      document.getElementById('nomeCliente').value = '';
-      document.getElementById('pagoCustom').value = '1';
       metodoPagamentoCustomSelecionado = null;
     }
 
     async function apagarServico(index) {
-      if (confirm('Apagar este serviço?')) {
-        dados[usuarioAtual].splice(index, 1);
-        await salvarDados();
-        atualizarInterface();
+      if (confirm('Tem certeza que deseja apagar este serviço?')) {
+        // Encontrar o índice global do serviço na lista completa
+        const dataFiltro = dataFiltroAtual || new Date().toISOString().split('T')[0];
+        const servicosFiltrados = dados[usuarioAtual].filter(s => s.data === dataFiltro);
+        const servicoParaApagar = servicosFiltrados[index];
+        
+        // Encontrar o índice real na lista completa
+        const indiceReal = dados[usuarioAtual].findIndex(s => 
+          s.data === servicoParaApagar.data && 
+          s.hora === servicoParaApagar.hora && 
+          s.cliente === servicoParaApagar.cliente
+        );
+        
+        if (indiceReal !== -1) {
+          dados[usuarioAtual].splice(indiceReal, 1);
+          await salvarDados();
+          atualizarInterface();
+        }
       }
     }
 
@@ -700,11 +728,14 @@ input, select {
       const container = document.getElementById('listaServicos');
       
       if (lista.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum serviço registrado</p>';
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum serviço registrado hoje</p>';
         return;
       }
 
       let html = `
+        <div style="margin-bottom: 15px; text-align: center; color: var(--primary); font-weight: 600;">
+          Total do dia: R$ ${calcularTotalDia(lista).toFixed(2)}
+        </div>
         <table>
           <tr>
             <th>Hora</th>
@@ -717,7 +748,6 @@ input, select {
       `;
       
       lista.forEach((servico, index) => {
-        const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
         const status = servico.pago ? 'PAGO' : 'FIADO';
         
         let metodoIcon = '';
@@ -726,6 +756,7 @@ input, select {
           case 'pix': metodoIcon = '📱'; break;
           case 'debito': metodoIcon = '💳'; break;
           case 'credito': metodoIcon = '💳'; break;
+          default: metodoIcon = '💰';
         }
         
         html += `
@@ -734,9 +765,14 @@ input, select {
             <td>${servico.tipo}</td>
             <td>${servico.cliente}</td>
             <td>R$ ${servico.valor.toFixed(2)}</td>
-            <td style="color: ${servico.pago ? '#25D366' : '#FF9500'}; font-weight:600;">${metodoIcon} ${status}</td>
+            <td style="color: ${servico.pago ? '#25D366' : '#FF9500'}; font-weight:600;">
+              ${metodoIcon} ${status}
+            </td>
             <td>
-              <button style="background:#ff3366; color:white; border:none; border-radius:8px; width:36px; height:36px; cursor:pointer;" onclick="apagarServico(${index})">×</button>
+              <button style="background:#ff3366; color:white; border:none; border-radius:8px; width:36px; height:36px; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center;" 
+                      onclick="apagarServico(${index})" title="Apagar serviço">
+                ×
+              </button>
             </td>
           </tr>
         `;
@@ -744,6 +780,10 @@ input, select {
       
       html += '</table>';
       container.innerHTML = html;
+    }
+
+    function calcularTotalDia(servicos) {
+      return servicos.reduce((total, servico) => total + servico.valor, 0);
     }
 
     function filtrarServicos() {
@@ -761,6 +801,8 @@ input, select {
       atualizarListaServicos();
     }
 
+    // ========== FUNÇÕES DE USUÁRIO ==========
+
     function trocarUsuario() {
       usuarioAtual = usuarioAtual === 'Gabriel' ? 'Wagner' : 'Gabriel';
       document.getElementById('usuarioAtual').textContent = usuarioAtual;
@@ -768,30 +810,218 @@ input, select {
       atualizarInterface();
     }
 
+    // ========== FUNÇÕES DE MODAL ==========
+
     function fecharModal(id) {
       document.getElementById(id).style.display = 'none';
     }
 
     function irParaDashboard() {
       document.getElementById('modalSenhaDashboard').style.display = 'flex';
+      document.getElementById('pinDashboard').value = '';
+      document.getElementById('pinDashboard').focus();
     }
 
     function verificarSenhaDashboard() {
       const senha = document.getElementById('pinDashboard').value;
-      if (senha === '9828') {
+      if (senha === dados.config.pin || senha === '9828') {
         window.location.href = '/dashboard';
       } else {
         alert('Senha incorreta!');
         document.getElementById('pinDashboard').value = '';
+        document.getElementById('pinDashboard').focus();
       }
     }
 
-    // Fechar modais ao clicar fora
+    // ========== WEBSOCKET E NOTIFICAÇÕES ==========
+
+    function conectarWebSocket() {
+        try {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                console.log('🔗 Conectado ao servidor de notificações');
+            };
+            
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'notificacao') {
+                        mostrarNotificacao(data);
+                    }
+                    
+                    if (data.type === 'atualizar') {
+                        carregarDados();
+                    }
+                } catch (error) {
+                    console.error('Erro ao processar mensagem:', error);
+                }
+            };
+            
+            ws.onclose = function() {
+                console.log('🔌 Conexão fechada, tentando reconectar...');
+                setTimeout(conectarWebSocket, 5000);
+            };
+            
+            ws.onerror = function(error) {
+                console.error('Erro WebSocket:', error);
+            };
+            
+        } catch (error) {
+            console.error('Erro ao conectar WebSocket:', error);
+        }
+    }
+
+    function mostrarNotificacao(data) {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("💈 BarbaPRO - Novo Serviço", {
+                body: `${data.barbeiro} realizou ${data.servico} para ${data.cliente}\nValor: R$ ${data.valor}\n${data.timestamp}`,
+                icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💈</text></svg>",
+                tag: "barbapro-notification"
+            });
+        }
+        
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(255, 170, 0, 0.3);
+            z-index: 10000;
+            max-width: 300px;
+            animation: slideInRight 0.3s ease;
+            border-left: 4px solid var(--success);
+            font-family: inherit;
+        `;
+        
+        notification.innerHTML = `
+            <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">💈 Novo Serviço</div>
+            <div style="font-size: 14px; line-height: 1.4;">
+                <strong>${data.barbeiro}</strong> - ${data.servico}<br>
+                <strong>Cliente:</strong> ${data.cliente}<br>
+                <strong>Valor:</strong> R$ ${data.valor}<br>
+                <small style="opacity: 0.8;">${data.timestamp}</small>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 5000);
+    }
+
+    async function salvarDadosComNotificacao(barbeiro, servico, cliente, valor) {
+        try {
+            const response = await fetch('/api/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    data: dados,
+                    notificar: {
+                        barbeiro: barbeiro,
+                        servico: servico,
+                        cliente: cliente,
+                        valor: valor,
+                        timestamp: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
+                    }
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Falha ao salvar no servidor');
+            }
+        } catch (error) {
+            console.log('Salvando localmente');
+            localStorage.setItem('barbapro_duo', JSON.stringify(dados));
+        }
+    }
+
+    // ========== EVENT LISTENERS ==========
+
     document.addEventListener('click', function(event) {
-      if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
-      }
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
     });
-  </script>
+
+    // Enter para confirmar senha do dashboard
+    document.getElementById('pinDashboard')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            verificarSenhaDashboard();
+        }
+    });
+
+    // Enter para confirmar serviços customizados
+    document.getElementById('valorCustom')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            salvarServicoCustom();
+        }
+    });
+
+    // ========== CSS DINÂMICO ==========
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        .servico-pago {
+            color: var(--success) !important;
+        }
+        
+        .servico-fiado {
+            color: var(--warning) !important;
+        }
+        
+        /* Melhorias para mobile */
+        @media (max-width: 480px) {
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px 4px;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // ========== FUNÇÕES UTILITÁRIAS ==========
+
+    function formatarData(data) {
+        return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+    }
+
+    function obterDataAtual() {
+        return new Date().toISOString().split('T')[0];
+    }
+
+    function obterHoraAtual() {
+        return new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    }
+
+    console.log('💈 BarbaPRO Duo - Sistema carregado com sucesso!');
+</script>
 </body>
 </html>

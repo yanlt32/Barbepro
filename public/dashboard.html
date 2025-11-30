@@ -2412,6 +2412,102 @@ label {
         }
       });
     });
+
+
+
+    // WebSocket para notificações (adicionar no dashboard também)
+let wsDashboard = null;
+
+function conectarWebSocketDashboard() {
+    try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}`;
+        
+        wsDashboard = new WebSocket(wsUrl);
+        
+        wsDashboard.onopen = function() {
+            console.log('📊 Dashboard conectado ao servidor');
+        };
+        
+        wsDashboard.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'notificacao') {
+                    mostrarNotificacaoDashboard(data);
+                }
+                
+                if (data.type === 'atualizar') {
+                    // Atualizar dashboard automaticamente
+                    carregarDados();
+                    atualizarDashboard();
+                }
+            } catch (error) {
+                console.error('Erro ao processar mensagem:', error);
+            }
+        };
+        
+        wsDashboard.onclose = function() {
+            console.log('🔌 Dashboard desconectado, tentando reconectar...');
+            setTimeout(conectarWebSocketDashboard, 3000);
+        };
+        
+    } catch (error) {
+        console.error('Erro WebSocket no dashboard:', error);
+    }
+}
+
+function mostrarNotificacaoDashboard(data) {
+    // Notificação no dashboard
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: linear-gradient(45deg, #00cc99, #009966);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 204, 153, 0.3);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideIn 0.3s ease;
+        border-left: 4px solid #ffaa00;
+    `;
+    
+    notification.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 5px;">📊 Novo Serviço no Sistema</div>
+        <div style="font-size: 14px;">
+            <strong>${data.barbeiro}</strong> - ${data.servico}<br>
+            Cliente: ${data.cliente}<br>
+            Valor: R$ ${data.valor}<br>
+            <small>${data.timestamp}</small>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remover após 5 segundos
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 5000);
+    
+    // Atualizar dashboard automaticamente
+    setTimeout(() => {
+        carregarDados();
+        atualizarDashboard();
+    }, 1000);
+}
+
+// Inicializar WebSocket no dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    conectarWebSocketDashboard();
+});
   </script>
 </body>
 </html>
