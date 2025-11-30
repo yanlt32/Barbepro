@@ -1,0 +1,23 @@
+{
+  "Gabriel": [
+    {
+      "hora": "16:34",
+      "tipo": "Corte",
+      "valor": 28,
+      "cliente": "Cliente",
+      "pago": true,
+      "metodoPagamento": "dinheiro",
+      "data": "2025-11-30"
+    }
+  ],
+  "Wagner": [],
+  "despesas": [],
+  "mensalistas": [],
+  "config": {
+    "pin": "1234",
+    "whatsapp": "11962094589",
+    "corte": 28,
+    "barba": 15,
+    "combo": 40
+  }
+}
