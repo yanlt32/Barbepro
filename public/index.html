@@ -65,17 +65,18 @@ html, body {
 
 h1 {
   font-family: 'Arial', sans-serif;
-  font-size: clamp(42px, 10vw, 72px);
+  font-size: clamp(36px, 8vw, 72px);
   color: var(--primary);
   margin: 10px 0 5px;
   letter-spacing: 3px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   font-weight: 700;
+  padding: 0 70px;
 }
 
 .subtitle {
   color: var(--primary);
-  font-size: clamp(16px, 4vw, 20px);
+  font-size: clamp(14px, 3.5vw, 20px);
   margin-bottom: 8px;
   font-weight: 400;
   letter-spacing: 2px;
@@ -84,25 +85,44 @@ h1 {
 
 .trocar-usuario {
   position:absolute; 
-  top:15px; 
-  right:15px; 
+  top: 15px; 
+  right: 15px; 
   background:rgba(255,255,255,0.12); 
   border:1px solid rgba(255,170,0,0.4); 
-  padding:12px 20px; 
+  padding: 10px 15px; 
   border-radius:16px; 
   font-weight:700; 
-  font-size:clamp(14px, 3.5vw, 16px); 
+  font-size: clamp(13px, 3vw, 16px); 
   backdrop-filter:blur(10px); 
   color: var(--primary);
   cursor: pointer;
   transition: var(--transition);
-  min-height: 44px;
-  min-width: 80px;
+  min-height: 40px;
+  min-width: 70px;
+  white-space: nowrap;
 }
 
 .trocar-usuario:hover {
   background:rgba(255,255,255,0.18);
   transform: translateY(-2px);
+}
+
+.usuario-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 20px;
+  background: rgba(255,170,0,0.1);
+  font-size: clamp(14px, 3.5vw, 16px);
+  margin-top: 8px;
+}
+
+.usuario-status {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
 }
 
 /* Cards */
@@ -286,6 +306,61 @@ input, select {
   font-size: 16px;
 }
 
+/* Filtro Container - RESPONSIVO OTIMIZADO */
+.filtro-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.filtro-data {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.3);
+  color: var(--light);
+  font-size: 16px;
+}
+
+.filtro-botoes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.filtro-btn {
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  min-height: 48px;
+}
+
+.filtro-filtrar {
+  background: rgba(255,170,0,0.2);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+
+.filtro-hoje {
+  background: rgba(51, 102, 255, 0.2);
+  color: var(--info);
+  border: 1px solid var(--info);
+}
+
+.filtro-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.filtro-btn:active {
+  transform: translateY(0);
+}
+
 /* Método Pagamento Grid */
 .metodo-pagamento-grid {
   display: grid;
@@ -319,6 +394,35 @@ input, select {
   border-color: var(--primary);
 }
 
+/* Action Button */
+.action-btn {
+  background: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  min-height: 36px;
+  min-width: 36px;
+  touch-action: manipulation;
+}
+
+.action-btn:hover {
+  background: #ff0044;
+  transform: scale(1.05);
+}
+
+.action-btn:active {
+  background: #ff0044;
+  transform: scale(0.95);
+}
+
 /* Responsividade */
 @media (max-width: 767px) {
   .servicos-grid {
@@ -328,6 +432,105 @@ input, select {
   .metodo-pagamento-grid {
     grid-template-columns: 1fr;
   }
+  
+  .header {
+    padding: 15px 0;
+  }
+  
+  h1 {
+    padding: 0 60px;
+    font-size: clamp(32px, 9vw, 60px);
+  }
+  
+  .trocar-usuario {
+    padding: 8px 12px;
+    min-height: 36px;
+    min-width: 60px;
+    font-size: 12px;
+    top: 12px;
+    right: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 15px 12px;
+  }
+  
+  .card {
+    padding: 15px;
+  }
+  
+  h1 {
+    padding: 0 50px;
+    font-size: clamp(28px, 10vw, 48px);
+  }
+  
+  .filtro-botoes {
+    grid-template-columns: 1fr;
+  }
+  
+  .btn {
+    padding: 14px;
+    min-height: 50px;
+    font-size: 15px;
+  }
+  
+  .servico-btn {
+    padding: 15px;
+    min-height: 100px;
+  }
+  
+  .trocar-usuario {
+    padding: 6px 10px;
+    min-height: 32px;
+    min-width: 50px;
+    font-size: 11px;
+    top: 10px;
+    right: 10px;
+  }
+  
+  table {
+    font-size: 12px;
+  }
+  
+  th, td {
+    padding: 8px 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  h1 {
+    padding: 0 45px;
+    font-size: clamp(24px, 11vw, 40px);
+  }
+  
+  .trocar-usuario {
+    padding: 5px 8px;
+    min-width: 45px;
+    font-size: 10px;
+  }
+}
+
+/* Animations */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+.servico-pago {
+  color: var(--success) !important;
+  font-weight: 600;
+}
+
+.servico-fiado {
+  color: var(--warning) !important;
+  font-weight: 600;
 }
   </style>
 </head>
@@ -336,8 +539,8 @@ input, select {
     <div class="header">
       <h1>BarbaPRO</h1>
       <div class="subtitle">Sistema de Registro</div>
-      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 20px; background: rgba(255,170,0,0.1); font-size: 16px; margin-top: 8px;">
-        <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--primary);"></div>
+      <div class="usuario-info">
+        <div class="usuario-status"></div>
         <span id="usuarioAtual">Gabriel</span>
       </div>
       <button class="trocar-usuario" onclick="trocarUsuario()">
@@ -346,7 +549,7 @@ input, select {
     </div>
 
     <div class="card">
-      <h3 style="font-size:20px; margin:18px 0 12px; color: var(--primary); font-weight:700;">Registrar Serviço</h3>
+      <h3 style="font-size:clamp(18px, 4.5vw, 20px); margin:18px 0 12px; color: var(--primary); font-weight:700;">Registrar Serviço</h3>
       <div class="servicos-grid">
         <div class="servico-btn corte" onclick="abrirModalPagamento('corte')">
           <div class="servico-nome">CORTE</div>
@@ -374,12 +577,14 @@ input, select {
     </div>
 
     <div class="card">
-      <h3 style="font-size:20px; margin:18px 0 12px; color: var(--primary); font-weight:700;">Serviços - <span id="nomeUsuario">Gabriel</span></h3>
+      <h3 style="font-size:clamp(18px, 4.5vw, 20px); margin:18px 0 12px; color: var(--primary); font-weight:700;">Serviços - <span id="nomeUsuario">Gabriel</span></h3>
       
-      <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-        <input type="date" id="dataFiltro" style="flex:1;" />
-        <button class="btn secundario" onclick="filtrarServicos()" style="padding: 10px 15px; margin:0;">FILTRAR</button>
-        <button class="btn secundario" onclick="limparFiltro()" style="padding: 10px 15px; margin:0;">HOJE</button>
+      <div class="filtro-container">
+        <input type="date" class="filtro-data" id="dataFiltro" />
+        <div class="filtro-botoes">
+          <button class="filtro-btn filtro-filtrar" onclick="filtrarServicos()">FILTRAR</button>
+          <button class="filtro-btn filtro-hoje" onclick="limparFiltro()">HOJE</button>
+        </div>
       </div>
       
       <div id="listaServicos"></div>
@@ -389,7 +594,7 @@ input, select {
   <!-- Modal Pagamento -->
   <div id="modalPagamento" class="modal">
     <div class="modal-content">
-      <h3 style="font-size:20px; margin:18px 0 12px; color: var(--primary); font-weight:700;">Forma de Pagamento</h3>
+      <h3 style="font-size:clamp(18px, 4.5vw, 20px); margin:18px 0 12px; color: var(--primary); font-weight:700;">Forma de Pagamento</h3>
       <p style="margin-bottom: 15px; color: #ccc; text-align: center;">
         Serviço: <span id="servicoSelecionadoNome" style="color: #ffaa00; font-weight: 600;"></span><br>
         Valor: <span id="servicoSelecionadoValor" style="color: #ffaa00; font-weight: 600;"></span>
@@ -426,7 +631,7 @@ input, select {
   <!-- Modal Outro Valor -->
   <div id="modalOutro" class="modal">
     <div class="modal-content">
-      <h3 style="font-size:20px; margin:18px 0 12px; color: var(--primary); font-weight:700;">Novo Serviço Personalizado</h3>
+      <h3 style="font-size:clamp(18px, 4.5vw, 20px); margin:18px 0 12px; color: var(--primary); font-weight:700;">Novo Serviço Personalizado</h3>
       <input id="valorCustom" type="number" placeholder="Valor do serviço" min="1" step="0.01" />
       <input id="nomeCliente" placeholder="Nome do cliente (opcional)" maxlength="30" />
       
@@ -460,7 +665,7 @@ input, select {
   <!-- Modal Senha Dashboard -->
   <div id="modalSenhaDashboard" class="modal">
     <div class="modal-content">
-      <h3 style="font-size:20px; margin:18px 0 12px; color: var(--primary); font-weight:700;">Acessar Dashboard</h3>
+      <h3 style="font-size:clamp(18px, 4.5vw, 20px); margin:18px 0 12px; color: var(--primary); font-weight:700;">Acessar Dashboard</h3>
       <p style="margin-bottom: 15px; color: #ccc;">Digite a senha para acessar o Dashboard:</p>
       <input type="password" id="pinDashboard" placeholder="Digite a senha" maxlength="4" />
       <div style="display: flex; gap: 15px; margin-top: 20px;">
@@ -510,17 +715,40 @@ input, select {
     async function carregarDados() {
       try {
         const response = await fetch('/api/data');
+        if (!response.ok) {
+          throw new Error('Erro na resposta do servidor');
+        }
         const result = await response.json();
         if (result.success) {
           Object.assign(dados, result.data);
           aplicarConfiguracoes();
           atualizarInterface();
+        } else {
+          throw new Error('Dados inválidos do servidor');
         }
       } catch (error) {
-        console.log('Usando dados locais');
+        console.log('Usando dados locais:', error.message);
         const salvo = localStorage.getItem('barbapro_duo');
         if (salvo) {
-          Object.assign(dados, JSON.parse(salvo));
+          try {
+            Object.assign(dados, JSON.parse(salvo));
+          } catch (parseError) {
+            console.error('Erro ao parsear dados locais:', parseError);
+            // Inicializar com dados padrão
+            dados = { 
+              Gabriel: [], 
+              Wagner: [], 
+              despesas: [],
+              mensalistas: [],
+              config: { 
+                pin: '1234', 
+                whatsapp: '11962094589', 
+                corte: 28, 
+                barba: 15, 
+                combo: 40 
+              }
+            };
+          }
         }
       }
     }
@@ -536,16 +764,65 @@ input, select {
         if (!response.ok) {
           throw new Error('Falha ao salvar no servidor');
         }
+        console.log('Dados salvos com sucesso no servidor');
       } catch (error) {
-        console.log('Salvando localmente');
+        console.log('Salvando localmente:', error.message);
         localStorage.setItem('barbapro_duo', JSON.stringify(dados));
       }
     }
 
+    async function salvarDadosComNotificacao(barbeiro, servico, cliente, valor) {
+      try {
+        const notificacao = {
+          barbeiro: barbeiro,
+          servico: servico,
+          cliente: cliente,
+          valor: valor,
+          timestamp: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
+        };
+        
+        const response = await fetch('/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            data: dados,
+            notificar: notificacao
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Falha ao salvar com notificação');
+        }
+        
+        console.log('Dados e notificação salvos com sucesso');
+        
+        // Enviar notificação via WebSocket se disponível
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'notificacao',
+            data: notificacao
+          }));
+        }
+        
+      } catch (error) {
+        console.log('Salvando localmente com notificação:', error.message);
+        localStorage.setItem('barbapro_duo', JSON.stringify(dados));
+        
+        // Criar notificação local
+        mostrarNotificacao({
+          barbeiro: barbeiro,
+          servico: servico,
+          cliente: cliente,
+          valor: valor,
+          timestamp: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
+        });
+      }
+    }
+
     function aplicarConfiguracoes() {
-      document.getElementById('precoCorte').textContent = dados.config.corte;
-      document.getElementById('precoBarba').textContent = dados.config.barba;
-      document.getElementById('precoBarbaCabelo').textContent = dados.config.combo;
+      document.getElementById('precoCorte').textContent = dados.config.corte.toFixed(2);
+      document.getElementById('precoBarba').textContent = dados.config.barba.toFixed(2);
+      document.getElementById('precoBarbaCabelo').textContent = dados.config.combo.toFixed(2);
     }
 
     function atualizarInterface() {
@@ -580,7 +857,7 @@ input, select {
       }
       
       document.getElementById('servicoSelecionadoNome').textContent = nome;
-      document.getElementById('servicoSelecionadoValor').textContent = `R$ ${valor}`;
+      document.getElementById('servicoSelecionadoValor').textContent = `R$ ${valor.toFixed(2)}`;
       document.getElementById('nomeClientePagamento').value = '';
       
       document.getElementById('modalPagamento').style.display = 'flex';
@@ -701,7 +978,11 @@ input, select {
     }
 
     async function apagarServico(index) {
-      if (confirm('Tem certeza que deseja apagar este serviço?')) {
+      if (!confirm('Tem certeza que deseja apagar este serviço?')) {
+        return;
+      }
+
+      try {
         // Encontrar o índice global do serviço na lista completa
         const dataFiltro = dataFiltroAtual || new Date().toISOString().split('T')[0];
         const servicosFiltrados = dados[usuarioAtual].filter(s => s.data === dataFiltro);
@@ -711,14 +992,22 @@ input, select {
         const indiceReal = dados[usuarioAtual].findIndex(s => 
           s.data === servicoParaApagar.data && 
           s.hora === servicoParaApagar.hora && 
-          s.cliente === servicoParaApagar.cliente
+          s.cliente === servicoParaApagar.cliente &&
+          s.valor === servicoParaApagar.valor &&
+          s.tipo === servicoParaApagar.tipo
         );
         
         if (indiceReal !== -1) {
           dados[usuarioAtual].splice(indiceReal, 1);
           await salvarDados();
           atualizarInterface();
+          console.log(`Serviço apagado: ${servicoParaApagar.tipo} - R$ ${servicoParaApagar.valor}`);
+        } else {
+          console.error('Serviço não encontrado para apagar');
         }
+      } catch (error) {
+        console.error('Erro ao apagar serviço:', error);
+        alert('Erro ao apagar serviço. Tente novamente.');
       }
     }
 
@@ -728,14 +1017,49 @@ input, select {
       const container = document.getElementById('listaServicos');
       
       if (lista.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum serviço registrado hoje</p>';
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum serviço registrado para esta data</p>';
         return;
       }
 
+      // Ordenar por hora (mais recente primeiro)
+      lista.sort((a, b) => {
+        // Converter horário para minutos para comparar
+        const [horaA, minutoA] = a.hora.split(':').map(Number);
+        const [horaB, minutoB] = b.hora.split(':').map(Number);
+        const totalMinutosA = horaA * 60 + minutoA;
+        const totalMinutosB = horaB * 60 + minutoB;
+        return totalMinutosB - totalMinutosA; // Ordem decrescente
+      });
+
+      const totalDia = lista.reduce((total, servico) => total + servico.valor, 0);
+      const servicosPagos = lista.filter(s => s.pago);
+      const totalPago = servicosPagos.reduce((total, s) => total + s.valor, 0);
+      const totalFiado = totalDia - totalPago;
+
       let html = `
-        <div style="margin-bottom: 15px; text-align: center; color: var(--primary); font-weight: 600;">
-          Total do dia: R$ ${calcularTotalDia(lista).toFixed(2)}
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; text-align: center;">
+            <div>
+              <div style="font-size: 12px; color: var(--gray);">TOTAL DIA</div>
+              <div style="font-size: 18px; font-weight: 700; color: var(--primary);">R$ ${totalDia.toFixed(2)}</div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: var(--gray);">SERVIÇOS</div>
+              <div style="font-size: 18px; font-weight: 700; color: var(--light);">${lista.length}</div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; text-align: center;">
+            <div>
+              <div style="font-size: 12px; color: var(--gray);">RECEBIDO</div>
+              <div style="font-size: 14px; font-weight: 600; color: var(--success);">R$ ${totalPago.toFixed(2)}</div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: var(--gray);">FIADO</div>
+              <div style="font-size: 14px; font-weight: 600; color: var(--warning);">R$ ${totalFiado.toFixed(2)}</div>
+            </div>
+          </div>
         </div>
+        
         <table>
           <tr>
             <th>Hora</th>
@@ -748,6 +1072,7 @@ input, select {
       `;
       
       lista.forEach((servico, index) => {
+        const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
         const status = servico.pago ? 'PAGO' : 'FIADO';
         
         let metodoIcon = '';
@@ -765,12 +1090,11 @@ input, select {
             <td>${servico.tipo}</td>
             <td>${servico.cliente}</td>
             <td>R$ ${servico.valor.toFixed(2)}</td>
-            <td style="color: ${servico.pago ? '#25D366' : '#FF9500'}; font-weight:600;">
+            <td class="${statusClass}">
               ${metodoIcon} ${status}
             </td>
             <td>
-              <button style="background:#ff3366; color:white; border:none; border-radius:8px; width:36px; height:36px; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center;" 
-                      onclick="apagarServico(${index})" title="Apagar serviço">
+              <button class="action-btn" onclick="apagarServico(${index})" title="Apagar serviço">
                 ×
               </button>
             </td>
@@ -780,10 +1104,6 @@ input, select {
       
       html += '</table>';
       container.innerHTML = html;
-    }
-
-    function calcularTotalDia(servicos) {
-      return servicos.reduce((total, servico) => total + servico.valor, 0);
     }
 
     function filtrarServicos() {
@@ -807,6 +1127,12 @@ input, select {
       usuarioAtual = usuarioAtual === 'Gabriel' ? 'Wagner' : 'Gabriel';
       document.getElementById('usuarioAtual').textContent = usuarioAtual;
       document.getElementById('nomeUsuario').textContent = usuarioAtual;
+      
+      // Resetar filtro para data atual ao trocar usuário
+      const hoje = new Date().toISOString().split('T')[0];
+      document.getElementById('dataFiltro').value = hoje;
+      dataFiltroAtual = hoje;
+      
       atualizarInterface();
     }
 
@@ -836,192 +1162,171 @@ input, select {
     // ========== WEBSOCKET E NOTIFICAÇÕES ==========
 
     function conectarWebSocket() {
-        try {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}`;
+      try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}`;
+        
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = function() {
+          console.log('🔗 Conectado ao servidor de notificações');
+        };
+        
+        ws.onmessage = function(event) {
+          try {
+            const data = JSON.parse(event.data);
             
-            ws = new WebSocket(wsUrl);
+            if (data.type === 'notificacao') {
+              mostrarNotificacao(data);
+            }
             
-            ws.onopen = function() {
-                console.log('🔗 Conectado ao servidor de notificações');
-            };
-            
-            ws.onmessage = function(event) {
-                try {
-                    const data = JSON.parse(event.data);
-                    
-                    if (data.type === 'notificacao') {
-                        mostrarNotificacao(data);
-                    }
-                    
-                    if (data.type === 'atualizar') {
-                        carregarDados();
-                    }
-                } catch (error) {
-                    console.error('Erro ao processar mensagem:', error);
-                }
-            };
-            
-            ws.onclose = function() {
-                console.log('🔌 Conexão fechada, tentando reconectar...');
-                setTimeout(conectarWebSocket, 5000);
-            };
-            
-            ws.onerror = function(error) {
-                console.error('Erro WebSocket:', error);
-            };
-            
-        } catch (error) {
-            console.error('Erro ao conectar WebSocket:', error);
-        }
+            if (data.type === 'atualizar') {
+              console.log('📥 Recebida solicitação para atualizar dados');
+              carregarDados();
+            }
+          } catch (error) {
+            console.error('Erro ao processar mensagem WebSocket:', error);
+          }
+        };
+        
+        ws.onclose = function() {
+          console.log('🔌 Conexão WebSocket fechada, tentando reconectar em 5 segundos...');
+          setTimeout(conectarWebSocket, 5000);
+        };
+        
+        ws.onerror = function(error) {
+          console.error('Erro WebSocket:', error);
+        };
+        
+      } catch (error) {
+        console.error('Erro ao conectar WebSocket:', error);
+      }
     }
 
     function mostrarNotificacao(data) {
-        if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("💈 BarbaPRO - Novo Serviço", {
-                body: `${data.barbeiro} realizou ${data.servico} para ${data.cliente}\nValor: R$ ${data.valor}\n${data.timestamp}`,
-                icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💈</text></svg>",
-                tag: "barbapro-notification"
-            });
-        }
-        
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 8px 25px rgba(255, 170, 0, 0.3);
-            z-index: 10000;
-            max-width: 300px;
-            animation: slideInRight 0.3s ease;
-            border-left: 4px solid var(--success);
-            font-family: inherit;
-        `;
-        
-        notification.innerHTML = `
-            <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">💈 Novo Serviço</div>
-            <div style="font-size: 14px; line-height: 1.4;">
-                <strong>${data.barbeiro}</strong> - ${data.servico}<br>
-                <strong>Cliente:</strong> ${data.cliente}<br>
-                <strong>Valor:</strong> R$ ${data.valor}<br>
-                <small style="opacity: 0.8;">${data.timestamp}</small>
-            </div>
-        `;
-        
-        document.body.appendChild(notification);
-        
+      // Solicitar permissão para notificações
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+      
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("💈 BarbaPRO - Novo Serviço", {
+          body: `${data.barbeiro} realizou ${data.servico} para ${data.cliente}\nValor: R$ ${data.valor}\n${data.timestamp}`,
+          icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💈</text></svg>",
+          tag: "barbapro-notification"
+        });
+      }
+      
+      // Criar notificação na interface
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 8px 25px rgba(255, 170, 0, 0.3);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideInRight 0.3s ease;
+        border-left: 4px solid var(--success);
+        font-family: inherit;
+      `;
+      
+      notification.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">💈 Novo Serviço</div>
+        <div style="font-size: 14px; line-height: 1.4;">
+          <strong>${data.barbeiro}</strong> - ${data.servico}<br>
+          <strong>Cliente:</strong> ${data.cliente}<br>
+          <strong>Valor:</strong> R$ ${data.valor}<br>
+          <small style="opacity: 0.8;">${data.timestamp}</small>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Remover notificação após 5 segundos
+      setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 5000);
-    }
-
-    async function salvarDadosComNotificacao(barbeiro, servico, cliente, valor) {
-        try {
-            const response = await fetch('/api/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    data: dados,
-                    notificar: {
-                        barbeiro: barbeiro,
-                        servico: servico,
-                        cliente: cliente,
-                        valor: valor,
-                        timestamp: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
-                    }
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error('Falha ao salvar no servidor');
-            }
-        } catch (error) {
-            console.log('Salvando localmente');
-            localStorage.setItem('barbapro_duo', JSON.stringify(dados));
-        }
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, 5000);
     }
 
     // ========== EVENT LISTENERS ==========
 
     document.addEventListener('click', function(event) {
-        if (event.target.classList.contains('modal')) {
-            event.target.style.display = 'none';
-        }
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
     });
 
     // Enter para confirmar senha do dashboard
     document.getElementById('pinDashboard')?.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            verificarSenhaDashboard();
-        }
+      if (e.key === 'Enter') {
+        verificarSenhaDashboard();
+      }
     });
 
     // Enter para confirmar serviços customizados
     document.getElementById('valorCustom')?.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            salvarServicoCustom();
-        }
+      if (e.key === 'Enter') {
+        salvarServicoCustom();
+      }
     });
 
-    // ========== CSS DINÂMICO ==========
+    // Enter para confirmar serviço no modal de pagamento
+    document.getElementById('nomeClientePagamento')?.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && metodoPagamentoSelecionado) {
+        confirmarServico();
+      }
+    });
 
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes slideOutRight {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        
-        .servico-pago {
-            color: var(--success) !important;
-        }
-        
-        .servico-fiado {
-            color: var(--warning) !important;
-        }
-        
-        /* Melhorias para mobile */
-        @media (max-width: 480px) {
-            table {
-                font-size: 12px;
-            }
-            
-            th, td {
-                padding: 8px 4px;
-            }
-        }
-    `;
-    document.head.appendChild(style);
+    // Atualizar dados quando a página ganha foco
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) {
+        console.log('🔄 Página em foco, recarregando dados...');
+        carregarDados();
+      }
+    });
 
     // ========== FUNÇÕES UTILITÁRIAS ==========
 
     function formatarData(data) {
-        return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+      return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
     }
 
     function obterDataAtual() {
-        return new Date().toISOString().split('T')[0];
+      return new Date().toISOString().split('T')[0];
     }
 
     function obterHoraAtual() {
-        return new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+      return new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
     }
 
+    // ========== DEBUG E LOGS ==========
+
     console.log('💈 BarbaPRO Duo - Sistema carregado com sucesso!');
-</script>
+    console.log('👤 Usuário atual:', usuarioAtual);
+    console.log('📊 Total de serviços Gabriel:', dados.Gabriel.length);
+    console.log('📊 Total de serviços Wagner:', dados.Wagner.length);
+    
+    // Monitorar alterações nos dados (apenas para debug)
+    const dadosProxy = new Proxy(dados, {
+      set(target, property, value) {
+        console.log(`📝 Dados alterados: ${property} =`, value);
+        target[property] = value;
+        return true;
+      }
+    });
+
+    // Expor dados para debug (remover em produção)
+    window.dadosBarbaPRO = dadosProxy;
+  </script>
 </body>
 </html>
