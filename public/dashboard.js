@@ -8,7 +8,7 @@ let dados = {
 
 let config = { 
     pin: '1234', 
-    whatsapp: '11962094589', 
+    whatsapp: '974065186', 
     corte: 28, 
     barba: 15, 
     combo: 40 
