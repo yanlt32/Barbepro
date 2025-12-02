@@ -15,6 +15,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Contador de requisições (para monitoramento)
+let requestCount = 0;
+const startupTime = new Date();
+
+// Middleware de logging
+app.use((req, res, next) => {
+    requestCount++;
+    console.log(`📊 ${new Date().toLocaleTimeString()} - ${req.method} ${req.url}`);
+    next();
+});
+
 // Arquivo para persistência de dados
 const DATA_FILE = path.join(__dirname, 'data.json');
 
@@ -93,6 +104,14 @@ wss.on('connection', function connection(ws) {
             console.error('Erro ao processar mensagem WebSocket:', error);
         }
     });
+    
+    // Enviar saudação ao novo cliente
+    ws.send(JSON.stringify({
+        type: 'conexao',
+        message: 'Conectado ao BarbaPRO Duo',
+        clientes: Object.keys(wss.clients).length,
+        timestamp: new Date().toLocaleTimeString('pt-BR')
+    }));
 });
 
 // Função para enviar notificação
@@ -110,6 +129,139 @@ function enviarNotificacao(barbeiro, servico, cliente, valor) {
         }
     });
 }
+
+// ===================== ROTAS DE KEEP-ALIVE =====================
+// IMPORTANTE: Para o cron-job funcionar na Render
+
+// 1. ROTA PING SIMPLES (para cron-job)
+app.get('/ping', (req, res) => {
+    const now = new Date();
+    console.log(`✅ Ping recebido às ${now.toLocaleTimeString('pt-BR')}`);
+    
+    res.json({
+        status: 'online',
+        service: 'BarbaPRO Duo - Sistema de Barbearia',
+        timestamp: now.toISOString(),
+        uptime: Math.floor(process.uptime()),
+        requests: requestCount,
+        websocket_clients: wss.clients.size,
+        message: 'BarbaPRO Duo online e respondendo'
+    });
+});
+
+// 2. ROTA HEALTH CHECK DETALHADO
+app.get('/health', (req, res) => {
+    const memory = process.memoryUsage();
+    const data = loadData();
+    
+    res.json({
+        status: 'healthy',
+        app: 'BarbaPRO Duo - Sistema de Barbearia',
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        startup: startupTime.toISOString(),
+        requests: requestCount,
+        
+        // Dados da barbearia
+        barbearia: {
+            total_servicos: (data.Gabriel?.length || 0) + (data.Wagner?.length || 0),
+            Gabriel: data.Gabriel?.length || 0,
+            Wagner: data.Wagner?.length || 0,
+            despesas: data.despesas?.length || 0,
+            mensalistas: data.mensalistas?.length || 0
+        },
+        
+        // Sistema
+        memory: {
+            rss: `${Math.round(memory.rss / 1024 / 1024)}MB`,
+            heapTotal: `${Math.round(memory.heapTotal / 1024 / 1024)}MB`,
+            heapUsed: `${Math.round(memory.heapUsed / 1024 / 1024)}MB`
+        },
+        
+        websocket: {
+            connected_clients: wss.clients.size,
+            status: 'ativo'
+        },
+        
+        node: process.version,
+        platform: process.platform,
+        env: process.env.NODE_ENV || 'development',
+        port: PORT
+    });
+});
+
+// 3. ROTA STATUS PARA VERIFICAÇÃO MANUAL
+app.get('/status', (req, res) => {
+    const data = loadData();
+    const totalServicos = (data.Gabriel?.length || 0) + (data.Wagner?.length || 0);
+    const totalValor = calcularTotalServicos(data);
+    
+    res.json({
+        online: true,
+        service: 'BarbaPRO Duo',
+        uptime: `${Math.floor(process.uptime() / 60)} minutos`,
+        last_access: new Date().toLocaleString('pt-BR'),
+        
+        // Estatísticas da barbearia
+        statistics: {
+            total_services: totalServicos,
+            total_value: `R$ ${totalValor.toFixed(2)}`,
+            Gabriel_services: data.Gabriel?.length || 0,
+            Wagner_services: data.Wagner?.length || 0,
+            expenses: data.despesas?.length || 0,
+            monthly_clients: data.mensalistas?.length || 0
+        },
+        
+        // Configurações
+        config: data.config || {},
+        
+        // Endpoints disponíveis
+        endpoints: {
+            app: '/',
+            dashboard: '/dashboard',
+            ping: '/ping (para cron-job)',
+            health: '/health',
+            api_data: '/api/data',
+            save_data: '/api/save (POST)'
+        },
+        
+        // Para cron-job
+        keep_alive: {
+            recommended_url: 'https://SEU-APP.onrender.com/ping',
+            recommended_interval: '14 minutos',
+            note: 'Configure no cron-job.org para manter online'
+        }
+    });
+});
+
+// 4. ROTA SUPER SIMPLES (apenas "OK")
+app.get('/up', (req, res) => {
+    res.send('OK');
+});
+
+// Função auxiliar para calcular total
+function calcularTotalServicos(data) {
+    let total = 0;
+    
+    // Somar serviços do Gabriel
+    if (data.Gabriel) {
+        data.Gabriel.forEach(servico => {
+            total += parseFloat(servico.valor) || 0;
+        });
+    }
+    
+    // Somar serviços do Wagner
+    if (data.Wagner) {
+        data.Wagner.forEach(servico => {
+            total += parseFloat(servico.valor) || 0;
+        });
+    }
+    
+    return total;
+}
+
+// ===================== ROTAS PRINCIPAIS DO APP =====================
 
 // Rotas principais
 app.get('/', (req, res) => {
@@ -150,26 +302,85 @@ app.post('/api/save', (req, res) => {
     }
 });
 
-// Health check
-app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'online', 
-        service: 'BarbaPRO Duo',
-        websocket: 'ativo',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0'
-    });
-});
+// ===================== INICIAR AUTO-PING (OPCIONAL) =====================
+
+// Se estiver em produção, faz auto-ping
+if (process.env.NODE_ENV === 'production') {
+    // Auto-ping a cada 10 minutos (para garantir)
+    setInterval(() => {
+        console.log(`🔄 Auto-ping interno: ${new Date().toLocaleTimeString('pt-BR')}`);
+    }, 10 * 60 * 1000); // 10 minutos
+    
+    console.log('✅ Auto-ping interno configurado (10 minutos)');
+}
+
+// ===================== LOGS PERIÓDICOS =====================
+
+// Log de status a cada 30 minutos
+setInterval(() => {
+    const data = loadData();
+    const totalServicos = (data.Gabriel?.length || 0) + (data.Wagner?.length || 0);
+    
+    console.log(`
+    📊 STATUS BARBAPRO DUO:
+    ⏰ Horário: ${new Date().toLocaleString('pt-BR')}
+    🔄 Uptime: ${Math.floor(process.uptime() / 60)} minutos
+    📞 Requisições: ${requestCount}
+    💈 Serviços totais: ${totalServicos}
+    👥 Gabriel: ${data.Gabriel?.length || 0}
+    👥 Wagner: ${data.Wagner?.length || 0}
+    💰 Valor total: R$ ${calcularTotalServicos(data).toFixed(2)}
+    📡 WebSocket: ${wss.clients.size} clientes
+    `);
+}, 30 * 60 * 1000); // 30 minutos
 
 // Rota padrão para SPA
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Iniciar servidor
+// ===================== INICIAR SERVIDOR =====================
+
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor BarbaPRO rodando na porta ${PORT}`);
-    console.log(`📱 WebSocket ativo para notificações em tempo real`);
-    console.log(`💈 Acesse: http://localhost:${PORT}`);
-    console.log(`💾 Dados salvos em: ${DATA_FILE}`);
+    console.log(`
+    🚀 BARBAPRO DUO INICIADO!
+    🔗 Porta: ${PORT}
+    ⏰ Início: ${new Date().toLocaleString('pt-BR')}
+    📡 WebSocket: Ativo para notificações em tempo real
+    💾 Dados: ${DATA_FILE}
+    
+    🌐 ENDPOINTS PARA CRON-JOB:
+    ✅ Ping: http://localhost:${PORT}/ping
+    ✅ Health: http://localhost:${PORT}/health  
+    ✅ Status: http://localhost:${PORT}/status
+    ✅ Simples: http://localhost:${PORT}/up
+    
+    💈 Acesse: http://localhost:${PORT}
+    📊 Dashboard: http://localhost:${PORT}/dashboard
+    `);
+    
+    // Mostrar dados iniciais
+    const data = loadData();
+    console.log(`
+    📁 DADOS CARREGADOS:
+    ✂️  Gabriel: ${data.Gabriel?.length || 0} serviços
+    ✂️  Wagner: ${data.Wagner?.length || 0} serviços  
+    💸 Despesas: ${data.despesas?.length || 0}
+    📅 Mensalistas: ${data.mensalistas?.length || 0}
+    `);
+});
+
+// Tratamento de graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('🛑 Recebido SIGTERM, encerrando graciosamente...');
+    
+    // Fechar conexões WebSocket
+    wss.clients.forEach(client => {
+        client.close();
+    });
+    
+    server.close(() => {
+        console.log('✅ Servidor BarbaPRO encerrado');
+        process.exit(0);
+    });
 });
