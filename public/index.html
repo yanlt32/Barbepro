@@ -306,7 +306,20 @@ input, select {
   font-size: 16px;
 }
 
-/* Filtro Container - RESPONSIVO OTIMIZADO */
+/* CORREÇÃO DA SELECT BOX */
+select option {
+  background-color: #0a0a0a;
+  color: var(--light);
+  padding: 10px;
+}
+
+select:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 170, 0, 0.2);
+}
+
+/* Filtro Container */
 .filtro-container {
   display: flex;
   flex-direction: column;
@@ -532,6 +545,143 @@ input, select {
   color: var(--warning) !important;
   font-weight: 600;
 }
+
+/* Status Tags */
+.status-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-pago {
+  background: rgba(37, 211, 102, 0.2);
+  color: var(--success);
+}
+
+.status-pendente {
+  background: rgba(255, 149, 0, 0.2);
+  color: var(--warning);
+}
+
+.status-vencido {
+  background: rgba(255, 51, 102, 0.2);
+  color: var(--danger);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* Botão de Resultados Discreto */
+.resultados-btn {
+  background: rgba(255,255,255,0.05);
+  color: var(--gray);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 14px;
+  text-align: center;
+}
+
+.resultados-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--light);
+}
+
+/* Resultados Container (inicialmente escondido) */
+.resultados-container {
+  display: none;
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  padding: 15px;
+  margin: 15px 0;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.resultados-container.show {
+  display: block;
+  animation: slideInRight 0.3s ease;
+}
+
+/* Status Conexão */
+.conexao-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  margin-left: 10px;
+}
+
+.conexao-online {
+  background: rgba(37, 211, 102, 0.2);
+  color: var(--success);
+}
+
+.conexao-offline {
+  background: rgba(255, 51, 102, 0.2);
+  color: var(--danger);
+}
+
+/* Badge de serviço */
+.badge-servico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--dark);
+  font-weight: 700;
+  font-size: 12px;
+  margin-left: 5px;
+}
+
+/* Botão de sincronização */
+.sync-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: var(--dark);
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 170, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  z-index: 100;
+}
+
+.sync-btn:hover {
+  transform: scale(1.1) rotate(45deg);
+  box-shadow: 0 6px 20px rgba(255, 170, 0, 0.4);
+}
+
+.sync-btn.syncing {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
   </style>
 </head>
 <body>
@@ -542,9 +692,42 @@ input, select {
       <div class="usuario-info">
         <div class="usuario-status"></div>
         <span id="usuarioAtual">Gabriel</span>
+        <span id="conexaoStatus" class="conexao-status conexao-offline">OFFLINE</span>
       </div>
       <button class="trocar-usuario" onclick="trocarUsuario()">
         TROCAR
+      </button>
+    </div>
+
+    <!-- Botão discreto para ver resultados -->
+    <button class="resultados-btn" onclick="toggleResultados()" id="btnToggleResultados">
+      👁️ Ver meus resultados do dia
+    </button>
+
+    <!-- Container dos resultados (inicialmente escondido) -->
+    <div class="resultados-container" id="resultadosContainer">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div style="font-weight: 600; color: var(--primary);">SEU RESUMO HOJE</div>
+        <div style="font-size: 12px; color: var(--gray);" id="dataHoje"></div>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
+        <div style="text-align: center;">
+          <div style="font-size: 20px; font-weight: 700; color: var(--primary);" id="resumoServicosHoje">0</div>
+          <div style="font-size: 11px; color: var(--gray);">SERVIÇOS</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 20px; font-weight: 700; color: var(--success);" id="resumoTotalHoje">R$ 0,00</div>
+          <div style="font-size: 11px; color: var(--gray);">TOTAL</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 20px; font-weight: 700; color: var(--warning);" id="resumoFiadoHoje">R$ 0,00</div>
+          <div style="font-size: 11px; color: var(--gray);">FIADO</div>
+        </div>
+      </div>
+      
+      <button class="btn btn-whatsapp" onclick="abrirModalEnviarWhatsApp()" style="padding: 10px; font-size: 14px; background: linear-gradient(45deg, #25D366, #128C7E);">
+        📱 Enviar meu resumo
       </button>
     </div>
 
@@ -590,6 +773,11 @@ input, select {
       <div id="listaServicos"></div>
     </div>
   </div>
+
+  <!-- Botão de sincronização -->
+  <button class="sync-btn" onclick="sincronizarDados()" id="btnSync" title="Sincronizar com servidor">
+    🔄
+  </button>
 
   <!-- Modal Pagamento -->
   <div id="modalPagamento" class="modal">
@@ -675,20 +863,54 @@ input, select {
     </div>
   </div>
 
+  <!-- Modal Enviar WhatsApp -->
+  <div id="modalEnviarWhatsApp" class="modal">
+    <div class="modal-content">
+      <h3 style="font-size:clamp(18px, 4.5vw, 20px); margin:18px 0 12px; color: var(--primary); font-weight:700;">Enviar por WhatsApp</h3>
+      <p style="margin-bottom: 15px; color: #ccc;">Enviar seu resumo do dia para o WhatsApp:</p>
+      
+      <div class="pix-container">
+        <textarea id="mensagemWhatsApp" rows="6" style="width:100%; padding:15px; border-radius:12px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1);" placeholder="Mensagem será gerada automaticamente..."></textarea>
+      </div>
+      
+      <div style="display: flex; gap: 15px; margin-top: 20px;">
+        <button class="btn btn-whatsapp" onclick="enviarWhatsAppDireto()" style="margin:0; flex:1; background:linear-gradient(45deg, #25D366, #128C7E);">
+          📱 ENVIAR AGORA
+        </button>
+        <button class="btn secundario" onclick="fecharModal('modalEnviarWhatsApp')" style="margin:0; flex:1;">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Sincronização -->
+  <div id="modalSincronizacao" class="modal">
+    <div class="modal-content">
+      <h3 style="font-size:clamp(18px, 4.5vw, 20px); margin:18px 0 12px; color: var(--primary); font-weight:700;">Sincronização</h3>
+      <div style="text-align: center; padding: 20px;">
+        <div id="syncStatusIcon" style="font-size: 48px; margin-bottom: 15px;">🔄</div>
+        <div id="syncStatusText" style="color: #ccc; margin-bottom: 10px;">Sincronizando com o servidor...</div>
+        <div id="syncStatusDetails" style="font-size: 12px; color: #aaa;">Conectando...</div>
+      </div>
+      <div style="display: flex; gap: 15px; margin-top: 20px;">
+        <button class="btn secundario" onclick="fecharModal('modalSincronizacao')" style="margin:0; flex:1;">FECHAR</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // Variáveis globais
+    // ========== VARIÁVEIS GLOBAIS ==========
     let usuarioAtual = 'Gabriel';
-    let dados = { 
-      Gabriel: [], 
-      Wagner: [], 
+    let dados = {
+      Gabriel: [],
+      Wagner: [],
       despesas: [],
       mensalistas: [],
-      config: { 
-        pin: '1234', 
-        whatsapp: '11962094589', 
-        corte: 28, 
-        barba: 15, 
-        combo: 40 
+      config: {
+        pin: '1234',
+        whatsapp: '11962094589',
+        corte: 28,
+        barba: 15,
+        combo: 40
       }
     };
 
@@ -697,63 +919,175 @@ input, select {
     let metodoPagamentoCustomSelecionado = null;
     let dataFiltroAtual = null;
     let ws = null;
+    let isOnline = false;
+    let syncTimeout = null;
 
-    // Inicialização
+    // ========== INICIALIZAÇÃO ==========
     document.addEventListener('DOMContentLoaded', function() {
-      carregarDados();
-      aplicarConfiguracoes();
-      atualizarInterface();
-      conectarWebSocket();
+      console.log('🚀 BarbaPRO - Sistema inicializando...');
+      inicializarSistema();
+    });
+
+    function inicializarSistema() {
+      // Carregar dados locais primeiro
+      carregarDadosLocais();
       
+      // Configurar data atual no filtro
       const hoje = new Date().toISOString().split('T')[0];
       document.getElementById('dataFiltro').value = hoje;
       dataFiltroAtual = hoje;
-    });
+      document.getElementById('dataHoje').textContent = formatarDataBR(hoje);
+      
+      // Conectar ao servidor
+      conectarWebSocket();
+      
+      // Atualizar interface
+      atualizarInterface();
+      
+      console.log('✅ Sistema inicializado com sucesso!');
+    }
 
-    // ========== FUNÇÕES PRINCIPAIS ==========
-
-    async function carregarDados() {
+    // ========== SISTEMA ONLINE/OFFLINE ==========
+    function conectarWebSocket() {
       try {
-        const response = await fetch('/api/data');
-        if (!response.ok) {
-          throw new Error('Erro na resposta do servidor');
-        }
-        const result = await response.json();
-        if (result.success) {
-          Object.assign(dados, result.data);
-          aplicarConfiguracoes();
-          atualizarInterface();
-        } else {
-          throw new Error('Dados inválidos do servidor');
-        }
-      } catch (error) {
-        console.log('Usando dados locais:', error.message);
-        const salvo = localStorage.getItem('barbapro_duo');
-        if (salvo) {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}`;
+        
+        console.log('📡 Conectando ao servidor:', wsUrl);
+        
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = function() {
+          console.log('✅ Conectado ao servidor!');
+          isOnline = true;
+          atualizarStatusConexao(true);
+          mostrarFeedback('✅ Conectado ao servidor', 'success');
+          
+          // Sincronizar dados ao conectar
+          setTimeout(() => {
+            sincronizarDados();
+          }, 1000);
+        };
+        
+        ws.onmessage = function(event) {
           try {
-            Object.assign(dados, JSON.parse(salvo));
-          } catch (parseError) {
-            console.error('Erro ao parsear dados locais:', parseError);
-            // Inicializar com dados padrão
-            dados = { 
-              Gabriel: [], 
-              Wagner: [], 
-              despesas: [],
-              mensalistas: [],
-              config: { 
-                pin: '1234', 
-                whatsapp: '11962094589', 
-                corte: 28, 
-                barba: 15, 
-                combo: 40 
-              }
-            };
+            const data = JSON.parse(event.data);
+            console.log('📥 Mensagem do servidor:', data.type);
+            
+            switch(data.type) {
+              case 'conexao':
+                console.log(`📞 Conectado: ${data.message}`);
+                break;
+                
+              case 'dados_iniciais':
+                console.log('📦 Dados iniciais recebidos do servidor');
+                processarDadosServidor(data.data);
+                break;
+                
+              case 'sync_completo':
+                console.log('🔄 Sincronização completa recebida');
+                processarDadosServidor(data.data);
+                break;
+                
+              case 'notificacao':
+                mostrarNotificacaoServico(data);
+                break;
+                
+              case 'mensalista_removido':
+                mostrarFeedback(`🗑️ Mensalista ${data.mensalista} removido`, 'info');
+                carregarDadosLocais();
+                atualizarInterface();
+                break;
+                
+              case 'atualizar':
+                console.log('🔄 Atualização solicitada pelo servidor');
+                sincronizarDados();
+                break;
+            }
+          } catch (error) {
+            console.error('❌ Erro ao processar mensagem:', error);
           }
-        }
+        };
+        
+        ws.onclose = function() {
+          console.log('🔌 Desconectado do servidor');
+          isOnline = false;
+          atualizarStatusConexao(false);
+          
+          // Tentar reconectar em 5 segundos
+          setTimeout(conectarWebSocket, 5000);
+        };
+        
+        ws.onerror = function(error) {
+          console.error('❌ Erro WebSocket:', error);
+          isOnline = false;
+          atualizarStatusConexao(false);
+        };
+        
+      } catch (error) {
+        console.error('❌ Erro ao conectar:', error);
+        isOnline = false;
+        atualizarStatusConexao(false);
       }
     }
 
-    async function salvarDados() {
+    function atualizarStatusConexao(online) {
+      const statusElement = document.getElementById('conexaoStatus');
+      if (online) {
+        statusElement.textContent = 'ONLINE';
+        statusElement.className = 'conexao-status conexao-online';
+      } else {
+        statusElement.textContent = 'OFFLINE';
+        statusElement.className = 'conexao-status conexao-offline';
+      }
+    }
+
+    // ========== FUNÇÕES DE DADOS ==========
+    function carregarDadosLocais() {
+      try {
+        const dadosSalvos = localStorage.getItem('barbapro_duo');
+        if (dadosSalvos) {
+          const dadosParseados = JSON.parse(dadosSalvos);
+          
+          // Carregar arrays
+          if (Array.isArray(dadosParseados.Gabriel)) dados.Gabriel = dadosParseados.Gabriel;
+          if (Array.isArray(dadosParseados.Wagner)) dados.Wagner = dadosParseados.Wagner;
+          if (Array.isArray(dadosParseados.despesas)) dados.despesas = dadosParseados.despesas;
+          if (Array.isArray(dadosParseados.mensalistas)) dados.mensalistas = dadosParseados.mensalistas;
+          
+          // Carregar configurações
+          if (dadosParseados.config) {
+            dados.config = { ...dados.config, ...dadosParseados.config };
+          }
+          
+          console.log('📂 Dados carregados do localStorage');
+          aplicarConfiguracoes();
+        } else {
+          console.log('📝 Nenhum dado salvo encontrado, usando dados padrão');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar dados locais:', error);
+      }
+    }
+
+    function salvarDadosLocais() {
+      try {
+        localStorage.setItem('barbapro_duo', JSON.stringify(dados));
+        console.log('💾 Dados salvos localmente');
+        return true;
+      } catch (error) {
+        console.error('❌ Erro ao salvar dados locais:', error);
+        return false;
+      }
+    }
+
+    async function salvarDadosServidor() {
+      if (!isOnline || !ws || ws.readyState !== WebSocket.OPEN) {
+        console.log('📴 Offline - salvando apenas localmente');
+        salvarDadosLocais();
+        return false;
+      }
+      
       try {
         const response = await fetch('/api/save', {
           method: 'POST',
@@ -761,62 +1095,113 @@ input, select {
           body: JSON.stringify({ data: dados })
         });
         
-        if (!response.ok) {
+        if (response.ok) {
+          console.log('✅ Dados salvos no servidor');
+          return true;
+        } else {
           throw new Error('Falha ao salvar no servidor');
         }
-        console.log('Dados salvos com sucesso no servidor');
       } catch (error) {
-        console.log('Salvando localmente:', error.message);
-        localStorage.setItem('barbapro_duo', JSON.stringify(dados));
+        console.log('❌ Erro ao salvar no servidor:', error.message);
+        salvarDadosLocais();
+        return false;
       }
     }
 
-    async function salvarDadosComNotificacao(barbeiro, servico, cliente, valor) {
+    function processarDadosServidor(dadosServidor) {
       try {
-        const notificacao = {
-          barbeiro: barbeiro,
-          servico: servico,
-          cliente: cliente,
-          valor: valor,
-          timestamp: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
-        };
-        
-        const response = await fetch('/api/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            data: dados,
-            notificar: notificacao
-          })
-        });
-        
-        if (!response.ok) {
-          throw new Error('Falha ao salvar com notificação');
+        // Mesclar dados do servidor com dados locais
+        // Para serviços, manter os mais recentes (por timestamp)
+        if (Array.isArray(dadosServidor.Gabriel)) {
+          dados.Gabriel = unificarServicos(dados.Gabriel, dadosServidor.Gabriel);
         }
         
-        console.log('Dados e notificação salvos com sucesso');
-        
-        // Enviar notificação via WebSocket se disponível
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'notificacao',
-            data: notificacao
-          }));
+        if (Array.isArray(dadosServidor.Wagner)) {
+          dados.Wagner = unificarServicos(dados.Wagner, dadosServidor.Wagner);
         }
+        
+        // Para mensalistas, manter os mais recentes (por id)
+        if (Array.isArray(dadosServidor.mensalistas)) {
+          dados.mensalistas = unificarMensalistas(dados.mensalistas, dadosServidor.mensalistas);
+        }
+        
+        // Para despesas, manter as mais recentes (por id)
+        if (Array.isArray(dadosServidor.despesas)) {
+          dados.despesas = unificarDespesas(dados.despesas, dadosServidor.despesas);
+        }
+        
+        // Configurações (sobrescrever com as do servidor)
+        if (dadosServidor.config) {
+          dados.config = { ...dados.config, ...dadosServidor.config };
+          aplicarConfiguracoes();
+        }
+        
+        // Salvar localmente
+        salvarDadosLocais();
+        
+        // Atualizar interface
+        atualizarInterface();
+        
+        mostrarFeedback('🔄 Dados sincronizados com sucesso!', 'success');
         
       } catch (error) {
-        console.log('Salvando localmente com notificação:', error.message);
-        localStorage.setItem('barbapro_duo', JSON.stringify(dados));
-        
-        // Criar notificação local
-        mostrarNotificacao({
-          barbeiro: barbeiro,
-          servico: servico,
-          cliente: cliente,
-          valor: valor,
-          timestamp: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
-        });
+        console.error('❌ Erro ao processar dados do servidor:', error);
       }
+    }
+
+    function unificarServicos(locais, servidor) {
+      // Criar mapa por id/timestamp
+      const mapa = new Map();
+      
+      // Adicionar serviços do servidor
+      servidor.forEach(servico => {
+        const key = servico.id || `${servico.data}_${servico.hora}_${servico.cliente}`;
+        mapa.set(key, servico);
+      });
+      
+      // Adicionar serviços locais (sobrescrevendo se mais recente)
+      locais.forEach(servico => {
+        const key = servico.id || `${servico.data}_${servico.hora}_${servico.cliente}`;
+        const existente = mapa.get(key);
+        
+        if (!existente || (servico.timestamp && existente.timestamp && servico.timestamp > existente.timestamp)) {
+          mapa.set(key, servico);
+        }
+      });
+      
+      return Array.from(mapa.values()).sort((a, b) => {
+        const timestampA = a.timestamp || 0;
+        const timestampB = b.timestamp || 0;
+        return timestampB - timestampA;
+      });
+    }
+
+    function unificarMensalistas(locais, servidor) {
+      const mapa = new Map();
+      
+      servidor.forEach(m => mapa.set(m.id, m));
+      locais.forEach(m => {
+        const existente = mapa.get(m.id);
+        if (!existente || (m.ultimaAtualizacao && existente.ultimaAtualizacao && m.ultimaAtualizacao > existente.ultimaAtualizacao)) {
+          mapa.set(m.id, m);
+        }
+      });
+      
+      return Array.from(mapa.values()).sort((a, b) => b.id - a.id);
+    }
+
+    function unificarDespesas(locais, servidor) {
+      const mapa = new Map();
+      
+      servidor.forEach(d => mapa.set(d.id, d));
+      locais.forEach(d => {
+        const existente = mapa.get(d.id);
+        if (!existente || (d.dataCriacao && existente.dataCriacao && d.dataCriacao > existente.dataCriacao)) {
+          mapa.set(d.id, d);
+        }
+      });
+      
+      return Array.from(mapa.values()).sort((a, b) => b.id - a.id);
     }
 
     function aplicarConfiguracoes() {
@@ -825,22 +1210,133 @@ input, select {
       document.getElementById('precoBarbaCabelo').textContent = dados.config.combo.toFixed(2);
     }
 
+    // ========== SINCORNIZAÇÃO ==========
+    async function sincronizarDados() {
+      const btnSync = document.getElementById('btnSync');
+      const icon = document.getElementById('syncStatusIcon');
+      const text = document.getElementById('syncStatusText');
+      const details = document.getElementById('syncStatusDetails');
+      
+      // Mostrar modal
+      document.getElementById('modalSincronizacao').style.display = 'flex';
+      icon.textContent = '🔄';
+      text.textContent = 'Sincronizando...';
+      details.textContent = 'Conectando ao servidor...';
+      btnSync.classList.add('syncing');
+      
+      try {
+        // 1. Baixar dados do servidor
+        details.textContent = 'Baixando dados do servidor...';
+        const response = await fetch('/api/data');
+        
+        if (response.ok) {
+          const result = await response.json();
+          
+          if (result.success) {
+            details.textContent = 'Processando dados...';
+            
+            // 2. Processar e mesclar dados
+            processarDadosServidor(result.data);
+            
+            // 3. Enviar dados locais para o servidor
+            details.textContent = 'Enviando dados para o servidor...';
+            const saveResponse = await fetch('/api/save', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ data: dados })
+            });
+            
+            if (saveResponse.ok) {
+              icon.textContent = '✅';
+              text.textContent = 'Sincronização completa!';
+              details.textContent = 'Todos os dados estão atualizados';
+              
+              // Fechar modal automaticamente após 2 segundos
+              setTimeout(() => {
+                fecharModal('modalSincronizacao');
+              }, 2000);
+              
+            } else {
+              throw new Error('Erro ao enviar dados para o servidor');
+            }
+          } else {
+            throw new Error('Dados inválidos do servidor');
+          }
+        } else {
+          throw new Error('Erro ao conectar ao servidor');
+        }
+      } catch (error) {
+        console.error('❌ Erro na sincronização:', error);
+        icon.textContent = '❌';
+        text.textContent = 'Erro na sincronização';
+        details.textContent = 'Usando dados locais. Tente novamente mais tarde.';
+        
+        // Fechar modal automaticamente após 3 segundos
+        setTimeout(() => {
+          fecharModal('modalSincronizacao');
+        }, 3000);
+      } finally {
+        btnSync.classList.remove('syncing');
+      }
+    }
+
+    // ========== FUNÇÕES DE INTERFACE ==========
     function atualizarInterface() {
       atualizarListaServicos();
+      atualizarResumoDiario();
+      document.getElementById('usuarioAtual').textContent = usuarioAtual;
+      document.getElementById('nomeUsuario').textContent = usuarioAtual;
+    }
+
+    function toggleResultados() {
+      const container = document.getElementById('resultadosContainer');
+      const btn = document.getElementById('btnToggleResultados');
+      
+      if (container.classList.contains('show')) {
+        container.classList.remove('show');
+        btn.textContent = '👁️ Ver meus resultados do dia';
+      } else {
+        container.classList.add('show');
+        btn.textContent = '👁️ Ocultar resultados';
+        atualizarResumoDiario();
+      }
+    }
+
+    function atualizarResumoDiario() {
+      const hoje = new Date().toISOString().split('T')[0];
+      const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
+      
+      const totalServicos = servicosHoje.length;
+      const totalValor = servicosHoje.reduce((sum, s) => sum + s.valor, 0);
+      const totalFiado = servicosHoje.filter(s => !s.pago).reduce((sum, s) => sum + s.valor, 0);
+      
+      // Atualizar elementos
+      document.getElementById('resumoServicosHoje').textContent = totalServicos;
+      document.getElementById('resumoTotalHoje').textContent = `R$ ${totalValor.toFixed(2)}`;
+      document.getElementById('resumoFiadoHoje').textContent = `R$ ${totalFiado.toFixed(2)}`;
+    }
+
+    function trocarUsuario() {
+      usuarioAtual = usuarioAtual === 'Gabriel' ? 'Wagner' : 'Gabriel';
+      console.log('🔄 Trocando usuário para:', usuarioAtual);
+      atualizarInterface();
+      
+      // Mostrar notificação
+      mostrarFeedback(`👤 Usuário alterado para ${usuarioAtual}`);
     }
 
     // ========== FUNÇÕES DE SERVIÇOS ==========
-
     function abrirModalPagamento(tipo) {
       servicoSelecionado = tipo;
       metodoPagamentoSelecionado = null;
       
+      // Resetar seleção de método
       document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
       
+      // Definir nome e valor do serviço
       let nome, valor;
-      
       switch(tipo) {
         case 'corte':
           nome = 'Corte';
@@ -854,39 +1350,52 @@ input, select {
           nome = 'Barba + Cabelo';
           valor = dados.config.combo;
           break;
+        default:
+          nome = 'Serviço';
+          valor = 0;
       }
       
       document.getElementById('servicoSelecionadoNome').textContent = nome;
       document.getElementById('servicoSelecionadoValor').textContent = `R$ ${valor.toFixed(2)}`;
       document.getElementById('nomeClientePagamento').value = '';
       
+      // Abrir modal
       document.getElementById('modalPagamento').style.display = 'flex';
     }
 
     function selecionarMetodoPagamento(metodo) {
       metodoPagamentoSelecionado = metodo;
+      
+      // Atualizar visualmente
       document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
       event.currentTarget.classList.add('selecionado');
+      
+      console.log('✅ Método selecionado:', metodo);
     }
 
     function selecionarMetodoPagamentoCustom(metodo) {
       metodoPagamentoCustomSelecionado = metodo;
+      
+      // Atualizar visualmente
       document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
       event.currentTarget.classList.add('selecionado');
+      
+      console.log('✅ Método custom selecionado:', metodo);
     }
 
     async function confirmarServico() {
+      // Validar seleção
       if (!metodoPagamentoSelecionado) {
-        alert('Selecione uma forma de pagamento!');
+        alert('⚠️ Selecione uma forma de pagamento!');
         return;
       }
       
+      // Obter valor e nome do serviço
       let valor, nome;
-      
       switch(servicoSelecionado) {
         case 'corte':
           valor = dados.config.corte;
@@ -900,188 +1409,207 @@ input, select {
           valor = dados.config.combo;
           nome = 'Barba + Cabelo';
           break;
+        default:
+          valor = 0;
+          nome = 'Serviço';
       }
       
+      // Obter nome do cliente
       const nomeCliente = document.getElementById('nomeClientePagamento').value.trim() || 'Cliente';
       
+      // Criar objeto do serviço
       const servico = {
+        id: Date.now(),
         hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+        data: new Date().toISOString().split('T')[0],
         tipo: nome,
         valor: valor,
         cliente: nomeCliente,
         pago: true,
         metodoPagamento: metodoPagamentoSelecionado,
-        data: new Date().toISOString().split('T')[0]
+        barbeiro: usuarioAtual,
+        timestamp: new Date().getTime()
       };
-
+      
+      console.log('➕ Adicionando serviço:', servico);
+      
+      // Adicionar ao array do usuário atual
       dados[usuarioAtual].unshift(servico);
       
-      await salvarDadosComNotificacao(usuarioAtual, nome, nomeCliente, valor);
-      atualizarInterface();
+      // Salvar dados localmente
+      salvarDadosLocais();
+      
+      // Tentar salvar no servidor
+      const salvoNoServidor = await salvarDadosServidor();
+      
+      // Enviar notificação via WebSocket se online
+      if (isOnline && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'novo_servico',
+          barbeiro: usuarioAtual,
+          servico: nome,
+          cliente: nomeCliente,
+          valor: valor
+        }));
+      }
+      
+      // Fechar modal
       fecharModal('modalPagamento');
       
+      // Atualizar interface
+      atualizarInterface();
+      
+      // Resetar variáveis
       servicoSelecionado = null;
       metodoPagamentoSelecionado = null;
+      
+      // Feedback visual
+      mostrarFeedback(`✅ Serviço registrado com sucesso!<br>${nome} - R$ ${valor.toFixed(2)}`, 'success');
+      
+      console.log('🎉 Serviço salvo:', servico);
     }
 
     function abrirModalOutro() {
-      document.getElementById('modalOutro').style.display = 'flex';
-      metodoPagamentoCustomSelecionado = null;
+      // Resetar campos
       document.getElementById('valorCustom').value = '';
       document.getElementById('nomeCliente').value = '';
       document.getElementById('pagoCustom').value = '1';
+      metodoPagamentoCustomSelecionado = null;
       
+      // Resetar seleção de método
       document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
+      
+      // Abrir modal
+      document.getElementById('modalOutro').style.display = 'flex';
     }
 
     async function salvarServicoCustom() {
+      // Validar valor
       const valorInput = document.getElementById('valorCustom').value;
       const valor = parseFloat(valorInput);
       
       if (!valorInput || valor <= 0 || isNaN(valor)) {
-        alert('Insira um valor válido!');
+        alert('⚠️ Insira um valor válido maior que zero!');
         return;
       }
-
+      
+      // Validar método de pagamento
       if (!metodoPagamentoCustomSelecionado) {
-        alert('Selecione uma forma de pagamento!');
+        alert('⚠️ Selecione uma forma de pagamento!');
         return;
       }
-
+      
+      // Obter dados do formulário
       const nomeCliente = document.getElementById('nomeCliente').value.trim() || 'Cliente';
       const pago = document.getElementById('pagoCustom').value === '1';
-
+      
+      // Criar objeto do serviço
       const servico = {
+        id: Date.now(),
         hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+        data: new Date().toISOString().split('T')[0],
         tipo: 'Outro',
         valor: valor,
         cliente: nomeCliente,
         pago: pago,
         metodoPagamento: metodoPagamentoCustomSelecionado,
-        data: new Date().toISOString().split('T')[0]
+        barbeiro: usuarioAtual,
+        timestamp: new Date().getTime()
       };
-
+      
+      console.log('➕ Adicionando serviço customizado:', servico);
+      
+      // Adicionar ao array do usuário atual
       dados[usuarioAtual].unshift(servico);
       
-      if (pago) {
-        await salvarDadosComNotificacao(usuarioAtual, 'Outro', nomeCliente, valor);
-      } else {
-        await salvarDados();
-      }
+      // Salvar dados localmente
+      salvarDadosLocais();
       
-      atualizarInterface();
+      // Tentar salvar no servidor
+      await salvarDadosServidor();
+      
+      // Fechar modal
       fecharModal('modalOutro');
       
-      metodoPagamentoCustomSelecionado = null;
-    }
-
-    async function apagarServico(index) {
-      if (!confirm('Tem certeza que deseja apagar este serviço?')) {
-        return;
-      }
-
-      try {
-        // Encontrar o índice global do serviço na lista completa
-        const dataFiltro = dataFiltroAtual || new Date().toISOString().split('T')[0];
-        const servicosFiltrados = dados[usuarioAtual].filter(s => s.data === dataFiltro);
-        const servicoParaApagar = servicosFiltrados[index];
-        
-        // Encontrar o índice real na lista completa
-        const indiceReal = dados[usuarioAtual].findIndex(s => 
-          s.data === servicoParaApagar.data && 
-          s.hora === servicoParaApagar.hora && 
-          s.cliente === servicoParaApagar.cliente &&
-          s.valor === servicoParaApagar.valor &&
-          s.tipo === servicoParaApagar.tipo
-        );
-        
-        if (indiceReal !== -1) {
-          dados[usuarioAtual].splice(indiceReal, 1);
-          await salvarDados();
-          atualizarInterface();
-          console.log(`Serviço apagado: ${servicoParaApagar.tipo} - R$ ${servicoParaApagar.valor}`);
-        } else {
-          console.error('Serviço não encontrado para apagar');
-        }
-      } catch (error) {
-        console.error('Erro ao apagar serviço:', error);
-        alert('Erro ao apagar serviço. Tente novamente.');
-      }
-    }
-
-    function atualizarListaServicos() {
-      const dataFiltro = dataFiltroAtual || new Date().toISOString().split('T')[0];
-      const lista = dados[usuarioAtual].filter(s => s.data === dataFiltro);
-      const container = document.getElementById('listaServicos');
+      // Atualizar interface
+      atualizarInterface();
       
-      if (lista.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666;padding:30px;">Nenhum serviço registrado para esta data</p>';
+      // Resetar variável
+      metodoPagamentoCustomSelecionado = null;
+      
+      // Feedback visual
+      mostrarFeedback(`✅ ${pago ? 'Serviço PAGO' : 'Serviço FIADO'} registrado com sucesso!<br>R$ ${valor.toFixed(2)}`, 'success');
+      
+      console.log('🎉 Serviço custom salvo:', servico);
+    }
+
+    // ========== FUNÇÕES DE LISTA E FILTRO ==========
+    function atualizarListaServicos() {
+      const container = document.getElementById('listaServicos');
+      const dataFiltro = dataFiltroAtual || new Date().toISOString().split('T')[0];
+      
+      // Filtrar serviços pela data
+      const servicosFiltrados = dados[usuarioAtual].filter(servico => {
+        return servico.data === dataFiltro;
+      });
+      
+      console.log(`📋 Mostrando ${servicosFiltrados.length} serviços para ${dataFiltro}`);
+      
+      // Ordenar por hora (mais recente primeiro)
+      servicosFiltrados.sort((a, b) => {
+        if (a.timestamp && b.timestamp) {
+          return b.timestamp - a.timestamp;
+        }
+        return 0;
+      });
+      
+      // Se não houver serviços
+      if (servicosFiltrados.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:40px 20px;">
+            <div style="font-size:48px; margin-bottom:15px;">📝</div>
+            <div style="color:#666; font-size:16px;">
+              Nenhum serviço registrado para esta data
+            </div>
+            <div style="color:#888; font-size:14px; margin-top:10px;">
+              Data: ${formatarDataBR(dataFiltro)}
+            </div>
+          </div>
+        `;
         return;
       }
-
-      // Ordenar por hora (mais recente primeiro)
-      lista.sort((a, b) => {
-        // Converter horário para minutos para comparar
-        const [horaA, minutoA] = a.hora.split(':').map(Number);
-        const [horaB, minutoB] = b.hora.split(':').map(Number);
-        const totalMinutosA = horaA * 60 + minutoA;
-        const totalMinutosB = horaB * 60 + minutoB;
-        return totalMinutosB - totalMinutosA; // Ordem decrescente
-      });
-
-      const totalDia = lista.reduce((total, servico) => total + servico.valor, 0);
-      const servicosPagos = lista.filter(s => s.pago);
-      const totalPago = servicosPagos.reduce((total, s) => total + s.valor, 0);
-      const totalFiado = totalDia - totalPago;
-
+      
+      // Gerar HTML da tabela simplificada
       let html = `
-        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 15px;">
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; text-align: center;">
-            <div>
-              <div style="font-size: 12px; color: var(--gray);">TOTAL DIA</div>
-              <div style="font-size: 18px; font-weight: 700; color: var(--primary);">R$ ${totalDia.toFixed(2)}</div>
-            </div>
-            <div>
-              <div style="font-size: 12px; color: var(--gray);">SERVIÇOS</div>
-              <div style="font-size: 18px; font-weight: 700; color: var(--light);">${lista.length}</div>
-            </div>
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; text-align: center;">
-            <div>
-              <div style="font-size: 12px; color: var(--gray);">RECEBIDO</div>
-              <div style="font-size: 14px; font-weight: 600; color: var(--success);">R$ ${totalPago.toFixed(2)}</div>
-            </div>
-            <div>
-              <div style="font-size: 12px; color: var(--gray);">FIADO</div>
-              <div style="font-size: 14px; font-weight: 600; color: var(--warning);">R$ ${totalFiado.toFixed(2)}</div>
-            </div>
-          </div>
-        </div>
-        
-        <table>
-          <tr>
-            <th>Hora</th>
-            <th>Serviço</th>
-            <th>Cliente</th>
-            <th>Valor</th>
-            <th>Pagamento</th>
-            <th>Ação</th>
-          </tr>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th>Serviço</th>
+                <th>Cliente</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody>
       `;
       
-      lista.forEach((servico, index) => {
+      // Adicionar cada serviço
+      servicosFiltrados.forEach((servico, index) => {
         const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
-        const status = servico.pago ? 'PAGO' : 'FIADO';
+        const statusTexto = servico.pago ? 'PAGO' : 'FIADO';
         
-        let metodoIcon = '';
+        // Ícone do método de pagamento
+        let metodoIcon = '💰';
         switch(servico.metodoPagamento) {
           case 'dinheiro': metodoIcon = '💵'; break;
           case 'pix': metodoIcon = '📱'; break;
           case 'debito': metodoIcon = '💳'; break;
           case 'credito': metodoIcon = '💳'; break;
-          default: metodoIcon = '💰';
         }
         
         html += `
@@ -1091,7 +1619,7 @@ input, select {
             <td>${servico.cliente}</td>
             <td>R$ ${servico.valor.toFixed(2)}</td>
             <td class="${statusClass}">
-              ${metodoIcon} ${status}
+              ${metodoIcon} ${statusTexto}
             </td>
             <td>
               <button class="action-btn" onclick="apagarServico(${index})" title="Apagar serviço">
@@ -1102,46 +1630,117 @@ input, select {
         `;
       });
       
-      html += '</table>';
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+      
       container.innerHTML = html;
     }
 
     function filtrarServicos() {
       const dataSelecionada = document.getElementById('dataFiltro').value;
-      if (dataSelecionada) {
-        dataFiltroAtual = dataSelecionada;
-        atualizarListaServicos();
+      
+      if (!dataSelecionada) {
+        alert('⚠️ Selecione uma data para filtrar!');
+        return;
       }
+      
+      console.log('🔍 Filtrando serviços para:', dataSelecionada);
+      dataFiltroAtual = dataSelecionada;
+      atualizarListaServicos();
     }
 
     function limparFiltro() {
       const hoje = new Date().toISOString().split('T')[0];
       document.getElementById('dataFiltro').value = hoje;
       dataFiltroAtual = hoje;
+      console.log('🗓️ Filtro resetado para hoje:', hoje);
       atualizarListaServicos();
     }
 
-    // ========== FUNÇÕES DE USUÁRIO ==========
-
-    function trocarUsuario() {
-      usuarioAtual = usuarioAtual === 'Gabriel' ? 'Wagner' : 'Gabriel';
-      document.getElementById('usuarioAtual').textContent = usuarioAtual;
-      document.getElementById('nomeUsuario').textContent = usuarioAtual;
+    async function apagarServico(index) {
+      if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação não pode ser desfeita.')) {
+        return;
+      }
       
-      // Resetar filtro para data atual ao trocar usuário
+      const dataFiltro = dataFiltroAtual || new Date().toISOString().split('T')[0];
+      const servicosFiltrados = dados[usuarioAtual].filter(s => s.data === dataFiltro);
+      
+      if (index >= 0 && index < servicosFiltrados.length) {
+        const servicoParaApagar = servicosFiltrados[index];
+        
+        // Encontrar e remover da lista completa
+        const indiceCompleto = dados[usuarioAtual].findIndex(s => 
+          s.id === servicoParaApagar.id || 
+          (s.data === servicoParaApagar.data && 
+           s.hora === servicoParaApagar.hora && 
+           s.cliente === servicoParaApagar.cliente)
+        );
+        
+        if (indiceCompleto !== -1) {
+          const servicoRemovido = dados[usuarioAtual].splice(indiceCompleto, 1)[0];
+          console.log('🗑️ Serviço removido:', servicoRemovido);
+          
+          // Salvar localmente
+          salvarDadosLocais();
+          
+          // Tentar salvar no servidor
+          await salvarDadosServidor();
+          
+          atualizarListaServicos();
+          atualizarResumoDiario();
+          mostrarFeedback('✅ Serviço removido com sucesso!', 'success');
+        }
+      }
+    }
+
+    // ========== FUNÇÕES DE WHATSAPP ==========
+    function abrirModalEnviarWhatsApp() {
       const hoje = new Date().toISOString().split('T')[0];
-      document.getElementById('dataFiltro').value = hoje;
-      dataFiltroAtual = hoje;
+      const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
+      const totalValor = servicosHoje.reduce((sum, s) => sum + s.valor, 0);
+      const totalPago = servicosHoje.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
+      const totalFiado = totalValor - totalPago;
       
-      atualizarInterface();
+      const mensagem = `*💈 MEU RESUMO DO DIA - ${usuarioAtual.toUpperCase()}*
+
+📅 Data: ${formatarDataBR(hoje)}
+
+📊 *MEUS SERVIÇOS HOJE*
+• Serviços realizados: ${servicosHoje.length}
+• Valor total: R$ ${totalValor.toFixed(2)}
+• Valor recebido: R$ ${totalPago.toFixed(2)}
+• Valor fiado: R$ ${totalFiado.toFixed(2)}
+
+👨‍🦱 *DETALHES DOS MEUS SERVIÇOS*
+${servicosHoje.slice(0, 10).map((s, i) => 
+  `• ${s.hora} - ${s.tipo} - ${s.cliente} - R$ ${s.valor.toFixed(2)} (${s.pago ? 'PAGO' : 'FIADO'})`
+).join('\n')}
+
+📱 *Sistema BarbaPRO Duo*`;
+      
+      document.getElementById('mensagemWhatsApp').value = mensagem;
+      document.getElementById('modalEnviarWhatsApp').style.display = 'flex';
     }
 
-    // ========== FUNÇÕES DE MODAL ==========
-
-    function fecharModal(id) {
-      document.getElementById(id).style.display = 'none';
+    function enviarWhatsAppDireto() {
+      const mensagem = document.getElementById('mensagemWhatsApp').value;
+      const telefone = dados.config.whatsapp;
+      
+      if (!mensagem.trim()) {
+        alert('⚠️ A mensagem está vazia!');
+        return;
+      }
+      
+      const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+      window.open(url, '_blank');
+      fecharModal('modalEnviarWhatsApp');
+      mostrarFeedback('📱 Mensagem pronta para envio no WhatsApp!', 'success');
     }
 
+    // ========== FUNÇÕES DE DASHBOARD ==========
     function irParaDashboard() {
       document.getElementById('modalSenhaDashboard').style.display = 'flex';
       document.getElementById('pinDashboard').value = '';
@@ -1150,60 +1749,81 @@ input, select {
 
     function verificarSenhaDashboard() {
       const senha = document.getElementById('pinDashboard').value;
+      
       if (senha === dados.config.pin || senha === '9828') {
-        window.location.href = '/dashboard';
+        console.log('🔓 Senha correta, redirecionando...');
+        mostrarFeedback('✅ Senha correta! Redirecionando...', 'success');
+        fecharModal('modalSenhaDashboard');
+        
+        // Redirecionar para dashboard
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 500);
       } else {
-        alert('Senha incorreta!');
+        alert('❌ Senha incorreta! Tente novamente.');
         document.getElementById('pinDashboard').value = '';
         document.getElementById('pinDashboard').focus();
       }
     }
 
-    // ========== WEBSOCKET E NOTIFICAÇÕES ==========
-
-    function conectarWebSocket() {
-      try {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}`;
-        
-        ws = new WebSocket(wsUrl);
-        
-        ws.onopen = function() {
-          console.log('🔗 Conectado ao servidor de notificações');
-        };
-        
-        ws.onmessage = function(event) {
-          try {
-            const data = JSON.parse(event.data);
-            
-            if (data.type === 'notificacao') {
-              mostrarNotificacao(data);
-            }
-            
-            if (data.type === 'atualizar') {
-              console.log('📥 Recebida solicitação para atualizar dados');
-              carregarDados();
-            }
-          } catch (error) {
-            console.error('Erro ao processar mensagem WebSocket:', error);
-          }
-        };
-        
-        ws.onclose = function() {
-          console.log('🔌 Conexão WebSocket fechada, tentando reconectar em 5 segundos...');
-          setTimeout(conectarWebSocket, 5000);
-        };
-        
-        ws.onerror = function(error) {
-          console.error('Erro WebSocket:', error);
-        };
-        
-      } catch (error) {
-        console.error('Erro ao conectar WebSocket:', error);
-      }
+    // ========== FUNÇÕES AUXILIARES ==========
+    function fecharModal(id) {
+      document.getElementById(id).style.display = 'none';
     }
 
-    function mostrarNotificacao(data) {
+    function formatarDataBR(dataISO) {
+      const [ano, mes, dia] = dataISO.split('-');
+      return `${dia}/${mes}/${ano}`;
+    }
+
+    function mostrarFeedback(mensagem, tipo = 'info') {
+      // Criar elemento de feedback
+      const feedback = document.createElement('div');
+      feedback.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${tipo === 'success' ? 'rgba(37, 211, 102, 0.15)' : 
+                     tipo === 'warning' ? 'rgba(255, 149, 0, 0.15)' : 
+                     tipo === 'danger' ? 'rgba(255, 51, 102, 0.15)' : 
+                     'rgba(255, 170, 0, 0.15)'};
+        color: ${tipo === 'success' ? '#25D366' : 
+                tipo === 'warning' ? '#FF9500' : 
+                tipo === 'danger' ? '#ff3366' : '#ffaa00'};
+        padding: 15px 25px;
+        border-radius: 10px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideInRight 0.3s ease;
+        font-family: inherit;
+        border: 1px solid ${tipo === 'success' ? 'rgba(37, 211, 102, 0.3)' : 
+                           tipo === 'warning' ? 'rgba(255, 149, 0, 0.3)' : 
+                           tipo === 'danger' ? 'rgba(255, 51, 102, 0.3)' : 
+                           'rgba(255, 170, 0, 0.3)'};
+        backdrop-filter: blur(10px);
+      `;
+      
+      feedback.innerHTML = `
+        <div style="font-weight: bold; font-size: 14px;">
+          ${mensagem}
+        </div>
+      `;
+      
+      document.body.appendChild(feedback);
+      
+      // Remover após 3 segundos
+      setTimeout(() => {
+        feedback.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+          if (feedback.parentNode) {
+            feedback.parentNode.removeChild(feedback);
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    function mostrarNotificacaoServico(data) {
       // Solicitar permissão para notificações
       if ("Notification" in window && Notification.permission === "default") {
         Notification.requestPermission();
@@ -1218,48 +1838,50 @@ input, select {
       }
       
       // Criar notificação na interface
-      const notification = document.createElement('div');
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(45deg, var(--primary), var(--primary-dark));
-        color: white;
-        padding: 15px 20px;
-        border-radius: 10px;
-        box-shadow: 0 8px 25px rgba(255, 170, 0, 0.3);
-        z-index: 10000;
-        max-width: 300px;
-        animation: slideInRight 0.3s ease;
-        border-left: 4px solid var(--success);
-        font-family: inherit;
-      `;
-      
-      notification.innerHTML = `
-        <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">💈 Novo Serviço</div>
-        <div style="font-size: 14px; line-height: 1.4;">
-          <strong>${data.barbeiro}</strong> - ${data.servico}<br>
-          <strong>Cliente:</strong> ${data.cliente}<br>
-          <strong>Valor:</strong> R$ ${data.valor}<br>
-          <small style="opacity: 0.8;">${data.timestamp}</small>
-        </div>
-      `;
-      
-      document.body.appendChild(notification);
-      
-      // Remover notificação após 5 segundos
-      setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.3s ease';
+      if (data.barbeiro !== usuarioAtual) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+          color: white;
+          padding: 15px 20px;
+          border-radius: 10px;
+          box-shadow: 0 8px 25px rgba(255, 170, 0, 0.3);
+          z-index: 10000;
+          max-width: 300px;
+          animation: slideInRight 0.3s ease;
+          border-left: 4px solid var(--success);
+          font-family: inherit;
+          backdrop-filter: blur(10px);
+        `;
+        
+        notification.innerHTML = `
+          <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">💈 Novo Serviço - ${data.barbeiro}</div>
+          <div style="font-size: 14px; line-height: 1.4;">
+            <strong>${data.servico}</strong> para ${data.cliente}<br>
+            <strong>Valor:</strong> R$ ${data.valor}<br>
+            <small style="opacity: 0.8;">${data.timestamp}</small>
+          </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Remover notificação após 5 segundos
         setTimeout(() => {
-          if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-          }
-        }, 300);
-      }, 5000);
+          notification.style.animation = 'slideOutRight 0.3s ease';
+          setTimeout(() => {
+            if (notification.parentNode) {
+              notification.parentNode.removeChild(notification);
+            }
+          }, 300);
+        }, 5000);
+      }
     }
 
     // ========== EVENT LISTENERS ==========
-
+    // Fechar modais ao clicar fora
     document.addEventListener('click', function(event) {
       if (event.target.classList.contains('modal')) {
         event.target.style.display = 'none';
@@ -1280,53 +1902,29 @@ input, select {
       }
     });
 
-    // Enter para confirmar serviço no modal de pagamento
-    document.getElementById('nomeClientePagamento')?.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter' && metodoPagamentoSelecionado) {
-        confirmarServico();
-      }
-    });
-
-    // Atualizar dados quando a página ganha foco
+    // Atualizar quando a página ganha foco
     document.addEventListener('visibilitychange', function() {
       if (!document.hidden) {
-        console.log('🔄 Página em foco, recarregando dados...');
-        carregarDados();
+        console.log('🔄 Página em foco, atualizando dados...');
+        carregarDadosLocais();
+        atualizarInterface();
       }
     });
 
-    // ========== FUNÇÕES UTILITÁRIAS ==========
-
-    function formatarData(data) {
-      return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
-    }
-
-    function obterDataAtual() {
-      return new Date().toISOString().split('T')[0];
-    }
-
-    function obterHoraAtual() {
-      return new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    }
-
-    // ========== DEBUG E LOGS ==========
-
-    console.log('💈 BarbaPRO Duo - Sistema carregado com sucesso!');
-    console.log('👤 Usuário atual:', usuarioAtual);
-    console.log('📊 Total de serviços Gabriel:', dados.Gabriel.length);
-    console.log('📊 Total de serviços Wagner:', dados.Wagner.length);
-    
-    // Monitorar alterações nos dados (apenas para debug)
-    const dadosProxy = new Proxy(dados, {
-      set(target, property, value) {
-        console.log(`📝 Dados alterados: ${property} =`, value);
-        target[property] = value;
-        return true;
-      }
+    // Salvar dados antes de fechar a página
+    window.addEventListener('beforeunload', function() {
+      salvarDadosLocais();
     });
 
-    // Expor dados para debug (remover em produção)
-    window.dadosBarbaPRO = dadosProxy;
+    // Sincronização automática a cada 5 minutos se online
+    setInterval(() => {
+      if (isOnline) {
+        console.log('🔄 Sincronização automática iniciada');
+        salvarDadosServidor();
+      }
+    }, 5 * 60 * 1000); // 5 minutos
+
+    console.log('💈 BarbaPRO Duo - Sistema de Registro carregado com sucesso!');
   </script>
 </body>
 </html>

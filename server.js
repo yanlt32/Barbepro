@@ -15,14 +15,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Contador de requisições (para monitoramento)
+// Contador de requisições
 let requestCount = 0;
 const startupTime = new Date();
 
 // Middleware de logging
 app.use((req, res, next) => {
     requestCount++;
-    console.log(`📊 ${new Date().toLocaleTimeString()} - ${req.method} ${req.url}`);
+    console.log(`📊 ${new Date().toLocaleTimeString()} - ${req.method} ${req.url} - IP: ${req.ip}`);
     next();
 });
 
@@ -33,14 +33,16 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 function loadData() {
     try {
         if (fs.existsSync(DATA_FILE)) {
-            return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            console.log('✅ Dados carregados do servidor');
+            return data;
         }
     } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        console.error('❌ Erro ao carregar dados:', error);
     }
     
     // Dados padrão
-    return {
+    const defaultData = {
         Gabriel: [],
         Wagner: [],
         despesas: [],
@@ -53,16 +55,41 @@ function loadData() {
             combo: 40
         }
     };
+    
+    // Criar arquivo com dados padrão
+    saveData(defaultData);
+    console.log('📝 Arquivo de dados criado com configurações padrão');
+    return defaultData;
 }
 
 // Salvar dados no arquivo
 function saveData(data) {
     try {
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        console.log('💾 Dados salvos no servidor');
         return true;
     } catch (error) {
-        console.error('Erro ao salvar dados:', error);
+        console.error('❌ Erro ao salvar dados:', error);
         return false;
+    }
+}
+
+// Backup automático a cada hora
+function criarBackup() {
+    try {
+        const data = loadData();
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const backupFile = path.join(__dirname, 'backups', `backup-${timestamp}.json`);
+        
+        // Criar pasta de backups se não existir
+        if (!fs.existsSync(path.join(__dirname, 'backups'))) {
+            fs.mkdirSync(path.join(__dirname, 'backups'), { recursive: true });
+        }
+        
+        fs.writeFileSync(backupFile, JSON.stringify(data, null, 2));
+        console.log(`💾 Backup criado: ${backupFile}`);
+    } catch (error) {
+        console.error('❌ Erro ao criar backup:', error);
     }
 }
 
@@ -100,8 +127,17 @@ wss.on('connection', function connection(ws) {
                     }
                 });
             }
+            
+            if (message.type === 'sync_dados') {
+                // Enviar dados atualizados para sincronização
+                const dados = loadData();
+                ws.send(JSON.stringify({
+                    type: 'sync_completo',
+                    data: dados
+                }));
+            }
         } catch (error) {
-            console.error('Erro ao processar mensagem WebSocket:', error);
+            console.error('❌ Erro ao processar mensagem WebSocket:', error);
         }
     });
     
@@ -109,8 +145,16 @@ wss.on('connection', function connection(ws) {
     ws.send(JSON.stringify({
         type: 'conexao',
         message: 'Conectado ao BarbaPRO Duo',
-        clientes: Object.keys(wss.clients).length,
-        timestamp: new Date().toLocaleTimeString('pt-BR')
+        clientes: wss.clients.size,
+        timestamp: new Date().toLocaleTimeString('pt-BR'),
+        online: true
+    }));
+    
+    // Enviar dados iniciais
+    const dados = loadData();
+    ws.send(JSON.stringify({
+        type: 'dados_iniciais',
+        data: dados
     }));
 });
 
@@ -131,7 +175,6 @@ function enviarNotificacao(barbeiro, servico, cliente, valor) {
 }
 
 // ===================== ROTAS DE KEEP-ALIVE =====================
-// IMPORTANTE: Para o cron-job funcionar na Render
 
 // 1. ROTA PING SIMPLES (para cron-job)
 app.get('/ping', (req, res) => {
@@ -157,7 +200,7 @@ app.get('/health', (req, res) => {
     res.json({
         status: 'healthy',
         app: 'BarbaPRO Duo - Sistema de Barbearia',
-        version: '1.0.0',
+        version: '2.0.0',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         startup: startupTime.toISOString(),
@@ -223,7 +266,8 @@ app.get('/status', (req, res) => {
             ping: '/ping (para cron-job)',
             health: '/health',
             api_data: '/api/data',
-            save_data: '/api/save (POST)'
+            save_data: '/api/save (POST)',
+            delete_mensalista: '/api/mensalista/delete (POST)'
         },
         
         // Para cron-job
@@ -293,6 +337,16 @@ app.post('/api/save', (req, res) => {
                 );
             }
             
+            // Enviar sincronização para todos os clientes
+            wss.clients.forEach(function each(client) {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify({
+                        type: 'sync_completo',
+                        data: data
+                    }));
+                }
+            });
+            
             res.json({ success: true, message: 'Dados salvos com sucesso' });
         } else {
             res.status(500).json({ success: false, error: 'Erro ao salvar dados' });
@@ -302,7 +356,118 @@ app.post('/api/save', (req, res) => {
     }
 });
 
-// ===================== INICIAR AUTO-PING (OPCIONAL) =====================
+// API para deletar mensalista
+app.post('/api/mensalista/delete', (req, res) => {
+    try {
+        const { id } = req.body;
+        const dados = loadData();
+        
+        const index = dados.mensalistas.findIndex(m => m.id === id);
+        if (index !== -1) {
+            const mensalistaRemovido = dados.mensalistas.splice(index, 1)[0];
+            
+            if (saveData(dados)) {
+                // Notificar todos os clientes
+                wss.clients.forEach(function each(client) {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({
+                            type: 'mensalista_removido',
+                            id: id,
+                            mensalista: mensalistaRemovido.nome
+                        }));
+                    }
+                });
+                
+                res.json({ 
+                    success: true, 
+                    message: `Mensalista ${mensalistaRemovido.nome} removido com sucesso` 
+                });
+            } else {
+                res.status(500).json({ success: false, error: 'Erro ao salvar após remoção' });
+            }
+        } else {
+            res.status(404).json({ success: false, error: 'Mensalista não encontrado' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// API para backup
+app.get('/api/backup', (req, res) => {
+    try {
+        criarBackup();
+        res.json({ success: true, message: 'Backup criado com sucesso' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// API para restaurar backup
+app.post('/api/backup/restore', (req, res) => {
+    try {
+        const { file } = req.body;
+        const backupFile = path.join(__dirname, 'backups', file);
+        
+        if (fs.existsSync(backupFile)) {
+            const backupData = JSON.parse(fs.readFileSync(backupFile, 'utf8'));
+            
+            if (saveData(backupData)) {
+                // Notificar todos os clientes
+                wss.clients.forEach(function each(client) {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({
+                            type: 'sync_completo',
+                            data: backupData
+                        }));
+                    }
+                });
+                
+                res.json({ success: true, message: 'Backup restaurado com sucesso' });
+            } else {
+                res.status(500).json({ success: false, error: 'Erro ao restaurar backup' });
+            }
+        } else {
+            res.status(404).json({ success: false, error: 'Arquivo de backup não encontrado' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Listar backups
+app.get('/api/backup/list', (req, res) => {
+    try {
+        const backupsDir = path.join(__dirname, 'backups');
+        
+        if (!fs.existsSync(backupsDir)) {
+            fs.mkdirSync(backupsDir, { recursive: true });
+        }
+        
+        const files = fs.readdirSync(backupsDir)
+            .filter(file => file.endsWith('.json'))
+            .map(file => {
+                const stats = fs.statSync(path.join(backupsDir, file));
+                return {
+                    file,
+                    size: `${(stats.size / 1024).toFixed(2)} KB`,
+                    created: stats.mtime
+                };
+            })
+            .sort((a, b) => b.created - a.created);
+        
+        res.json({ success: true, backups: files });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Rota padrão para SPA
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// ===================== INICIAR AUTO-PING =====================
 
 // Se estiver em produção, faz auto-ping
 if (process.env.NODE_ENV === 'production') {
@@ -313,6 +478,11 @@ if (process.env.NODE_ENV === 'production') {
     
     console.log('✅ Auto-ping interno configurado (10 minutos)');
 }
+
+// Backup automático a cada hora
+setInterval(() => {
+    criarBackup();
+}, 60 * 60 * 1000); // 1 hora
 
 // ===================== LOGS PERIÓDICOS =====================
 
@@ -331,13 +501,9 @@ setInterval(() => {
     👥 Wagner: ${data.Wagner?.length || 0}
     💰 Valor total: R$ ${calcularTotalServicos(data).toFixed(2)}
     📡 WebSocket: ${wss.clients.size} clientes
+    💾 Último backup: ${new Date().toLocaleTimeString('pt-BR')}
     `);
 }, 30 * 60 * 1000); // 30 minutos
-
-// Rota padrão para SPA
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 // ===================== INICIAR SERVIDOR =====================
 
@@ -355,6 +521,12 @@ server.listen(PORT, '0.0.0.0', () => {
     ✅ Status: http://localhost:${PORT}/status
     ✅ Simples: http://localhost:${PORT}/up
     
+    🔧 API ENDPOINTS:
+    📊 Dados: /api/data
+    💾 Salvar: /api/save (POST)
+    ❌ Deletar mensalista: /api/mensalista/delete (POST)
+    💽 Backup: /api/backup
+    
     💈 Acesse: http://localhost:${PORT}
     📊 Dashboard: http://localhost:${PORT}/dashboard
     `);
@@ -367,7 +539,12 @@ server.listen(PORT, '0.0.0.0', () => {
     ✂️  Wagner: ${data.Wagner?.length || 0} serviços  
     💸 Despesas: ${data.despesas?.length || 0}
     📅 Mensalistas: ${data.mensalistas?.length || 0}
+    ⚙️  PIN: ${data.config?.pin || '1234'}
+    📱 WhatsApp: ${data.config?.whatsapp || 'Não configurado'}
     `);
+    
+    // Criar primeiro backup
+    criarBackup();
 });
 
 // Tratamento de graceful shutdown
@@ -379,8 +556,17 @@ process.on('SIGTERM', () => {
         client.close();
     });
     
+    // Criar backup final
+    criarBackup();
+    
     server.close(() => {
-        console.log('✅ Servidor BarbaPRO encerrado');
+        console.log('✅ Servidor BarbaPRO encerrado com backup salvo');
         process.exit(0);
     });
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('❌ Erro não tratado:', err);
+    criarBackup(); // Salvar dados antes de sair
+    process.exit(1);
 });
