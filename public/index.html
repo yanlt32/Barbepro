@@ -682,6 +682,51 @@ select:focus {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Botões de Pagamento/Fiado */
+.opcao-pagamento-botoes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.opcao-pagamento-btn {
+  padding: 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 100px;
+}
+
+.opcao-pagamento-btn.pago {
+  background: linear-gradient(45deg, var(--success), #128C7E);
+  color: white;
+}
+
+.opcao-pagamento-btn.fiado {
+  background: linear-gradient(45deg, var(--warning), #cc6600);
+  color: white;
+}
+
+.opcao-pagamento-btn.selecionado {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 170, 0, 0.4);
+  border: 2px solid white;
+}
+
+.opcao-pagamento-btn:hover {
+  transform: translateY(-3px);
+  opacity: 0.9;
+}
   </style>
 </head>
 <body>
@@ -788,22 +833,39 @@ select:focus {
         Valor: <span id="servicoSelecionadoValor" style="color: #ffaa00; font-weight: 600;"></span>
       </p>
       
-      <div class="metodo-pagamento-grid">
-        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('dinheiro')">
-          <div>💵 DINHEIRO</div>
-          <div style="font-size:11px; color:var(--gray);">Pagamento em espécie</div>
-        </div>
-        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('pix')">
-          <div>📱 PIX</div>
-          <div style="font-size:11px; color:var(--gray);">Transferência instantânea</div>
-        </div>
-        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('debito')">
-          <div>💳 DÉBITO</div>
-          <div style="font-size:11px; color:var(--gray);">Cartão de débito</div>
-        </div>
-        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('credito')">
-          <div>💳 CRÉDITO</div>
-          <div style="font-size:11px; color:var(--gray);">Cartão de crédito</div>
+      <!-- Opções de PAGO/FIADO -->
+      <div class="opcao-pagamento-botoes">
+        <button class="opcao-pagamento-btn pago" onclick="selecionarOpcaoPagamento('pago')" id="btnPago">
+          <div style="font-size: 24px;">✅</div>
+          <div>PAGO</div>
+          <div style="font-size: 11px; opacity: 0.8;">Pagamento à vista</div>
+        </button>
+        <button class="opcao-pagamento-btn fiado" onclick="selecionarOpcaoPagamento('fiado')" id="btnFiado">
+          <div style="font-size: 24px;">⏳</div>
+          <div>FIADO</div>
+          <div style="font-size: 11px; opacity: 0.8;">Pagamento posterior</div>
+        </button>
+      </div>
+      
+      <!-- Métodos de pagamento (inicialmente oculto para fiado) -->
+      <div id="metodosPagamentoContainer" style="display: none;">
+        <div class="metodo-pagamento-grid">
+          <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('dinheiro')">
+            <div>💵 DINHEIRO</div>
+            <div style="font-size:11px; color:var(--gray);">Pagamento em espécie</div>
+          </div>
+          <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('pix')">
+            <div>📱 PIX</div>
+            <div style="font-size:11px; color:var(--gray);">Transferência instantânea</div>
+          </div>
+          <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('debito')">
+            <div>💳 DÉBITO</div>
+            <div style="font-size:11px; color:var(--gray);">Cartão de débito</div>
+          </div>
+          <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamento('credito')">
+            <div>💳 CRÉDITO</div>
+            <div style="font-size:11px; color:var(--gray);">Cartão de crédito</div>
+          </div>
         </div>
       </div>
       
@@ -823,25 +885,35 @@ select:focus {
       <input id="valorCustom" type="number" placeholder="Valor do serviço" min="1" step="0.01" />
       <input id="nomeCliente" placeholder="Nome do cliente (opcional)" maxlength="30" />
       
-      <div class="metodo-pagamento-grid">
-        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamentoCustom('dinheiro')">
-          <div>💵 DINHEIRO</div>
-        </div>
-        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamentoCustom('pix')">
-          <div>📱 PIX</div>
-        </div>
-        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamentoCustom('debito')">
-          <div>💳 DÉBITO</div>
-        </div>
-        <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamentoCustom('credito')">
-          <div>💳 CRÉDITO</div>
-        </div>
+      <!-- Opções de PAGO/FIADO para serviço personalizado -->
+      <div class="opcao-pagamento-botoes">
+        <button class="opcao-pagamento-btn pago" onclick="selecionarOpcaoPagamentoCustom('pago')" id="btnPagoCustom">
+          <div style="font-size: 24px;">✅</div>
+          <div>PAGO</div>
+        </button>
+        <button class="opcao-pagamento-btn fiado" onclick="selecionarOpcaoPagamentoCustom('fiado')" id="btnFiadoCustom">
+          <div style="font-size: 24px;">⏳</div>
+          <div>FIADO</div>
+        </button>
       </div>
       
-      <select id="pagoCustom">
-        <option value="1">PAGO</option>
-        <option value="0">FIADO</option>
-      </select>
+      <!-- Métodos de pagamento para serviço personalizado -->
+      <div id="metodosPagamentoContainerCustom" style="display: none;">
+        <div class="metodo-pagamento-grid">
+          <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamentoCustom('dinheiro')">
+            <div>💵 DINHEIRO</div>
+          </div>
+          <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamentoCustom('pix')">
+            <div>📱 PIX</div>
+          </div>
+          <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamentoCustom('debito')">
+            <div>💳 DÉBITO</div>
+          </div>
+          <div class="metodo-pagamento-btn" onclick="selecionarMetodoPagamentoCustom('credito')">
+            <div>💳 CRÉDITO</div>
+          </div>
+        </div>
+      </div>
       
       <div style="display: flex; gap: 15px; margin-top: 20px;">
         <button class="btn corte" onclick="salvarServicoCustom()" style="margin:0; flex:1;">SALVAR</button>
@@ -915,7 +987,9 @@ select:focus {
     };
 
     let servicoSelecionado = null;
+    let opcaoPagamentoSelecionada = null; // 'pago' ou 'fiado'
     let metodoPagamentoSelecionado = null;
+    let opcaoPagamentoCustomSelecionada = null;
     let metodoPagamentoCustomSelecionado = null;
     let dataFiltroAtual = null;
     let ws = null;
@@ -1328,12 +1402,19 @@ select:focus {
     // ========== FUNÇÕES DE SERVIÇOS ==========
     function abrirModalPagamento(tipo) {
       servicoSelecionado = tipo;
+      opcaoPagamentoSelecionada = null;
       metodoPagamentoSelecionado = null;
       
-      // Resetar seleção de método
+      // Resetar seleções
+      document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => {
+        btn.classList.remove('selecionado');
+      });
       document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
+      
+      // Ocultar métodos de pagamento
+      document.getElementById('metodosPagamentoContainer').style.display = 'none';
       
       // Definir nome e valor do serviço
       let nome, valor;
@@ -1363,7 +1444,35 @@ select:focus {
       document.getElementById('modalPagamento').style.display = 'flex';
     }
 
+    function selecionarOpcaoPagamento(opcao) {
+      opcaoPagamentoSelecionada = opcao;
+      metodoPagamentoSelecionado = null;
+      
+      // Atualizar visualmente os botões de opção
+      document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => {
+        btn.classList.remove('selecionado');
+      });
+      event.currentTarget.classList.add('selecionado');
+      
+      // Mostrar/ocultar métodos de pagamento
+      const metodosContainer = document.getElementById('metodosPagamentoContainer');
+      if (opcao === 'pago') {
+        metodosContainer.style.display = 'block';
+        // Resetar seleção de métodos
+        document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
+          btn.classList.remove('selecionado');
+        });
+      } else {
+        // Para fiado, ocultar métodos de pagamento
+        metodosContainer.style.display = 'none';
+      }
+      
+      console.log('✅ Opção selecionada:', opcao);
+    }
+
     function selecionarMetodoPagamento(metodo) {
+      if (opcaoPagamentoSelecionada !== 'pago') return;
+      
       metodoPagamentoSelecionado = metodo;
       
       // Atualizar visualmente
@@ -1375,7 +1484,35 @@ select:focus {
       console.log('✅ Método selecionado:', metodo);
     }
 
+    function selecionarOpcaoPagamentoCustom(opcao) {
+      opcaoPagamentoCustomSelecionada = opcao;
+      metodoPagamentoCustomSelecionado = null;
+      
+      // Atualizar visualmente os botões de opção
+      document.querySelectorAll('#modalOutro .opcao-pagamento-btn').forEach(btn => {
+        btn.classList.remove('selecionado');
+      });
+      event.currentTarget.classList.add('selecionado');
+      
+      // Mostrar/ocultar métodos de pagamento
+      const metodosContainer = document.getElementById('metodosPagamentoContainerCustom');
+      if (opcao === 'pago') {
+        metodosContainer.style.display = 'block';
+        // Resetar seleção de métodos
+        document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
+          btn.classList.remove('selecionado');
+        });
+      } else {
+        // Para fiado, ocultar métodos de pagamento
+        metodosContainer.style.display = 'none';
+      }
+      
+      console.log('✅ Opção custom selecionada:', opcao);
+    }
+
     function selecionarMetodoPagamentoCustom(metodo) {
+      if (opcaoPagamentoCustomSelecionada !== 'pago') return;
+      
       metodoPagamentoCustomSelecionado = metodo;
       
       // Atualizar visualmente
@@ -1389,7 +1526,13 @@ select:focus {
 
     async function confirmarServico() {
       // Validar seleção
-      if (!metodoPagamentoSelecionado) {
+      if (!opcaoPagamentoSelecionada) {
+        alert('⚠️ Selecione PAGO ou FIADO!');
+        return;
+      }
+      
+      // Se for PAGO, validar método de pagamento
+      if (opcaoPagamentoSelecionada === 'pago' && !metodoPagamentoSelecionado) {
         alert('⚠️ Selecione uma forma de pagamento!');
         return;
       }
@@ -1425,8 +1568,8 @@ select:focus {
         tipo: nome,
         valor: valor,
         cliente: nomeCliente,
-        pago: true,
-        metodoPagamento: metodoPagamentoSelecionado,
+        pago: opcaoPagamentoSelecionada === 'pago',
+        metodoPagamento: opcaoPagamentoSelecionada === 'pago' ? metodoPagamentoSelecionado : null,
         barbeiro: usuarioAtual,
         timestamp: new Date().getTime()
       };
@@ -1449,7 +1592,8 @@ select:focus {
           barbeiro: usuarioAtual,
           servico: nome,
           cliente: nomeCliente,
-          valor: valor
+          valor: valor,
+          status: opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO'
         }));
       }
       
@@ -1461,10 +1605,12 @@ select:focus {
       
       // Resetar variáveis
       servicoSelecionado = null;
+      opcaoPagamentoSelecionada = null;
       metodoPagamentoSelecionado = null;
       
       // Feedback visual
-      mostrarFeedback(`✅ Serviço registrado com sucesso!<br>${nome} - R$ ${valor.toFixed(2)}`, 'success');
+      const status = opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO';
+      mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>${nome} - R$ ${valor.toFixed(2)}`, 'success');
       
       console.log('🎉 Serviço salvo:', servico);
     }
@@ -1473,13 +1619,19 @@ select:focus {
       // Resetar campos
       document.getElementById('valorCustom').value = '';
       document.getElementById('nomeCliente').value = '';
-      document.getElementById('pagoCustom').value = '1';
+      opcaoPagamentoCustomSelecionada = null;
       metodoPagamentoCustomSelecionado = null;
       
-      // Resetar seleção de método
+      // Resetar seleções
+      document.querySelectorAll('#modalOutro .opcao-pagamento-btn').forEach(btn => {
+        btn.classList.remove('selecionado');
+      });
       document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
+      
+      // Ocultar métodos de pagamento
+      document.getElementById('metodosPagamentoContainerCustom').style.display = 'none';
       
       // Abrir modal
       document.getElementById('modalOutro').style.display = 'flex';
@@ -1495,15 +1647,20 @@ select:focus {
         return;
       }
       
-      // Validar método de pagamento
-      if (!metodoPagamentoCustomSelecionado) {
+      // Validar opção de pagamento
+      if (!opcaoPagamentoCustomSelecionada) {
+        alert('⚠️ Selecione PAGO ou FIADO!');
+        return;
+      }
+      
+      // Se for PAGO, validar método de pagamento
+      if (opcaoPagamentoCustomSelecionada === 'pago' && !metodoPagamentoCustomSelecionado) {
         alert('⚠️ Selecione uma forma de pagamento!');
         return;
       }
       
       // Obter dados do formulário
       const nomeCliente = document.getElementById('nomeCliente').value.trim() || 'Cliente';
-      const pago = document.getElementById('pagoCustom').value === '1';
       
       // Criar objeto do serviço
       const servico = {
@@ -1513,8 +1670,8 @@ select:focus {
         tipo: 'Outro',
         valor: valor,
         cliente: nomeCliente,
-        pago: pago,
-        metodoPagamento: metodoPagamentoCustomSelecionado,
+        pago: opcaoPagamentoCustomSelecionada === 'pago',
+        metodoPagamento: opcaoPagamentoCustomSelecionada === 'pago' ? metodoPagamentoCustomSelecionado : null,
         barbeiro: usuarioAtual,
         timestamp: new Date().getTime()
       };
@@ -1536,11 +1693,13 @@ select:focus {
       // Atualizar interface
       atualizarInterface();
       
-      // Resetar variável
+      // Resetar variáveis
+      opcaoPagamentoCustomSelecionada = null;
       metodoPagamentoCustomSelecionado = null;
       
       // Feedback visual
-      mostrarFeedback(`✅ ${pago ? 'Serviço PAGO' : 'Serviço FIADO'} registrado com sucesso!<br>R$ ${valor.toFixed(2)}`, 'success');
+      const status = opcaoPagamentoCustomSelecionada === 'pago' ? 'PAGO' : 'FIADO';
+      mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>R$ ${valor.toFixed(2)}`, 'success');
       
       console.log('🎉 Serviço custom salvo:', servico);
     }
@@ -1605,11 +1764,15 @@ select:focus {
         
         // Ícone do método de pagamento
         let metodoIcon = '💰';
-        switch(servico.metodoPagamento) {
-          case 'dinheiro': metodoIcon = '💵'; break;
-          case 'pix': metodoIcon = '📱'; break;
-          case 'debito': metodoIcon = '💳'; break;
-          case 'credito': metodoIcon = '💳'; break;
+        if (servico.pago) {
+          switch(servico.metodoPagamento) {
+            case 'dinheiro': metodoIcon = '💵'; break;
+            case 'pix': metodoIcon = '📱'; break;
+            case 'debito': metodoIcon = '💳'; break;
+            case 'credito': metodoIcon = '💳'; break;
+          }
+        } else {
+          metodoIcon = '⏳';
         }
         
         html += `
