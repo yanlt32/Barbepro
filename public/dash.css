@@ -1,0 +1,1052 @@
+/* ============================================
+   BARBAPRO DUO - CSS LEVE E BONITO
+   Performance + Design Elegante
+============================================ */
+
+/* 1. BASE - SIMPLES E LEVE */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f172a;
+    color: #f8fafc;
+    min-height: 100vh;
+    padding: 16px;
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 12px;
+}
+
+/* 2. HEADER - ELEGANTE */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 20px;
+    background: rgba(30, 41, 59, 0.7);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 170, 0, 0.2);
+    backdrop-filter: blur(8px);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    font-size: 32px;
+    color: #ffaa00;
+}
+
+.logo h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffaa00;
+    letter-spacing: -0.5px;
+}
+
+.logo-subtitle {
+    color: #94a3b8;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+/* 3. BOTÕES - MODERNOS */
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background: #334155;
+    color: #f8fafc;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ffaa00, #f59e0b);
+    color: #1e293b;
+}
+
+.btn-whatsapp {
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    color: white;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 4. CARDS - BONITOS E LEVES */
+.card {
+    background: rgba(30, 41, 59, 0.7);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    transition: transform 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 170, 0, 0.3);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-title {
+    color: #ffaa00;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 5. ÁREA DE MENSALISTAS - ESPECIAL */
+.mensalistas-container {
+    margin-bottom: 30px;
+}
+
+.mensalistas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(255, 170, 0, 0.3);
+}
+
+.mensalistas-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.mensalistas-title-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #ffaa00, #f59e0b);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #1e293b;
+}
+
+.mensalistas-title-text {
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffaa00;
+}
+
+.mensalistas-title-sub {
+    color: #94a3b8;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* Botões Arredondados */
+.btn-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.2s ease;
+}
+
+.btn-circle:hover {
+    transform: scale(1.1);
+}
+
+.btn-circle-add {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-circle-notify {
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    color: white;
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+
+/* Resumo de Status */
+.status-resumo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.status-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.status-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 170, 0, 0.3);
+}
+
+.status-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.status-number {
+    font-size: 32px;
+    font-weight: 800;
+    margin: 8px 0;
+    display: block;
+}
+
+.status-card.pago .status-number { color: #10b981; }
+.status-card.pendente .status-number { color: #f59e0b; }
+.status-card.vencido .status-number { color: #ef4444; }
+.status-card.hoje .status-number { color: #ffaa00; }
+
+.status-label {
+    font-size: 12px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+/* Menu de Status */
+.status-menu-container {
+    background: rgba(30, 41, 59, 0.7);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.status-menu-btn {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.status-menu-btn.active {
+    background: rgba(255, 170, 0, 0.2);
+    color: #ffaa00;
+    border: 1px solid rgba(255, 170, 0, 0.3);
+}
+
+.status-menu-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+}
+
+.status-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    background: rgba(255, 170, 0, 0.2);
+    border-radius: 11px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffaa00;
+}
+
+/* Filtros Modernos */
+.filtro-container {
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 170, 0, 0.2);
+    backdrop-filter: blur(8px);
+}
+
+.filtro-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-size: 14px;
+    color: #ffaa00;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.input-with-icon {
+    position: relative;
+}
+
+.input-with-icon input,
+.input-with-icon select {
+    width: 100%;
+    padding: 14px 16px 14px 42px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    color: #f8fafc;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.input-with-icon input:focus,
+.input-with-icon select:focus {
+    outline: none;
+    border-color: #ffaa00;
+    box-shadow: 0 0 0 2px rgba(255, 170, 0, 0.1);
+}
+
+.input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #ffaa00;
+    z-index: 1;
+}
+
+.filtro-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.filtro-btn {
+    flex: 1;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+.filtro-btn-apply {
+    background: linear-gradient(135deg, #ffaa00, #f59e0b);
+    color: #1e293b;
+}
+
+.filtro-btn-clear {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.filtro-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+/* Cards de Mensalistas */
+.mensalista-card {
+    background: rgba(30, 41, 59, 0.7);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border-left: 4px solid #10b981;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.mensalista-card:hover {
+    transform: translateY(-3px);
+    border-color: #ffaa00;
+}
+
+.mensalista-card.vencido {
+    border-left: 4px solid #ef4444;
+}
+
+.mensalista-card.pendente {
+    border-left: 4px solid #f59e0b;
+}
+
+.mensalista-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.mensalista-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mensalista-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffaa00, #f59e0b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.mensalista-nome {
+    font-weight: 700;
+    font-size: 18px;
+    color: #f8fafc;
+}
+
+.mensalista-barbeiro {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255, 170, 0, 0.2);
+    color: #ffaa00;
+    margin-top: 4px;
+}
+
+.mensalista-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    transition: all 0.2s ease;
+}
+
+.action-btn-circle:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.action-btn-circle.success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.action-btn-circle.whatsapp {
+    background: rgba(37, 211, 102, 0.2);
+    color: #25D366;
+}
+
+.action-btn-circle.edit {
+    background: rgba(255, 170, 0, 0.2);
+    color: #ffaa00;
+}
+
+.action-btn-circle.delete {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+/* Detalhes do Mensalista */
+.mensalista-detalhes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.detalhe-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.detalhe-label {
+    font-size: 12px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.detalhe-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.detalhe-valor {
+    color: #10b981;
+    font-size: 18px;
+}
+
+.detalhe-telefone {
+    color: #25D366;
+    font-weight: 600;
+}
+
+/* Status de Vencimento */
+.vencimento-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 12px;
+}
+
+.vencimento-status.hoje {
+    background: rgba(255, 170, 0, 0.2);
+    color: #ffaa00;
+    border: 1px solid rgba(255, 170, 0, 0.3);
+}
+
+.vencimento-status.proximo {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.vencimento-status.vencido {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.vencimento-status.pago {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    background: rgba(30, 41, 59, 0.7);
+    border-radius: 16px;
+    border: 2px dashed rgba(255, 170, 0, 0.3);
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: rgba(255, 170, 0, 0.5);
+}
+
+.empty-state-title {
+    color: #ffaa00;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.empty-state-subtitle {
+    color: #94a3b8;
+    font-size: 14px;
+    margin-bottom: 24px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 6. TABELAS - LEVES */
+.table-container {
+    overflow-x: auto;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(30, 41, 59, 0.7);
+    font-size: 14px;
+}
+
+th {
+    background: rgba(255, 170, 0, 0.1);
+    padding: 16px;
+    text-align: left;
+    font-weight: 700;
+    color: #ffaa00;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid rgba(255, 170, 0, 0.3);
+}
+
+td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* 7. STATS - ELEGANTES */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.stat-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+    border-color: rgba(255, 170, 0, 0.3);
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: #ffaa00;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+/* 8. MODAIS - LEVES */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background: rgba(30, 41, 59, 0.95);
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 170, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(255, 170, 0, 0.3);
+}
+
+.modal-title {
+    color: #ffaa00;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+}
+
+/* 9. RESPONSIVIDADE */
+@media (max-width: 1024px) {
+    .header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+    
+    .status-resumo-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .status-menu-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .filtro-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .mensalista-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .mensalista-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 12px;
+    }
+    
+    .container {
+        padding: 0 8px;
+    }
+    
+    .status-resumo-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .status-menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .filtro-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .filtro-actions {
+        flex-direction: column;
+    }
+    
+    .mensalista-detalhes-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    
+    .btn-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 16px;
+    }
+    
+    .logo h1 {
+        font-size: 20px;
+    }
+    
+    .status-menu-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .mensalista-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .mensalista-nome {
+        font-size: 16px;
+    }
+    
+    .action-btn-circle {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+}
+
+/* 10. SCROLLBAR PERSONALIZADA */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #ffaa00, #f59e0b);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #f59e0b, #ffaa00);
+}
+
+/* 11. ANIMAÇÕES SUAVES */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card, .mensalista-card, .status-card {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* 12. DASHBOARD GRID */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* 13. BADGES */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* 14. NOTIFICAÇÕES */
+.push-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(30, 41, 59, 0.95);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    z-index: 1001;
+    max-width: 320px;
+    border: 1px solid rgba(255, 170, 0, 0.3);
+    backdrop-filter: blur(10px);
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.push-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.push-title {
+    font-weight: 700;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.push-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* 15. FORMULÁRIOS */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    color: #ffaa00;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 16. TOOLTIPS */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 8px;
+}
+
+/* 17. PERFORMANCE HACKS */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* 18. FIX PARA MOBILE */
+@media (hover: none) and (pointer: coarse) {
+    .btn:hover, .card:hover, .status-card:hover {
+        transform: none;
+    }
+    
+    .btn, .action-btn-circle, input, select, textarea {
+        min-height: 44px;
+    }
+}

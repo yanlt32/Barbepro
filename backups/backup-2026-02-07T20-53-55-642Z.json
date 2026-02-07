@@ -1,18 +1,6 @@
 {
   "Gabriel": [
     {
-      "id": 1770499554749,
-      "hora": "18:25",
-      "data": "2026-02-07",
-      "tipo": "Corte",
-      "valor": 28,
-      "cliente": "Cliente",
-      "pago": true,
-      "metodoPagamento": "dinheiro",
-      "barbeiro": "Gabriel",
-      "timestamp": 1770499554786
-    },
-    {
       "hora": "10:49",
       "tipo": "Barba + Cabelo",
       "valor": 40,
