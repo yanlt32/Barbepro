@@ -15,17 +15,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Contador de requisições
-let requestCount = 0;
-const startupTime = new Date();
-
-// Middleware de logging
-app.use((req, res, next) => {
-    requestCount++;
-    console.log(`📊 ${new Date().toLocaleTimeString()} - ${req.method} ${req.url} - IP: ${req.ip}`);
-    next();
-});
-
 // Arquivo para persistência de dados
 const DATA_FILE = path.join(__dirname, 'data.json');
 
@@ -49,10 +38,13 @@ function loadData() {
         mensalistas: [],
         config: {
             pin: '1234',
-            whatsapp: '11962094589',
+            whatsapp: '11974065186',
             corte: 28,
             barba: 15,
-            combo: 40
+            combo: 40,
+            orcamentoDespesas: 1500,
+            notificacoesAtivas: true,
+            diasAlerta: 3
         }
     };
     
@@ -74,22 +66,40 @@ function saveData(data) {
     }
 }
 
-// Backup automático a cada hora
+// Backup automático
 function criarBackup() {
     try {
         const data = loadData();
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const backupFile = path.join(__dirname, 'backups', `backup-${timestamp}.json`);
+        const backupDir = path.join(__dirname, 'backups');
+        const backupFile = path.join(backupDir, `backup-${timestamp}.json`);
         
         // Criar pasta de backups se não existir
-        if (!fs.existsSync(path.join(__dirname, 'backups'))) {
-            fs.mkdirSync(path.join(__dirname, 'backups'), { recursive: true });
+        if (!fs.existsSync(backupDir)) {
+            fs.mkdirSync(backupDir, { recursive: true });
         }
         
         fs.writeFileSync(backupFile, JSON.stringify(data, null, 2));
         console.log(`💾 Backup criado: ${backupFile}`);
+        
+        // Limitar a 10 backups mais recentes
+        const files = fs.readdirSync(backupDir)
+            .filter(file => file.endsWith('.json'))
+            .map(file => ({ file, time: fs.statSync(path.join(backupDir, file)).mtime.getTime() }))
+            .sort((a, b) => b.time - a.time);
+        
+        // Remover backups antigos (manter apenas os 10 mais recentes)
+        if (files.length > 10) {
+            files.slice(10).forEach(({ file }) => {
+                fs.unlinkSync(path.join(backupDir, file));
+                console.log(`🗑️ Backup antigo removido: ${file}`);
+            });
+        }
+        
+        return backupFile;
     } catch (error) {
         console.error('❌ Erro ao criar backup:', error);
+        return null;
     }
 }
 
@@ -97,12 +107,48 @@ function criarBackup() {
 wss.on('connection', function connection(ws) {
     console.log('📱 Novo dispositivo conectado');
     
+    // Enviar dados iniciais
+    const dados = loadData();
+    ws.send(JSON.stringify({
+        type: 'dados_iniciais',
+        data: dados
+    }));
+    
     ws.on('message', function message(data) {
         try {
             const message = JSON.parse(data);
             
+            // Sincronização de dados
+            if (message.type === 'sync_request') {
+                const dados = loadData();
+                ws.send(JSON.stringify({
+                    type: 'sync_completo',
+                    data: dados
+                }));
+            }
+            
+            // Atualizar dados
+            if (message.type === 'update_data') {
+                if (saveData(message.data)) {
+                    // Enviar atualização para todos os clientes
+                    wss.clients.forEach(function each(client) {
+                        if (client.readyState === WebSocket.OPEN) {
+                            client.send(JSON.stringify({
+                                type: 'sync_completo',
+                                data: message.data
+                            }));
+                        }
+                    });
+                    
+                    ws.send(JSON.stringify({
+                        type: 'update_success',
+                        message: 'Dados atualizados'
+                    }));
+                }
+            }
+            
+            // Notificação de novo serviço
             if (message.type === 'novo_servico') {
-                // Enviar notificação para TODOS os outros dispositivos
                 wss.clients.forEach(function each(client) {
                     if (client !== ws && client.readyState === WebSocket.OPEN) {
                         client.send(JSON.stringify({
@@ -117,227 +163,57 @@ wss.on('connection', function connection(ws) {
                 });
             }
             
-            if (message.type === 'atualizar_dashboard') {
-                // Forçar atualização do dashboard em todos os dispositivos
-                wss.clients.forEach(function each(client) {
-                    if (client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify({
-                            type: 'atualizar'
-                        }));
-                    }
-                });
-            }
-            
-            if (message.type === 'sync_dados') {
-                // Enviar dados atualizados para sincronização
-                const dados = loadData();
-                ws.send(JSON.stringify({
-                    type: 'sync_completo',
-                    data: dados
-                }));
-            }
         } catch (error) {
             console.error('❌ Erro ao processar mensagem WebSocket:', error);
-        }
-    });
-    
-    // Enviar saudação ao novo cliente
-    ws.send(JSON.stringify({
-        type: 'conexao',
-        message: 'Conectado ao BarbaPRO Duo',
-        clientes: wss.clients.size,
-        timestamp: new Date().toLocaleTimeString('pt-BR'),
-        online: true
-    }));
-    
-    // Enviar dados iniciais
-    const dados = loadData();
-    ws.send(JSON.stringify({
-        type: 'dados_iniciais',
-        data: dados
-    }));
-});
-
-// Função para enviar notificação
-function enviarNotificacao(barbeiro, servico, cliente, valor) {
-    wss.clients.forEach(function each(client) {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({
-                type: 'notificacao',
-                barbeiro: barbeiro,
-                servico: servico,
-                cliente: cliente,
-                valor: valor,
-                timestamp: new Date().toLocaleTimeString('pt-BR')
+            ws.send(JSON.stringify({
+                type: 'error',
+                message: 'Erro ao processar mensagem'
             }));
         }
     });
-}
-
-// ===================== ROTAS DE KEEP-ALIVE =====================
-
-// 1. ROTA PING SIMPLES (para cron-job)
-app.get('/ping', (req, res) => {
-    const now = new Date();
-    console.log(`✅ Ping recebido às ${now.toLocaleTimeString('pt-BR')}`);
     
-    res.json({
-        status: 'online',
-        service: 'BarbaPRO Duo - Sistema de Barbearia',
-        timestamp: now.toISOString(),
-        uptime: Math.floor(process.uptime()),
-        requests: requestCount,
-        websocket_clients: wss.clients.size,
-        message: 'BarbaPRO Duo online e respondendo'
+    ws.on('close', function close() {
+        console.log('📱 Dispositivo desconectado');
+    });
+    
+    ws.on('error', function error(err) {
+        console.error('❌ Erro WebSocket:', err);
     });
 });
 
-// 2. ROTA HEALTH CHECK DETALHADO
-app.get('/health', (req, res) => {
-    const memory = process.memoryUsage();
-    const data = loadData();
-    
-    res.json({
-        status: 'healthy',
-        app: 'BarbaPRO Duo - Sistema de Barbearia',
-        version: '2.0.0',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        startup: startupTime.toISOString(),
-        requests: requestCount,
-        
-        // Dados da barbearia
-        barbearia: {
-            total_servicos: (data.Gabriel?.length || 0) + (data.Wagner?.length || 0),
-            Gabriel: data.Gabriel?.length || 0,
-            Wagner: data.Wagner?.length || 0,
-            despesas: data.despesas?.length || 0,
-            mensalistas: data.mensalistas?.length || 0
-        },
-        
-        // Sistema
-        memory: {
-            rss: `${Math.round(memory.rss / 1024 / 1024)}MB`,
-            heapTotal: `${Math.round(memory.heapTotal / 1024 / 1024)}MB`,
-            heapUsed: `${Math.round(memory.heapUsed / 1024 / 1024)}MB`
-        },
-        
-        websocket: {
-            connected_clients: wss.clients.size,
-            status: 'ativo'
-        },
-        
-        node: process.version,
-        platform: process.platform,
-        env: process.env.NODE_ENV || 'development',
-        port: PORT
-    });
-});
+// ===================== ROTAS PRINCIPAIS =====================
 
-// 3. ROTA STATUS PARA VERIFICAÇÃO MANUAL
-app.get('/status', (req, res) => {
-    const data = loadData();
-    const totalServicos = (data.Gabriel?.length || 0) + (data.Wagner?.length || 0);
-    const totalValor = calcularTotalServicos(data);
-    
-    res.json({
-        online: true,
-        service: 'BarbaPRO Duo',
-        uptime: `${Math.floor(process.uptime() / 60)} minutos`,
-        last_access: new Date().toLocaleString('pt-BR'),
-        
-        // Estatísticas da barbearia
-        statistics: {
-            total_services: totalServicos,
-            total_value: `R$ ${totalValor.toFixed(2)}`,
-            Gabriel_services: data.Gabriel?.length || 0,
-            Wagner_services: data.Wagner?.length || 0,
-            expenses: data.despesas?.length || 0,
-            monthly_clients: data.mensalistas?.length || 0
-        },
-        
-        // Configurações
-        config: data.config || {},
-        
-        // Endpoints disponíveis
-        endpoints: {
-            app: '/',
-            dashboard: '/dashboard',
-            ping: '/ping (para cron-job)',
-            health: '/health',
-            api_data: '/api/data',
-            save_data: '/api/save (POST)',
-            delete_mensalista: '/api/mensalista/delete (POST)'
-        },
-        
-        // Para cron-job
-        keep_alive: {
-            recommended_url: 'https://SEU-APP.onrender.com/ping',
-            recommended_interval: '14 minutos',
-            note: 'Configure no cron-job.org para manter online'
-        }
-    });
-});
-
-// 4. ROTA SUPER SIMPLES (apenas "OK")
-app.get('/up', (req, res) => {
-    res.send('OK');
-});
-
-// Função auxiliar para calcular total
-function calcularTotalServicos(data) {
-    let total = 0;
-    
-    // Somar serviços do Gabriel
-    if (data.Gabriel) {
-        data.Gabriel.forEach(servico => {
-            total += parseFloat(servico.valor) || 0;
-        });
-    }
-    
-    // Somar serviços do Wagner
-    if (data.Wagner) {
-        data.Wagner.forEach(servico => {
-            total += parseFloat(servico.valor) || 0;
-        });
-    }
-    
-    return total;
-}
-
-// ===================== ROTAS PRINCIPAIS DO APP =====================
-
-// Rotas principais
+// Rota raiz
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Dashboard
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// API para dados
+// API para obter dados
 app.get('/api/data', (req, res) => {
-    const data = loadData();
-    res.json({ success: true, data });
+    try {
+        const data = loadData();
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
+// API para salvar dados
 app.post('/api/save', (req, res) => {
     try {
-        const { data, notificar } = req.body;
+        const { data } = req.body;
+        
+        if (!data) {
+            return res.status(400).json({ success: false, error: 'Dados não fornecidos' });
+        }
         
         if (saveData(data)) {
-            // Se for para notificar (novo serviço)
-            if (notificar && notificar.barbeiro && notificar.servico) {
-                enviarNotificacao(
-                    notificar.barbeiro,
-                    notificar.servico,
-                    notificar.cliente,
-                    notificar.valor
-                );
-            }
-            
-            // Enviar sincronização para todos os clientes
+            // Notificar todos os clientes WebSocket
             wss.clients.forEach(function each(client) {
                 if (client.readyState === WebSocket.OPEN) {
                     client.send(JSON.stringify({
@@ -356,48 +232,64 @@ app.post('/api/save', (req, res) => {
     }
 });
 
-// API para deletar mensalista
-app.post('/api/mensalista/delete', (req, res) => {
+// API para backup
+app.get('/api/backup', (req, res) => {
     try {
-        const { id } = req.body;
-        const dados = loadData();
+        const backupFile = criarBackup();
         
-        const index = dados.mensalistas.findIndex(m => m.id === id);
-        if (index !== -1) {
-            const mensalistaRemovido = dados.mensalistas.splice(index, 1)[0];
-            
-            if (saveData(dados)) {
-                // Notificar todos os clientes
-                wss.clients.forEach(function each(client) {
-                    if (client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify({
-                            type: 'mensalista_removido',
-                            id: id,
-                            mensalista: mensalistaRemovido.nome
-                        }));
-                    }
-                });
-                
-                res.json({ 
-                    success: true, 
-                    message: `Mensalista ${mensalistaRemovido.nome} removido com sucesso` 
-                });
-            } else {
-                res.status(500).json({ success: false, error: 'Erro ao salvar após remoção' });
-            }
+        if (backupFile) {
+            res.json({ 
+                success: true, 
+                message: 'Backup criado com sucesso',
+                file: path.basename(backupFile)
+            });
         } else {
-            res.status(404).json({ success: false, error: 'Mensalista não encontrado' });
+            res.status(500).json({ success: false, error: 'Erro ao criar backup' });
         }
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-// API para backup
-app.get('/api/backup', (req, res) => {
+// API para listar backups
+app.get('/api/backup/list', (req, res) => {
     try {
-        criarBackup();
-        res.json({ success: true, message: 'Backup criado com sucesso' });
+        const backupDir = path.join(__dirname, 'backups');
+        
+        if (!fs.existsSync(backupDir)) {
+            fs.mkdirSync(backupDir, { recursive: true });
+        }
+        
+        const files = fs.readdirSync(backupDir)
+            .filter(file => file.endsWith('.json'))
+            .map(file => {
+                const stats = fs.statSync(path.join(backupDir, file));
+                return {
+                    file,
+                    size: `${(stats.size / 1024).toFixed(2)} KB`,
+                    created: stats.mtime,
+                    url: `/api/backup/download/${file}`
+                };
+            })
+            .sort((a, b) => b.created - a.created);
+        
+        res.json({ success: true, backups: files });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// API para baixar backup
+app.get('/api/backup/download/:file', (req, res) => {
+    try {
+        const file = req.params.file;
+        const backupFile = path.join(__dirname, 'backups', file);
+        
+        if (fs.existsSync(backupFile)) {
+            res.download(backupFile, `backup-${file}`);
+        } else {
+            res.status(404).json({ success: false, error: 'Backup não encontrado' });
+        }
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -435,112 +327,173 @@ app.post('/api/backup/restore', (req, res) => {
     }
 });
 
-// Listar backups
-app.get('/api/backup/list', (req, res) => {
+// API para deletar backup
+app.delete('/api/backup/:file', (req, res) => {
     try {
-        const backupsDir = path.join(__dirname, 'backups');
+        const file = req.params.file;
+        const backupFile = path.join(__dirname, 'backups', file);
         
-        if (!fs.existsSync(backupsDir)) {
-            fs.mkdirSync(backupsDir, { recursive: true });
+        if (fs.existsSync(backupFile)) {
+            fs.unlinkSync(backupFile);
+            res.json({ success: true, message: 'Backup excluído com sucesso' });
+        } else {
+            res.status(404).json({ success: false, error: 'Backup não encontrado' });
         }
-        
-        const files = fs.readdirSync(backupsDir)
-            .filter(file => file.endsWith('.json'))
-            .map(file => {
-                const stats = fs.statSync(path.join(backupsDir, file));
-                return {
-                    file,
-                    size: `${(stats.size / 1024).toFixed(2)} KB`,
-                    created: stats.mtime
-                };
-            })
-            .sort((a, b) => b.created - a.created);
-        
-        res.json({ success: true, backups: files });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-// Rota padrão para SPA
+// API para exportar dados em CSV
+app.get('/api/export/:type', (req, res) => {
+    try {
+        const type = req.params.type;
+        const data = loadData();
+        
+        let csv = '';
+        let filename = '';
+        
+        switch(type) {
+            case 'servicos':
+                const servicos = [...(data.Gabriel || []), ...(data.Wagner || [])];
+                csv = 'Data,Hora,Barbeiro,Cliente,Serviço,Valor,Status,Pagamento,Observações\n';
+                
+                servicos.forEach(s => {
+                    const linha = [
+                        s.data || '',
+                        s.hora || '',
+                        s.barbeiro || '',
+                        s.cliente || '',
+                        s.tipo || '',
+                        s.valor || 0,
+                        s.pago ? 'PAGO' : 'FIADO',
+                        s.metodoPagamento || '',
+                        s.observacoes || ''
+                    ].map(campo => `"${campo}"`).join(',');
+                    
+                    csv += linha + '\n';
+                });
+                
+                filename = `servicos_${new Date().toISOString().split('T')[0]}.csv`;
+                break;
+                
+            case 'despesas':
+                const despesas = data.despesas || [];
+                csv = 'Data,Descrição,Categoria,Valor,Tags,Comprovante,Observações\n';
+                
+                despesas.forEach(d => {
+                    const linha = [
+                        d.data || '',
+                        d.descricao || '',
+                        d.categoria || '',
+                        d.valor || 0,
+                        (d.tags || []).join('; '),
+                        d.comprovante || '',
+                        d.observacoes || ''
+                    ].map(campo => `"${campo}"`).join(',');
+                    
+                    csv += linha + '\n';
+                });
+                
+                filename = `despesas_${new Date().toISOString().split('T')[0]}.csv`;
+                break;
+                
+            case 'mensalistas':
+                const mensalistas = data.mensalistas || [];
+                csv = 'Nome,Telefone,Barbeiro,Valor,Data Início,Dia Vencimento,Status,Observações\n';
+                
+                mensalistas.forEach(m => {
+                    const linha = [
+                        m.nome || '',
+                        m.telefone || '',
+                        m.barbeiro || '',
+                        m.valor || 0,
+                        m.dataInicio || '',
+                        m.diaVencimento || '',
+                        m.status || '',
+                        m.observacoes || ''
+                    ].map(campo => `"${campo}"`).join(',');
+                    
+                    csv += linha + '\n';
+                });
+                
+                filename = `mensalistas_${new Date().toISOString().split('T')[0]}.csv`;
+                break;
+                
+            default:
+                return res.status(400).json({ success: false, error: 'Tipo de exportação inválido' });
+        }
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(csv);
+        
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Rota para verificar status simples
+app.get('/status', (req, res) => {
+    const data = loadData();
+    const totalServicos = (data.Gabriel?.length || 0) + (data.Wagner?.length || 0);
+    
+    res.json({
+        status: 'online',
+        app: 'BarbaPRO Duo',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        clients: wss.clients.size,
+        statistics: {
+            total_services: totalServicos,
+            Gabriel: data.Gabriel?.length || 0,
+            Wagner: data.Wagner?.length || 0,
+            expenses: data.despesas?.length || 0,
+            monthly_clients: data.mensalistas?.length || 0
+        }
+    });
+});
+
+// Rota para SPA (todas as outras rotas vão para index.html)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ===================== INICIAR AUTO-PING =====================
+// ===================== INICIAR SERVIDOR =====================
 
-// Se estiver em produção, faz auto-ping
-if (process.env.NODE_ENV === 'production') {
-    // Auto-ping a cada 10 minutos (para garantir)
-    setInterval(() => {
-        console.log(`🔄 Auto-ping interno: ${new Date().toLocaleTimeString('pt-BR')}`);
-    }, 10 * 60 * 1000); // 10 minutos
-    
-    console.log('✅ Auto-ping interno configurado (10 minutos)');
-}
-
-// Backup automático a cada hora
+// Criar backup a cada 1 hora
 setInterval(() => {
     criarBackup();
-}, 60 * 60 * 1000); // 1 hora
+}, 60 * 60 * 1000);
 
-// ===================== LOGS PERIÓDICOS =====================
-
-// Log de status a cada 30 minutos
-setInterval(() => {
+// Iniciar servidor
+server.listen(PORT, '0.0.0.0', () => {
     const data = loadData();
     const totalServicos = (data.Gabriel?.length || 0) + (data.Wagner?.length || 0);
     
     console.log(`
-    📊 STATUS BARBAPRO DUO:
-    ⏰ Horário: ${new Date().toLocaleString('pt-BR')}
-    🔄 Uptime: ${Math.floor(process.uptime() / 60)} minutos
-    📞 Requisições: ${requestCount}
-    💈 Serviços totais: ${totalServicos}
-    👥 Gabriel: ${data.Gabriel?.length || 0}
-    👥 Wagner: ${data.Wagner?.length || 0}
-    💰 Valor total: R$ ${calcularTotalServicos(data).toFixed(2)}
-    📡 WebSocket: ${wss.clients.size} clientes
-    💾 Último backup: ${new Date().toLocaleTimeString('pt-BR')}
-    `);
-}, 30 * 60 * 1000); // 30 minutos
-
-// ===================== INICIAR SERVIDOR =====================
-
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`
-    🚀 BARBAPRO DUO INICIADO!
+    ⚡ BARBAPRO DUO INICIADO!
     🔗 Porta: ${PORT}
     ⏰ Início: ${new Date().toLocaleString('pt-BR')}
-    📡 WebSocket: Ativo para notificações em tempo real
+    📡 WebSocket: Pronto para sincronização em tempo real
     💾 Dados: ${DATA_FILE}
     
-    🌐 ENDPOINTS PARA CRON-JOB:
-    ✅ Ping: http://localhost:${PORT}/ping
-    ✅ Health: http://localhost:${PORT}/health  
-    ✅ Status: http://localhost:${PORT}/status
-    ✅ Simples: http://localhost:${PORT}/up
-    
-    🔧 API ENDPOINTS:
-    📊 Dados: /api/data
-    💾 Salvar: /api/save (POST)
-    ❌ Deletar mensalista: /api/mensalista/delete (POST)
-    💽 Backup: /api/backup
-    
-    💈 Acesse: http://localhost:${PORT}
-    📊 Dashboard: http://localhost:${PORT}/dashboard
-    `);
-    
-    // Mostrar dados iniciais
-    const data = loadData();
-    console.log(`
-    📁 DADOS CARREGADOS:
+    📊 DADOS INICIAIS:
     ✂️  Gabriel: ${data.Gabriel?.length || 0} serviços
     ✂️  Wagner: ${data.Wagner?.length || 0} serviços  
     💸 Despesas: ${data.despesas?.length || 0}
     📅 Mensalistas: ${data.mensalistas?.length || 0}
+    📈 Total serviços: ${totalServicos}
     ⚙️  PIN: ${data.config?.pin || '1234'}
     📱 WhatsApp: ${data.config?.whatsapp || 'Não configurado'}
+    
+    🌐 ENDPOINTS DISPONÍVEIS:
+    🔗 App: http://localhost:${PORT}
+    📊 Dashboard: http://localhost:${PORT}/dashboard
+    📊 API Data: http://localhost:${PORT}/api/data
+    💾 Backup: http://localhost:${PORT}/api/backup/list
+    📄 Exportar: /api/export/servicos, /api/export/despesas, /api/export/mensalistas
+    📡 Status: http://localhost:${PORT}/status
     `);
     
     // Criar primeiro backup
@@ -553,7 +506,9 @@ process.on('SIGTERM', () => {
     
     // Fechar conexões WebSocket
     wss.clients.forEach(client => {
-        client.close();
+        if (client.readyState === WebSocket.OPEN) {
+            client.close();
+        }
     });
     
     // Criar backup final
@@ -565,8 +520,29 @@ process.on('SIGTERM', () => {
     });
 });
 
+process.on('SIGINT', () => {
+    console.log('🛑 Recebido SIGINT, encerrando...');
+    
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.close();
+        }
+    });
+    
+    criarBackup();
+    
+    server.close(() => {
+        console.log('✅ Servidor encerrado');
+        process.exit(0);
+    });
+});
+
 process.on('uncaughtException', (err) => {
     console.error('❌ Erro não tratado:', err);
     criarBackup(); // Salvar dados antes de sair
     process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Promise rejeitada não tratada:', reason);
 });

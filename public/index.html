@@ -968,8 +968,7 @@ select:focus {
       </div>
     </div>
   </div>
-
-  <script>
+<script>
     // ========== VARIÁVEIS GLOBAIS ==========
     let usuarioAtual = 'Gabriel';
     let dados = {
@@ -996,6 +995,70 @@ select:focus {
     let isOnline = false;
     let syncTimeout = null;
 
+    // ========== FUNÇÕES DE DATA CORRIGIDAS ==========
+
+    // Obter data atual no fuso horário de Brasília (UTC-3)
+    function getDataAtualBrasilia() {
+        const agora = new Date();
+        
+        // Converter para fuso horário de Brasília (UTC-3)
+        // Criar uma nova data no fuso horário local, mas forçando ser UTC-3
+        const offset = -3; // Brasília é UTC-3
+        const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
+        const dataBrasilia = new Date(utc + (3600000 * offset));
+        
+        // Formatar como YYYY-MM-DD
+        const ano = dataBrasilia.getFullYear();
+        const mes = String(dataBrasilia.getMonth() + 1).padStart(2, '0');
+        const dia = String(dataBrasilia.getDate()).padStart(2, '0');
+        
+        return `${ano}-${mes}-${dia}`;
+    }
+
+    // Formatar data para exibição no padrão brasileiro
+    function formatarDataBR(dataISO) {
+        if (!dataISO) return '';
+        
+        // Se a data já estiver no formato brasileiro, retornar como está
+        if (dataISO.includes('/')) {
+            return dataISO;
+        }
+        
+        // Extrair partes da data ISO (YYYY-MM-DD)
+        const [ano, mes, dia] = dataISO.split('-');
+        return `${dia}/${mes}/${ano}`;
+    }
+
+    // Converter data brasileira para ISO (para comparações)
+    function converterDataBRparaISO(dataBR) {
+        if (!dataBR) return '';
+        
+        // Se já estiver em formato ISO, retornar como está
+        if (dataBR.includes('-') && dataBR.length === 10) {
+            return dataBR;
+        }
+        
+        // Converter de DD/MM/YYYY para YYYY-MM-DD
+        const [dia, mes, ano] = dataBR.split('/');
+        return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+    }
+
+    // Obter hora atual no fuso horário de Brasília
+    function getHoraAtualBrasilia() {
+        const agora = new Date();
+        
+        // Ajustar para fuso horário de Brasília
+        const offset = -3; // UTC-3
+        const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
+        const dataBrasilia = new Date(utc + (3600000 * offset));
+        
+        // Formatar hora como HH:MM
+        const hora = String(dataBrasilia.getHours()).padStart(2, '0');
+        const minutos = String(dataBrasilia.getMinutes()).padStart(2, '0');
+        
+        return `${hora}:${minutos}`;
+    }
+
     // ========== INICIALIZAÇÃO ==========
     document.addEventListener('DOMContentLoaded', function() {
       console.log('🚀 BarbaPRO - Sistema inicializando...');
@@ -1006,11 +1069,19 @@ select:focus {
       // Carregar dados locais primeiro
       carregarDadosLocais();
       
-      // Configurar data atual no filtro
-      const hoje = new Date().toISOString().split('T')[0];
+      // Verificar e corrigir datas incorretas
+      verificarDatasServicos();
+      
+      // Configurar data atual no filtro com fuso horário correto
+      const hoje = getDataAtualBrasilia();
       document.getElementById('dataFiltro').value = hoje;
       dataFiltroAtual = hoje;
       document.getElementById('dataHoje').textContent = formatarDataBR(hoje);
+      
+      // Mostrar data atual no console para debug
+      console.log('📅 Data atual (Brasília):', hoje);
+      console.log('📅 Data atual (UTC):', new Date().toISOString().split('T')[0]);
+      console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
       
       // Conectar ao servidor
       conectarWebSocket();
@@ -1284,6 +1355,42 @@ select:focus {
       document.getElementById('precoBarbaCabelo').textContent = dados.config.combo.toFixed(2);
     }
 
+    // ========== FUNÇÃO PARA VERIFICAR E CORRIGIR DATAS ==========
+    function verificarDatasServicos() {
+      console.log('🔍 Verificando datas dos serviços...');
+      
+      const hojeCorreto = getDataAtualBrasilia();
+      let servicosCorrigidos = 0;
+      
+      // Verificar serviços de Gabriel
+      dados.Gabriel.forEach(servico => {
+        // Se a data do serviço for maior que hoje (futuro), corrigir
+        if (servico.data > hojeCorreto) {
+          console.log(`⚠️ Serviço de Gabriel com data futura: ${servico.data} -> Corrigindo para ${hojeCorreto}`);
+          servico.data = hojeCorreto;
+          servicosCorrigidos++;
+        }
+      });
+      
+      // Verificar serviços de Wagner
+      dados.Wagner.forEach(servico => {
+        // Se a data do serviço for maior que hoje (futuro), corrigir
+        if (servico.data > hojeCorreto) {
+          console.log(`⚠️ Serviço de Wagner com data futura: ${servico.data} -> Corrigindo para ${hojeCorreto}`);
+          servico.data = hojeCorreto;
+          servicosCorrigidos++;
+        }
+      });
+      
+      if (servicosCorrigidos > 0) {
+        console.log(`✅ ${servicosCorrigidos} serviços com data corrigida`);
+        salvarDadosLocais();
+        mostrarFeedback(`⚠️ ${servicosCorrigidos} serviços ajustados para data atual`, 'warning');
+      }
+      
+      return servicosCorrigidos;
+    }
+
     // ========== SINCORNIZAÇÃO ==========
     async function sincronizarDados() {
       const btnSync = document.getElementById('btnSync');
@@ -1377,7 +1484,7 @@ select:focus {
     }
 
     function atualizarResumoDiario() {
-      const hoje = new Date().toISOString().split('T')[0];
+      const hoje = getDataAtualBrasilia();
       const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
       
       const totalServicos = servicosHoje.length;
@@ -1560,18 +1667,19 @@ select:focus {
       // Obter nome do cliente
       const nomeCliente = document.getElementById('nomeClientePagamento').value.trim() || 'Cliente';
       
-      // Criar objeto do serviço
+      // Criar objeto do serviço com data/hora no fuso correto
       const servico = {
         id: Date.now(),
-        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
-        data: new Date().toISOString().split('T')[0],
+        hora: getHoraAtualBrasilia(),
+        data: getDataAtualBrasilia(),
         tipo: nome,
         valor: valor,
         cliente: nomeCliente,
         pago: opcaoPagamentoSelecionada === 'pago',
         metodoPagamento: opcaoPagamentoSelecionada === 'pago' ? metodoPagamentoSelecionado : null,
         barbeiro: usuarioAtual,
-        timestamp: new Date().getTime()
+        timestamp: new Date().getTime(),
+        timezone: 'America/Sao_Paulo' // Adicionar informação do fuso horário
       };
       
       console.log('➕ Adicionando serviço:', servico);
@@ -1593,7 +1701,9 @@ select:focus {
           servico: nome,
           cliente: nomeCliente,
           valor: valor,
-          status: opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO'
+          status: opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO',
+          data: servico.data,
+          hora: servico.hora
         }));
       }
       
@@ -1662,18 +1772,19 @@ select:focus {
       // Obter dados do formulário
       const nomeCliente = document.getElementById('nomeCliente').value.trim() || 'Cliente';
       
-      // Criar objeto do serviço
+      // Criar objeto do serviço com data/hora no fuso correto
       const servico = {
         id: Date.now(),
-        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
-        data: new Date().toISOString().split('T')[0],
+        hora: getHoraAtualBrasilia(),
+        data: getDataAtualBrasilia(),
         tipo: 'Outro',
         valor: valor,
         cliente: nomeCliente,
         pago: opcaoPagamentoCustomSelecionada === 'pago',
         metodoPagamento: opcaoPagamentoCustomSelecionada === 'pago' ? metodoPagamentoCustomSelecionado : null,
         barbeiro: usuarioAtual,
-        timestamp: new Date().getTime()
+        timestamp: new Date().getTime(),
+        timezone: 'America/Sao_Paulo'
       };
       
       console.log('➕ Adicionando serviço customizado:', servico);
@@ -1707,7 +1818,7 @@ select:focus {
     // ========== FUNÇÕES DE LISTA E FILTRO ==========
     function atualizarListaServicos() {
       const container = document.getElementById('listaServicos');
-      const dataFiltro = dataFiltroAtual || new Date().toISOString().split('T')[0];
+      const dataFiltro = dataFiltroAtual || getDataAtualBrasilia();
       
       // Filtrar serviços pela data
       const servicosFiltrados = dados[usuarioAtual].filter(servico => {
@@ -1816,10 +1927,10 @@ select:focus {
     }
 
     function limparFiltro() {
-      const hoje = new Date().toISOString().split('T')[0];
+      const hoje = getDataAtualBrasilia();
       document.getElementById('dataFiltro').value = hoje;
       dataFiltroAtual = hoje;
-      console.log('🗓️ Filtro resetado para hoje:', hoje);
+      console.log('🗓️ Filtro resetado para hoje (Brasília):', hoje);
       atualizarListaServicos();
     }
 
@@ -1828,7 +1939,7 @@ select:focus {
         return;
       }
       
-      const dataFiltro = dataFiltroAtual || new Date().toISOString().split('T')[0];
+      const dataFiltro = dataFiltroAtual || getDataAtualBrasilia();
       const servicosFiltrados = dados[usuarioAtual].filter(s => s.data === dataFiltro);
       
       if (index >= 0 && index < servicosFiltrados.length) {
@@ -1861,7 +1972,7 @@ select:focus {
 
     // ========== FUNÇÕES DE WHATSAPP ==========
     function abrirModalEnviarWhatsApp() {
-      const hoje = new Date().toISOString().split('T')[0];
+      const hoje = getDataAtualBrasilia();
       const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
       const totalValor = servicosHoje.reduce((sum, s) => sum + s.valor, 0);
       const totalPago = servicosHoje.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
@@ -1932,11 +2043,6 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
     // ========== FUNÇÕES AUXILIARES ==========
     function fecharModal(id) {
       document.getElementById(id).style.display = 'none';
-    }
-
-    function formatarDataBR(dataISO) {
-      const [ano, mes, dia] = dataISO.split('-');
-      return `${dia}/${mes}/${ano}`;
     }
 
     function mostrarFeedback(mensagem, tipo = 'info') {
@@ -2043,6 +2149,35 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
       }
     }
 
+    // ========== FUNÇÃO DE DEBUG PARA VERIFICAR DATAS ==========
+    function debugDatas() {
+      console.log('🔍 DEBUG - DATAS NO SISTEMA');
+      console.log('📅 Data atual (sistema):', new Date());
+      console.log('📅 Data atual (ISO UTC):', new Date().toISOString());
+      console.log('📅 Data atual (ISO split):', new Date().toISOString().split('T')[0]);
+      console.log('📅 Data atual (Brasília):', getDataAtualBrasilia());
+      console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
+      
+      // Verificar serviços com datas futuras
+      const hojeCorreto = getDataAtualBrasilia();
+      const servicosFuturos = [];
+      
+      [...dados.Gabriel, ...dados.Wagner].forEach(servico => {
+        if (servico.data > hojeCorreto) {
+          servicosFuturos.push(servico);
+        }
+      });
+      
+      if (servicosFuturos.length > 0) {
+        console.log(`⚠️ ${servicosFuturos.length} serviços com data futura:`);
+        servicosFuturos.forEach(s => {
+          console.log(`   ${s.data} - ${s.barbeiro} - ${s.tipo} - R$ ${s.valor}`);
+        });
+      } else {
+        console.log('✅ Nenhum serviço com data futura encontrado');
+      }
+    }
+
     // ========== EVENT LISTENERS ==========
     // Fechar modais ao clicar fora
     document.addEventListener('click', function(event) {
@@ -2088,6 +2223,15 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
     }, 5 * 60 * 1000); // 5 minutos
 
     console.log('💈 BarbaPRO Duo - Sistema de Registro carregado com sucesso!');
+    
+    // Expor função de debug para console
+    window.debugDatas = debugDatas;
+    
+    // Teste inicial de datas
+    console.log('🧪 Teste de datas:');
+    console.log('   Data UTC:', new Date().toISOString().split('T')[0]);
+    console.log('   Data Brasil:', getDataAtualBrasilia());
+    console.log('   Hora Brasil:', getHoraAtualBrasilia());
   </script>
 </body>
 </html>
