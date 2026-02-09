@@ -5,11 +5,476 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BarbaPRO Duo - Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="dash.css">
     <style>
-        /* ESTILOS ADICIONAIS PARA DESPESAS */
+        /* ========== RESET E CONFIGURAÇÕES GERAIS ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* ========== HEADER ========== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(255,170,0,0.1) 0%, rgba(51,102,255,0.1) 100%);
+            border-radius: 20px;
+            border: 1px solid rgba(255,170,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            font-size: 40px;
+            background: linear-gradient(135deg, #ffaa00, #ff7733);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        
+        .logo h1 {
+            background: linear-gradient(135deg, #ffaa00, #ff7733);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        
+        .logo-subtitle {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 4px;
+            font-weight: 400;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        /* ========== BOTÕES ========== */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ffaa00 0%, #ff7733 100%);
+            color: #000;
+            box-shadow: 0 6px 20px rgba(255,170,0,0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(37,211,102,0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00cc99 0%, #009973 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(0,204,153,0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff3366 0%, #cc0033 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(255,51,102,0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        /* ========== DASHBOARD GRID ========== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        /* ========== CARDS ========== */
+        .card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ffaa00, #ff7733);
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border-color: rgba(255,170,0,0.3);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .card-title {
+            color: #ffaa00;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* ========== ESTATÍSTICAS ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateY(-3px);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffaa00, #ff7733);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        
+        .stat-secondary .stat-value {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-warning .stat-value {
+            background: linear-gradient(135deg, #FF9500, #FF7733);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-danger .stat-value {
+            background: linear-gradient(135deg, #ff3366, #cc0033);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* ========== TABELAS ========== */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 15px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.03);
+        }
+        
+        th {
+            background: linear-gradient(135deg, rgba(255,170,0,0.1), rgba(255,170,0,0.05));
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 700;
+            color: #ffaa00;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(255,170,0,0.2);
+        }
+        
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* ========== BOTÃO DE EXCLUSÃO NA TABELA ========== */
+        .delete-service-btn {
+            background: rgba(255, 50, 50, 0.2);
+            color: #ff3366;
+            border: 1px solid rgba(255, 50, 50, 0.3);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: bold;
+            font-size: 20px;
+            margin-left: 5px;
+        }
+        
+        .delete-service-btn:hover {
+            background: rgba(255, 50, 50, 0.3);
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 5px 15px rgba(255,50,50,0.3);
+        }
+        
+        /* ========== STATUS TAGS ========== */
+        .status-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-pago {
+            background: linear-gradient(135deg, rgba(37,211,102,0.2), rgba(37,211,102,0.1));
+            color: #25D366;
+            border: 1px solid rgba(37,211,102,0.3);
+        }
+        
+        .status-pendente {
+            background: linear-gradient(135deg, rgba(255,149,0,0.2), rgba(255,149,0,0.1));
+            color: #FF9500;
+            border: 1px solid rgba(255,149,0,0.3);
+        }
+        
+        .status-vencido {
+            background: linear-gradient(135deg, rgba(255,51,102,0.2), rgba(255,51,102,0.1));
+            color: #ff3366;
+            border: 1px solid rgba(255,51,102,0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        /* ========== MENSALISTAS ========== */
+        .mensalista-card {
+            background: linear-gradient(135deg, rgba(0,204,153,0.05), rgba(0,204,153,0.02));
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0,204,153,0.1);
+            border-left: 4px solid #00cc99;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .mensalista-card.vencido {
+            background: linear-gradient(135deg, rgba(255,51,102,0.05), rgba(255,51,102,0.02));
+            border-left: 4px solid #ff3366;
+            animation: pulse-alert 2s infinite;
+        }
+        
+        .mensalista-card.pendente {
+            background: linear-gradient(135deg, rgba(255,149,0,0.05), rgba(255,149,0,0.02));
+            border-left: 4px solid #FF9500;
+        }
+        
+        .mensalista-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,204,153,0.1);
+        }
+        
+        .mensalista-card.vencido:hover {
+            box-shadow: 0 10px 25px rgba(255,51,102,0.1);
+        }
+        
+        .mensalista-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .mensalista-nome {
+            font-weight: 700;
+            font-size: 16px;
+            color: #fff;
+        }
+        
+        .mensalista-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .mensalista-detalhes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .mensalista-detalhes-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .mensalista-detalhes-label {
+            color: #aaa;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .mensalista-detalhes-value {
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .mensalista-valor {
+            color: #00cc99;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        
+        .mensalista-telefone {
+            color: #25D366;
+            font-weight: 600;
+        }
+        
+        .mensalista-vencimento {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        
+        .mensalista-vencimento.hoje {
+            background: rgba(255,149,0,0.2);
+            color: #FF9500;
+            border: 1px solid rgba(255,149,0,0.3);
+        }
+        
+        .mensalista-vencimento.vencido {
+            background: rgba(255,51,102,0.2);
+            color: #ff3366;
+            border: 1px solid rgba(255,51,102,0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        .mensalista-vencimento.proximo {
+            background: rgba(255,170,0,0.2);
+            color: #ffaa00;
+            border: 1px solid rgba(255,170,0,0.3);
+        }
+        
+        /* ========== DESPESAS ========== */
         .despesa-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
             border-radius: 12px;
             padding: 15px;
             margin-bottom: 10px;
@@ -18,7 +483,7 @@
         }
         
         .despesa-card:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255,255,255,0.08);
             transform: translateY(-2px);
         }
         
@@ -65,7 +530,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255,255,255,0.03);
             border-radius: 8px;
             margin-bottom: 8px;
         }
@@ -77,7 +542,7 @@
         
         .progresso-despesa {
             height: 6px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255,255,255,0.1);
             border-radius: 3px;
             margin: 10px 0;
             overflow: hidden;
@@ -88,6 +553,630 @@
             background: linear-gradient(90deg, #ff3366, #ff6699);
             border-radius: 3px;
             transition: width 0.5s ease;
+        }
+        
+        /* ========== FILTROS ========== */
+        .filtro-container {
+            background: rgba(255,255,255,0.03);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .filtro-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .input-group label {
+            font-size: 14px;
+            color: #ffaa00;
+            font-weight: 600;
+        }
+        
+        /* ========== INPUTS ========== */
+        input, select, textarea {
+            padding: 14px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        select option {
+            background-color: #0a0a0a;
+            color: #fff;
+            padding: 12px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #ffaa00;
+            box-shadow: 0 0 0 3px rgba(255,170,0,0.1);
+        }
+        
+        /* ========== MODAIS ========== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.95) 100%);
+            border-radius: 25px;
+            padding: 35px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,170,0,0.3);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255,170,0,0.3);
+        }
+        
+        .modal-title {
+            color: #ffaa00;
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffaa00, #ff7733);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .close-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255,170,0,0.2);
+            transform: rotate(90deg);
+        }
+        
+        /* ========== FORMULÁRIOS ========== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .form-group label {
+            color: #ffaa00;
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* ========== GRÁFICOS ========== */
+        .grafico-container {
+            height: 320px;
+            margin-top: 20px;
+            position: relative;
+        }
+        
+        /* ========== NOTIFICAÇÕES ========== */
+        .notificacao {
+            background: linear-gradient(135deg, rgba(255,51,102,0.1), rgba(255,51,102,0.05));
+            border: 2px solid rgba(255,51,102,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            animation: pulse-alert 2s infinite;
+        }
+        
+        .notificacao.sucesso {
+            background: linear-gradient(135deg, rgba(37,211,102,0.1), rgba(37,211,102,0.05));
+            border: 2px solid rgba(37,211,102,0.3);
+            animation: none;
+        }
+        
+        .notificacao-titulo {
+            color: #ff3366;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .notificacao.sucesso .notificacao-titulo {
+            color: #25D366;
+        }
+        
+        .notificacao-mensalista {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255,51,102,0.1);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .notificacao-mensalista:hover {
+            background: rgba(255,51,102,0.15);
+        }
+        
+        /* ========== BOTÕES DE AÇÃO ========== */
+        .action-btn {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+        
+        .action-btn.success {
+            background: rgba(0, 204, 153, 0.2);
+            color: #00cc99;
+            border-color: rgba(0, 204, 153, 0.3);
+        }
+        
+        .action-btn.success:hover {
+            background: rgba(0, 204, 153, 0.3);
+            box-shadow: 0 5px 15px rgba(0,204,153,0.3);
+        }
+        
+        .action-btn.whatsapp {
+            background: rgba(37, 211, 102, 0.2);
+            color: #25D366;
+            border-color: rgba(37, 211, 102, 0.3);
+        }
+        
+        .action-btn.whatsapp:hover {
+            background: rgba(37, 211, 102, 0.3);
+            box-shadow: 0 5px 15px rgba(37,211,102,0.3);
+        }
+        
+        .action-btn.edit {
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+            border-color: rgba(255, 170, 0, 0.3);
+        }
+        
+        .action-btn.edit:hover {
+            background: rgba(255, 170, 0, 0.3);
+            box-shadow: 0 5px 15px rgba(255,170,0,0.3);
+        }
+        
+        /* ========== BADGES ========== */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        .badge-success {
+            background: linear-gradient(135deg, rgba(37,211,102,0.2), rgba(37,211,102,0.1));
+            color: #25D366;
+            border: 1px solid rgba(37,211,102,0.3);
+        }
+        
+        .badge-warning {
+            background: linear-gradient(135deg, rgba(255,149,0,0.2), rgba(255,149,0,0.1));
+            color: #FF9500;
+            border: 1px solid rgba(255,149,0,0.3);
+        }
+        
+        .badge-danger {
+            background: linear-gradient(135deg, rgba(255,51,102,0.2), rgba(255,51,102,0.1));
+            color: #ff3366;
+            border: 1px solid rgba(255,51,102,0.3);
+        }
+        
+        /* ========== ANIMAÇÕES ========== */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes pulse-alert {
+            0% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 51, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0); }
+        }
+        
+        /* ========== RESPONSIVIDADE PARA TABLET ========== */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 15px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .status-menu {
+                overflow-x: auto;
+                white-space: nowrap;
+                padding-bottom: 10px;
+            }
+            
+            .mensalista-detalhes {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .filtro-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .mensalista-detalhes {
+                grid-template-columns: 1fr;
+            }
+            
+            .filtro-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+            }
+            
+            .modal-content {
+                padding: 25px 20px;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .form-actions .btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 20px 15px;
+            }
+            
+            .btn {
+                padding: 10px 15px;
+                font-size: 13px;
+            }
+            
+            .stat-value {
+                font-size: 28px;
+            }
+            
+            .mensalista-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .mensalista-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .action-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .delete-service-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 18px;
+            }
+        }
+        
+        /* ========== MENU DE STATUS ========== */
+        .status-menu {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .status-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-btn.active {
+            background: rgba(255,170,0,0.2);
+            color: #ffaa00;
+        }
+        
+        .status-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* ========== CONTADOR DE STATUS ========== */
+        .status-counter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: rgba(255,170,0,0.3);
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+        
+        /* ========== CARDS RESUMO STATUS ========== */
+        .status-resumo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .status-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .status-card.pago {
+            border-top: 4px solid #25D366;
+        }
+        
+        .status-card.pendente {
+            border-top: 4px solid #FF9500;
+        }
+        
+        .status-card.vencido {
+            border-top: 4px solid #ff3366;
+        }
+        
+        .status-card-total {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 10px 0;
+        }
+        
+        .status-card.pago .status-card-total {
+            color: #25D366;
+        }
+        
+        .status-card.pendente .status-card-total {
+            color: #FF9500;
+        }
+        
+        .status-card.vencido .status-card-total {
+            color: #ff3366;
+        }
+        
+        .status-card-label {
+            font-size: 12px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* ========== EMPTY STATE ========== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .empty-state-title {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .empty-state-subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        /* ========== NOTIFICAÇÃO PUSH ========== */
+        .push-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(255,51,102,0.9), rgba(204,0,51,0.9));
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 10001;
+            max-width: 350px;
+            animation: slideInRight 0.5s ease;
+            display: none;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .push-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .push-title {
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .push-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* ========== SCROLLBAR PERSONALIZADA ========== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #ffaa00, #ff7733);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #ff7733, #ffaa00);
         }
     </style>
 </head>
@@ -306,7 +1395,7 @@
             </div>
         </div>
 
-        <!-- Terceira Linha: Mensalistas - ÁREA MELHORADA -->
+        <!-- Terceira Linha: Mensalistas -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">👥 MENSALISTAS - GERENCIAMENTO INTELIGENTE</div>
@@ -449,7 +1538,7 @@
             </div>
         </div>
 
-        <!-- Quinta Linha: Serviços Recentes -->
+        <!-- Quinta Linha: Serviços Recentes (COM BOTÃO DE EXCLUSÃO) -->
         <div class="card">
             <div class="card-header">
                 <div class="card-title">📝 SERVIÇOS RECENTES</div>
@@ -778,22 +1867,14 @@
         </div>
     </div>
 
-    <!-- JavaScript COMPLETO E FUNCIONAL -->
+    <!-- ========== JAVASCRIPT ========== -->
     <script>
-        // ========== VARIÁVEIS GLOBAIS ==========
+// ========== VARIÁVEIS GLOBAIS ==========
 let dados = { 
-    Gabriel: [
-    
-    ], 
-    Wagner: [
-      
-    ], 
-    despesas: [
-    
-    ],
-    mensalistas: [
-     
-    ],
+    Gabriel: [], 
+    Wagner: [],
+    despesas: [],
+    mensalistas: [],
     config: { 
         pin: '1234', 
         whatsapp: '11974065186', 
@@ -807,11 +1888,10 @@ let dados = {
 };
 
 let graficoPizza = null;
-let filtroMetodoAtual = null;
-let filtroStatusAtual = 'todos';
 let notificacaoAtiva = false;
 let editandoMensalistaId = null;
 let editandoDespesaId = null;
+let filtroStatusAtual = 'todos';
 
 // ========== INICIALIZAÇÃO ==========
 document.addEventListener('DOMContentLoaded', function() {
@@ -820,24 +1900,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function inicializarDashboard() {
-    // Carregar dados do localStorage se existir
     carregarDados();
-    
-    // Configurar datas
     configurarDatasDashboard();
-    
-    // Configurar event listeners
     configurarEventListenersDashboard();
-    
-    // Inicializar gráficos
     inicializarGraficos();
-    
-    // Atualizar dashboard
     atualizarDashboardCompleto();
-    
-    // Iniciar verificações periódicas
     iniciarVerificacoesPeriodicas();
-    
     console.log('✅ Dashboard inicializado!');
 }
 
@@ -846,7 +1914,6 @@ function carregarDados() {
         const dadosSalvos = localStorage.getItem('barbapro_duo');
         if (dadosSalvos) {
             const dadosParseados = JSON.parse(dadosSalvos);
-            // Mesclar dados salvos com dados padrão
             Object.keys(dadosParseados).forEach(key => {
                 if (dados[key] !== undefined) {
                     dados[key] = dadosParseados[key];
@@ -873,7 +1940,6 @@ function configurarDatasDashboard() {
     const umaSemanaAtras = new Date();
     umaSemanaAtras.setDate(hoje.getDate() - 7);
     
-    // Configurar datas padrão
     const formatarData = (date) => date.toISOString().split('T')[0];
     
     // Serviços recentes
@@ -952,6 +2018,15 @@ function configurarEventListenersDashboard() {
         });
     });
     
+    // Fechar modais ao clicar fora
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+    });
+    
     // Input mask para telefone
     const telefoneInput = document.getElementById('telefoneMensalista');
     if (telefoneInput) {
@@ -972,25 +2047,11 @@ function configurarEventListenersDashboard() {
             e.target.value = value;
         });
     }
-    
-    // Fechar modais ao clicar fora
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.style.display = 'none';
-            }
-        });
-    });
 }
 
 function iniciarVerificacoesPeriodicas() {
-    // Verificar vencimentos a cada 5 minutos
     setInterval(verificarVencimentosMensalistas, 300000);
-    
-    // Verificar orçamento de despesas a cada hora
     setInterval(verificarOrcamentoDespesas, 3600000);
-    
-    // Atualizar dashboard a cada 30 segundos
     setInterval(() => {
         atualizarDashboardCompleto();
     }, 30000);
@@ -1019,7 +2080,6 @@ function atualizarEstatisticasBarbeiros() {
     const fiadoGabrielHoje = servicosGabrielHoje.filter(s => !s.pago).reduce((sum, s) => sum + s.valor, 0);
     const mediaGabriel = servicosGabrielHoje.length > 0 ? (totalGabrielHoje / servicosGabrielHoje.length) : 0;
     
-    // Atualizar Gabriel
     document.getElementById('gabrielHoje').textContent = servicosGabrielHoje.length;
     document.getElementById('gabrielTotalHoje').textContent = `R$ ${totalGabrielHoje.toFixed(2)}`;
     document.getElementById('gabrielFiadoHoje').textContent = `R$ ${fiadoGabrielHoje.toFixed(2)}`;
@@ -1031,7 +2091,6 @@ function atualizarEstatisticasBarbeiros() {
     const fiadoWagnerHoje = servicosWagnerHoje.filter(s => !s.pago).reduce((sum, s) => sum + s.valor, 0);
     const mediaWagner = servicosWagnerHoje.length > 0 ? (totalWagnerHoje / servicosWagnerHoje.length) : 0;
     
-    // Atualizar Wagner
     document.getElementById('wagnerHoje').textContent = servicosWagnerHoje.length;
     document.getElementById('wagnerTotalHoje').textContent = `R$ ${totalWagnerHoje.toFixed(2)}`;
     document.getElementById('wagnerFiadoHoje').textContent = `R$ ${fiadoWagnerHoje.toFixed(2)}`;
@@ -1043,12 +2102,13 @@ function atualizarEstatisticasGerais() {
     const mesAtual = hoje.getMonth();
     const anoAtual = hoje.getFullYear();
     
-    // Calcular totais do mês
+    // Gabriel
     const servicosGabrielMes = dados.Gabriel.filter(s => {
         const dataServico = new Date(s.data);
         return dataServico.getMonth() === mesAtual && dataServico.getFullYear() === anoAtual;
     });
     
+    // Wagner
     const servicosWagnerMes = dados.Wagner.filter(s => {
         const dataServico = new Date(s.data);
         return dataServico.getMonth() === mesAtual && dataServico.getFullYear() === anoAtual;
@@ -1084,29 +2144,24 @@ function atualizarEstatisticasDespesas() {
     const mesAtual = hoje.getMonth();
     const anoAtual = hoje.getFullYear();
     
-    // Filtrar despesas do mês
     const despesasMes = dados.despesas.filter(d => {
         const dataDespesa = new Date(d.data);
         return dataDespesa.getMonth() === mesAtual && dataDespesa.getFullYear() === anoAtual;
     });
     
-    // Calcular estatísticas
     const totalDespesasMes = despesasMes.reduce((sum, d) => sum + d.valor, 0);
     const numDespesasMes = despesasMes.length;
     const maiorDespesaMes = despesasMes.length > 0 ? Math.max(...despesasMes.map(d => d.valor)) : 0;
     
-    // Calcular lucro líquido
     const totalReceitaMes = document.getElementById('totalMes').textContent.replace('R$ ', '').replace(',', '.');
     const totalReceita = parseFloat(totalReceitaMes) || 0;
     const lucroLiquido = totalReceita - totalDespesasMes;
     
-    // Atualizar cards
     document.getElementById('totalDespesasMes').textContent = `R$ ${totalDespesasMes.toFixed(2)}`;
     document.getElementById('numDespesasMes').textContent = numDespesasMes;
     document.getElementById('maiorDespesaMes').textContent = `R$ ${maiorDespesaMes.toFixed(2)}`;
     document.getElementById('lucroLiquido').textContent = `R$ ${lucroLiquido.toFixed(2)}`;
     
-    // Aplicar cor ao lucro (verde se positivo, vermelho se negativo)
     const lucroElement = document.getElementById('lucroLiquido');
     if (lucroElement) {
         if (lucroLiquido > 0) {
@@ -1122,7 +2177,6 @@ function atualizarResumoPagamentos() {
     const todosServicos = [...dados.Gabriel, ...dados.Wagner];
     const servicosHoje = todosServicos.filter(s => s.data === hoje);
     
-    // Calcular por método de pagamento
     const totalDinheiro = servicosHoje.filter(s => s.metodoPagamento === 'dinheiro').reduce((sum, s) => sum + s.valor, 0);
     const totalPix = servicosHoje.filter(s => s.metodoPagamento === 'pix').reduce((sum, s) => sum + s.valor, 0);
     const totalDebito = servicosHoje.filter(s => s.metodoPagamento === 'debito').reduce((sum, s) => sum + s.valor, 0);
@@ -1214,6 +2268,162 @@ function atualizarGraficoPizza() {
     graficoPizza.update();
 }
 
+// ========== FUNÇÃO PARA EXCLUIR SERVIÇOS ==========
+function excluirServico(servicoId, barbeiro) {
+    if (!confirm('⚠️ Tem certeza que deseja excluir este serviço?\n\nEsta ação não pode ser desfeita.')) {
+        return;
+    }
+    
+    // Encontrar o índice do serviço no array correto
+    const index = dados[barbeiro].findIndex(s => s.id === servicoId);
+    
+    if (index === -1) {
+        alert('❌ Serviço não encontrado!');
+        return;
+    }
+    
+    // Remover o serviço
+    const servicoRemovido = dados[barbeiro][index];
+    dados[barbeiro].splice(index, 1);
+    
+    // Salvar dados
+    salvarDados();
+    
+    // Atualizar dashboard
+    atualizarDashboardCompleto();
+    
+    alert(`✅ Serviço removido com sucesso!\nCliente: ${servicoRemovido.cliente}\nValor: R$ ${servicoRemovido.valor.toFixed(2)}`);
+}
+
+// ========== ATUALIZAR LISTA DE SERVIÇOS RECENTES ==========
+function atualizarListaServicosRecentes() {
+    const dataInicio = document.getElementById('dataInicioServicos').value;
+    const dataFim = document.getElementById('dataFimServicos').value;
+    const filtroBarbeiro = document.getElementById('filtroBarbeiroServicos').value;
+    const filtroPagamento = document.getElementById('filtroPagamentoServicos').value;
+    
+    let todosServicos = [...dados.Gabriel, ...dados.Wagner];
+    
+    // Aplicar filtros
+    if (dataInicio && dataFim) {
+        todosServicos = todosServicos.filter(servico => {
+            if (servico.data < dataInicio || servico.data > dataFim) return false;
+            if (filtroBarbeiro !== 'todos' && servico.barbeiro !== filtroBarbeiro) return false;
+            if (filtroPagamento === 'pago' && !servico.pago) return false;
+            if (filtroPagamento === 'fiado' && servico.pago) return false;
+            return true;
+        });
+    }
+    
+    // Ordenar por data e hora (mais recente primeiro)
+    todosServicos.sort((a, b) => {
+        const dataA = new Date(a.data + 'T' + (a.hora || '00:00'));
+        const dataB = new Date(b.data + 'T' + (b.hora || '00:00'));
+        return dataB - dataA;
+    });
+    
+    // Calcular totais filtrados
+    const totalFiltrado = todosServicos.reduce((sum, s) => sum + s.valor, 0);
+    const totalPagoFiltrado = todosServicos.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
+    
+    let html = '';
+    
+    if (todosServicos.length > 0) {
+        html = `
+            <div style="background: rgba(255,255,255,0.03); border-radius: 15px; padding: 20px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;">
+                    <div>
+                        <div style="font-size: 12px; color: #aaa;">TOTAL FILTRADO</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #ffaa00;">R$ ${totalFiltrado.toFixed(2)}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #aaa;">SERVIÇOS</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #fff;">${todosServicos.length}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #aaa;">RECEBIDO</div>
+                        <div style="font-size: 20px; font-weight: 600; color: #25D366;">R$ ${totalPagoFiltrado.toFixed(2)}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>📅 Data</th>
+                        <th>⏰ Hora</th>
+                        <th>👤 Barbeiro</th>
+                        <th>✂️ Serviço</th>
+                        <th>👤 Cliente</th>
+                        <th>💰 Valor</th>
+                        <th>💳 Pagamento</th>
+                        <th>📊 Status</th>
+                        <th>🗑️</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        todosServicos.slice(0, 50).forEach(servico => {
+            const statusClass = servico.pago ? 'status-pago' : 'status-pendente';
+            const statusTexto = servico.pago ? 'PAGO' : 'FIADO';
+            const metodoPagamento = servico.metodoPagamento || 'N/A';
+            
+            let metodoIcon = '💰';
+            switch(metodoPagamento) {
+                case 'dinheiro': metodoIcon = '💵'; break;
+                case 'pix': metodoIcon = '📱'; break;
+                case 'debito': metodoIcon = '💳'; break;
+                case 'credito': metodoIcon = '💳'; break;
+            }
+            
+            html += `
+                <tr>
+                    <td>${formatarDataBR(servico.data)}</td>
+                    <td>${servico.hora || '--:--'}</td>
+                    <td>
+                        <span class="badge ${servico.barbeiro === 'Gabriel' ? 'badge-warning' : 'badge-success'}">
+                            ${servico.barbeiro}
+                        </span>
+                    </td>
+                    <td>${servico.tipo || 'Corte'}</td>
+                    <td>${servico.cliente || 'Cliente'}</td>
+                    <td style="font-weight: 600; color: #ffaa00;">R$ ${servico.valor.toFixed(2)}</td>
+                    <td>${metodoIcon} ${metodoPagamento.toUpperCase()}</td>
+                    <td><span class="status-tag ${statusClass}">${statusTexto}</span></td>
+                    <td>
+                        <button class="delete-service-btn" onclick="excluirServico(${servico.id}, '${servico.barbeiro}')" title="Excluir serviço">
+                            ×
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                </tbody>
+            </table>
+            
+            <div style="text-align: center; margin-top: 20px; color: #aaa; font-size: 14px;">
+                Mostrando ${Math.min(todosServicos.length, 50)} de ${todosServicos.length} serviços
+                ${todosServicos.length > 50 ? '(use filtros para ver mais)' : ''}
+            </div>
+        `;
+    } else {
+        html = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <div class="empty-state-title">Nenhum serviço encontrado</div>
+                <div class="empty-state-subtitle">
+                    Tente ajustar os filtros ou datas
+                </div>
+            </div>
+        `;
+    }
+    
+    document.getElementById('listaServicosRecentes').innerHTML = html;
+}
+
 // ========== FUNÇÕES DE DESPESAS ==========
 function atualizarListaDespesasRecentes() {
     const dataInicio = document.getElementById('dataInicioDespesas').value;
@@ -1222,7 +2432,6 @@ function atualizarListaDespesasRecentes() {
     
     let despesasFiltradas = [...dados.despesas];
     
-    // Aplicar filtros
     if (dataInicio && dataFim) {
         despesasFiltradas = despesasFiltradas.filter(d => 
             d.data >= dataInicio && d.data <= dataFim
@@ -1233,10 +2442,8 @@ function atualizarListaDespesasRecentes() {
         despesasFiltradas = despesasFiltradas.filter(d => d.categoria === filtroCategoria);
     }
     
-    // Ordenar por data (mais recente primeiro)
     despesasFiltradas.sort((a, b) => new Date(b.data) - new Date(a.data));
     
-    // Calcular totais
     const totalFiltrado = despesasFiltradas.reduce((sum, d) => sum + d.valor, 0);
     const mediaDespesa = despesasFiltradas.length > 0 ? (totalFiltrado / despesasFiltradas.length) : 0;
     
@@ -1326,10 +2533,7 @@ function atualizarListaDespesasRecentes() {
                         ` : ''}
                         
                         <div class="despesa-actions">
-                            <button class="action-btn edit" onclick="editarDespesa(${despesa.id})" data-tooltip="Editar">
-                                ✏️
-                            </button>
-                            <button class="action-btn" onclick="removerDespesa(${despesa.id})" data-tooltip="Remover" style="background: rgba(255,0,0,0.2); color: #ff0000;">
+                            <button class="action-btn" onclick="removerDespesa(${despesa.id})" title="Remover despesa">
                                 ×
                             </button>
                         </div>
@@ -1364,6 +2568,7 @@ function atualizarListaDespesasRecentes() {
     document.getElementById('listaDespesasRecentes').innerHTML = html;
 }
 
+// ========== FUNÇÕES PARA ABRIR MODAIS ==========
 function abrirModalDespesas() {
     // Atualizar resumo financeiro
     atualizarResumoFinanceiroDespesas();
@@ -1375,1307 +2580,10 @@ function abrirModalDespesas() {
     document.getElementById('modalDespesas').style.display = 'flex';
 }
 
-function atualizarResumoFinanceiroDespesas() {
-    const hoje = new Date();
-    const mesAtual = hoje.getMonth();
-    const anoAtual = hoje.getFullYear();
-    
-    // Despesas do mês
-    const despesasMes = dados.despesas.filter(d => {
-        const dataDespesa = new Date(d.data);
-        return dataDespesa.getMonth() === mesAtual && dataDespesa.getFullYear() === anoAtual;
-    });
-    
-    const totalDespesas = despesasMes.reduce((sum, d) => sum + d.valor, 0);
-    const orcamento = dados.config.orcamentoDespesas || 1500;
-    const percentualUsado = (totalDespesas / orcamento) * 100;
-    
-    // Calcular por categoria
-    const categorias = {};
-    despesasMes.forEach(d => {
-        if (!categorias[d.categoria]) {
-            categorias[d.categoria] = 0;
-        }
-        categorias[d.categoria] += d.valor;
-    });
-    
-    let categoriasHtml = '';
-    Object.keys(categorias).forEach(categoria => {
-        const totalCategoria = categorias[categoria];
-        const percentualCategoria = (totalCategoria / totalDespesas) * 100;
-        
-        categoriasHtml += `
-            <div class="categoria-item">
-                <div>${categoria}</div>
-                <div class="categoria-total">R$ ${totalCategoria.toFixed(2)}</div>
-            </div>
-            <div class="progresso-despesa">
-                <div class="progresso-bar" style="width: ${percentualCategoria}%;"></div>
-            </div>
-        `;
-    });
-    
-    const html = `
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-            <div>
-                <div style="font-size: 12px; color: #aaa;">ORÇAMENTO MENSAL</div>
-                <div style="font-size: 24px; font-weight: 700; color: #fff;">R$ ${orcamento.toFixed(2)}</div>
-            </div>
-            <div>
-                <div style="font-size: 12px; color: #aaa;">DESPESAS MÊS</div>
-                <div style="font-size: 24px; font-weight: 700; color: ${totalDespesas > orcamento ? '#ff3366' : '#25D366'};">R$ ${totalDespesas.toFixed(2)}</div>
-            </div>
-        </div>
-        
-        <div class="progresso-despesa" style="margin: 15px 0;">
-            <div class="progresso-bar" style="width: ${Math.min(percentualUsado, 100)}%; background: ${percentualUsado > 100 ? 'linear-gradient(90deg, #ff3366, #ff0066)' : 'linear-gradient(90deg, #ff3366, #ff6699)'};"></div>
-        </div>
-        
-        <div style="text-align: center; margin: 10px 0; color: ${percentualUsado > 100 ? '#ff3366' : '#aaa'};">
-            ${percentualUsado.toFixed(1)}% do orçamento utilizado
-            ${percentualUsado > 100 ? '⚠️ EXCEDIDO!' : ''}
-        </div>
-        
-        <div style="margin-top: 20px;">
-            <div style="font-size: 14px; font-weight: 600; margin-bottom: 10px;">📊 DISTRIBUIÇÃO POR CATEGORIA</div>
-            ${categoriasHtml || '<div style="text-align: center; color: #aaa; padding: 20px;">Nenhuma despesa registrada este mês</div>'}
-        </div>
-    `;
-    
-    document.getElementById('resumoFinanceiroDespesas').innerHTML = html;
+function abrirModalMensalistas() {
+    document.getElementById('modalMensalistas').style.display = 'flex';
 }
 
-function atualizarListaDespesasModal() {
-    const hoje = new Date();
-    const mesAtual = hoje.getMonth();
-    const anoAtual = hoje.getFullYear();
-    
-    const despesasMes = dados.despesas.filter(d => {
-        const dataDespesa = new Date(d.data);
-        return dataDespesa.getMonth() === mesAtual && dataDespesa.getFullYear() === anoAtual;
-    }).sort((a, b) => new Date(b.data) - new Date(a.data));
-    
-    let html = '';
-    
-    if (despesasMes.length > 0) {
-        html = `
-            <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
-                <div style="font-size: 16px; font-weight: 600; margin-bottom: 10px;">📅 DESPESAS DESTE MÊS (${despesasMes.length})</div>
-            </div>
-        `;
-        
-        despesasMes.forEach(despesa => {
-            html += `
-                <div class="despesa-card" id="despesa-modal-${despesa.id}">
-                    <div class="despesa-header">
-                        <div>
-                            <div style="font-weight: 600; font-size: 16px; margin-bottom: 5px;">${despesa.descricao}</div>
-                            <div class="despesa-categoria">${despesa.categoria}</div>
-                        </div>
-                        <div class="despesa-valor">R$ ${despesa.valor.toFixed(2)}</div>
-                    </div>
-                    
-                    <div class="despesa-detalhes">
-                        <div>
-                            <div style="font-size: 11px; color: #888;">Data</div>
-                            <div>${formatarDataBR(despesa.data)}</div>
-                        </div>
-                        ${despesa.comprovante ? `
-                            <div>
-                                <div style="font-size: 11px; color: #888;">Comprovante</div>
-                                <div>${despesa.comprovante}</div>
-                            </div>
-                        ` : ''}
-                    </div>
-                    
-                    <div class="despesa-actions">
-                        <button class="action-btn edit" onclick="editarDespesa(${despesa.id})" data-tooltip="Editar">
-                            ✏️
-                        </button>
-                        <button class="action-btn" onclick="removerDespesa(${despesa.id})" data-tooltip="Remover" style="background: rgba(255,0,0,0.2); color: #ff0000;">
-                            ×
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-    } else {
-        html = `
-            <div style="text-align: center; padding: 40px; color: #aaa;">
-                <div style="font-size: 48px; margin-bottom: 20px;">💸</div>
-                <div style="font-size: 18px; font-weight: 600; margin-bottom: 10px;">Nenhuma despesa este mês</div>
-                <div>Registre sua primeira despesa usando o formulário acima</div>
-            </div>
-        `;
-    }
-    
-    document.getElementById('listaDespesasModal').innerHTML = html;
-}
-
-function adicionarOuAtualizarDespesa() {
-    const descricao = document.getElementById('descricaoDespesa').value.trim();
-    const categoria = document.getElementById('categoriaDespesa').value;
-    const valor = parseFloat(document.getElementById('valorDespesa').value);
-    const data = document.getElementById('dataDespesa').value;
-    const tags = document.getElementById('tagsDespesa').value.trim();
-    const comprovante = document.getElementById('comprovanteDespesa').value.trim();
-    const observacoes = document.getElementById('observacoesDespesa').value.trim();
-    
-    if (!descricao || !categoria || isNaN(valor) || !data) {
-        alert('❌ Preencha todos os campos obrigatórios!');
-        return;
-    }
-    
-    if (editandoDespesaId) {
-        // Atualizar despesa existente
-        atualizarDespesa(editandoDespesaId, descricao, categoria, valor, data, tags, comprovante, observacoes);
-    } else {
-        // Adicionar nova despesa
-        adicionarNovaDespesa(descricao, categoria, valor, data, tags, comprovante, observacoes);
-    }
-}
-
-function adicionarNovaDespesa(descricao, categoria, valor, data, tags, comprovante, observacoes) {
-    // Gerar ID único
-    const id = dados.despesas.length > 0 ? Math.max(...dados.despesas.map(d => d.id)) + 1 : 1;
-    
-    const novaDespesa = {
-        id: id,
-        data: data,
-        descricao: descricao,
-        categoria: categoria,
-        valor: valor,
-        tags: tags ? tags.split(',').map(t => t.trim()) : [],
-        comprovante: comprovante,
-        observacoes: observacoes
-    };
-    
-    dados.despesas.push(novaDespesa);
-    salvarDados();
-    
-    // Limpar formulário
-    limparFormDespesa();
-    
-    // Atualizar interface
-    atualizarDashboardCompleto();
-    
-    // Mostrar confirmação
-    alert(`✅ Despesa "${descricao}" registrada com sucesso!`);
-}
-
-function atualizarDespesa(id, descricao, categoria, valor, data, tags, comprovante, observacoes) {
-    const despesa = dados.despesas.find(d => d.id === id);
-    if (!despesa) {
-        alert('❌ Despesa não encontrada!');
-        return;
-    }
-    
-    // Atualizar dados
-    despesa.descricao = descricao;
-    despesa.categoria = categoria;
-    despesa.valor = valor;
-    despesa.data = data;
-    despesa.tags = tags ? tags.split(',').map(t => t.trim()) : [];
-    despesa.comprovante = comprovante;
-    despesa.observacoes = observacoes;
-    
-    salvarDados();
-    
-    // Resetar modo edição
-    editandoDespesaId = null;
-    document.getElementById('btnAdicionarDespesa').textContent = '💾 Registrar Despesa';
-    
-    // Limpar formulário
-    limparFormDespesa();
-    
-    // Atualizar interface
-    atualizarDashboardCompleto();
-    
-    alert(`✅ Despesa "${descricao}" atualizada com sucesso!`);
-}
-
-function editarDespesa(id) {
-    const despesa = dados.despesas.find(d => d.id === id);
-    if (!despesa) {
-        alert('❌ Despesa não encontrada!');
-        return;
-    }
-    
-    // Preencher formulário
-    document.getElementById('descricaoDespesa').value = despesa.descricao;
-    document.getElementById('categoriaDespesa').value = despesa.categoria;
-    document.getElementById('valorDespesa').value = despesa.valor;
-    document.getElementById('dataDespesa').value = despesa.data;
-    document.getElementById('tagsDespesa').value = despesa.tags ? despesa.tags.join(', ') : '';
-    document.getElementById('comprovanteDespesa').value = despesa.comprovante || '';
-    document.getElementById('observacoesDespesa').value = despesa.observacoes || '';
-    
-    // Mudar para modo edição
-    editandoDespesaId = id;
-    document.getElementById('btnAdicionarDespesa').textContent = '💾 Atualizar Despesa';
-    
-    // Abrir modal
-    abrirModalDespesas();
-}
-
-function removerDespesa(id) {
-    if (!confirm('⚠️ Tem certeza que deseja remover esta despesa?\n\nEsta ação não pode ser desfeita.')) {
-        return;
-    }
-    
-    const index = dados.despesas.findIndex(d => d.id === id);
-    if (index === -1) {
-        alert('❌ Despesa não encontrada!');
-        return;
-    }
-    
-    const descricaoRemovida = dados.despesas[index].descricao;
-    dados.despesas.splice(index, 1);
-    salvarDados();
-    
-    // Atualizar interface
-    atualizarDashboardCompleto();
-    
-    alert(`🗑️ Despesa "${descricaoRemovida}" removida com sucesso!`);
-}
-
-function exportarDadosDespesas() {
-    const dataInicio = document.getElementById('dataInicioDespesas').value;
-    const dataFim = document.getElementById('dataFimDespesas').value;
-    const filtroCategoria = document.getElementById('filtroCategoriaDespesas').value;
-    
-    let despesas = dados.despesas.filter(d => {
-        if (d.data < dataInicio || d.data > dataFim) return false;
-        if (filtroCategoria !== 'todos' && d.categoria !== filtroCategoria) return false;
-        return true;
-    });
-    
-    // Converter para CSV
-    let csv = 'Data,Descrição,Categoria,Valor,Tags,Comprovante,Observações\n';
-    
-    despesas.forEach(d => {
-        const linha = [
-            d.data,
-            d.descricao,
-            d.categoria,
-            d.valor.toFixed(2),
-            d.tags ? d.tags.join('; ') : '',
-            d.comprovante || '',
-            d.observacoes || ''
-        ].map(campo => `"${campo}"`).join(',');
-        
-        csv += linha + '\n';
-    });
-    
-    // Criar arquivo e baixar
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', `despesas_${dataInicio}_a_${dataFim}.csv`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    alert(`📥 Arquivo CSV gerado com ${despesas.length} despesas!`);
-}
-
-function verificarOrcamentoDespesas() {
-    const hoje = new Date();
-    const mesAtual = hoje.getMonth();
-    const anoAtual = hoje.getFullYear();
-    
-    const despesasMes = dados.despesas.filter(d => {
-        const dataDespesa = new Date(d.data);
-        return dataDespesa.getMonth() === mesAtual && dataDespesa.getFullYear() === anoAtual;
-    });
-    
-    const totalDespesas = despesasMes.reduce((sum, d) => sum + d.valor, 0);
-    const orcamento = dados.config.orcamentoDespesas || 1500;
-    const percentual = (totalDespesas / orcamento) * 100;
-    
-    if (percentual > 90 && percentual <= 100 && !notificacaoAtiva) {
-        mostrarNotificacaoOrcamento(percentual, totalDespesas, orcamento);
-    } else if (percentual > 100) {
-        mostrarNotificacaoOrcamentoExcedido(percentual, totalDespesas, orcamento);
-    }
-}
-
-function mostrarNotificacaoOrcamento(percentual, total, orcamento) {
-    const notificacao = document.getElementById('pushNotification');
-    const title = document.getElementById('pushNotificationTitle');
-    const message = document.getElementById('pushNotificationMessage');
-    
-    if (!notificacao || !title || !message) return;
-    
-    title.innerHTML = '💰 ALERTA DE ORÇAMENTO';
-    message.textContent = `Despesas atingiram ${percentual.toFixed(1)}% do orçamento (R$ ${total.toFixed(2)}/${orcamento.toFixed(2)})`;
-    
-    notificacao.style.display = 'block';
-    notificacao.style.background = 'linear-gradient(135deg, rgba(255,149,0,0.9), rgba(255,107,0,0.9))';
-    notificacaoAtiva = true;
-    
-    setTimeout(() => {
-        fecharNotificacao();
-    }, 10000);
-}
-
-function mostrarNotificacaoOrcamentoExcedido(percentual, total, orcamento) {
-    const notificacao = document.getElementById('pushNotification');
-    const title = document.getElementById('pushNotificationTitle');
-    const message = document.getElementById('pushNotificationMessage');
-    
-    if (!notificacao || !title || !message) return;
-    
-    title.innerHTML = '⚠️ ORÇAMENTO EXCEDIDO';
-    message.textContent = `Despesas excederam o orçamento em ${(percentual-100).toFixed(1)}% (R$ ${total.toFixed(2)}/${orcamento.toFixed(2)})`;
-    
-    notificacao.style.display = 'block';
-    notificacao.style.background = 'linear-gradient(135deg, rgba(255,51,102,0.9), rgba(255,0,51,0.9))';
-    notificacaoAtiva = true;
-    
-    setTimeout(() => {
-        fecharNotificacao();
-    }, 15000);
-}
-
-function limparFormDespesa() {
-    document.getElementById('descricaoDespesa').value = '';
-    document.getElementById('valorDespesa').value = '';
-    document.getElementById('tagsDespesa').value = '';
-    document.getElementById('comprovanteDespesa').value = '';
-    document.getElementById('observacoesDespesa').value = '';
-    
-    // Resetar valores padrão
-    const hoje = new Date();
-    document.getElementById('dataDespesa').value = hoje.toISOString().split('T')[0];
-    
-    // Resetar modo edição
-    editandoDespesaId = null;
-    document.getElementById('btnAdicionarDespesa').textContent = '💾 Registrar Despesa';
-}
-
-// ========== FUNÇÕES DE MENSALISTAS ==========
-function atualizarResumoStatusMensalistas() {
-    const hoje = new Date();
-    const mensalistas = dados.mensalistas;
-    
-    // Contar por status
-    const pagos = mensalistas.filter(m => m.status === 'pago').length;
-    const pendentes = mensalistas.filter(m => m.status === 'pendente').length;
-    const vencidos = mensalistas.filter(m => m.status === 'vencido').length;
-    
-    // Contar vencimentos hoje
-    const vencemHoje = mensalistas.filter(m => {
-        if (m.status === 'pago') return false;
-        const dataVenc = new Date(m.dataVencimento || m.vencimento);
-        const diffDias = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
-        return diffDias === 0;
-    }).length;
-    
-    // Atualizar contadores
-    document.getElementById('counterTodos').textContent = mensalistas.length;
-    document.getElementById('counterPagos').textContent = pagos;
-    document.getElementById('counterPendentes').textContent = pendentes;
-    document.getElementById('counterVencidos').textContent = vencidos;
-    document.getElementById('counterHoje').textContent = vencemHoje;
-    
-    // Atualizar resumo visual
-    const html = `
-        <div class="status-card pago">
-            <div class="status-card-label">✅ PAGOS</div>
-            <div class="status-card-total">${pagos}</div>
-        </div>
-        <div class="status-card pendente">
-            <div class="status-card-label">⏳ PENDENTES</div>
-            <div class="status-card-total">${pendentes}</div>
-        </div>
-        <div class="status-card vencido">
-            <div class="status-card-label">⚠️ VENCIDOS</div>
-            <div class="status-card-total">${vencidos}</div>
-        </div>
-        <div class="status-card" style="border-top: 4px solid #ffaa00;">
-            <div class="status-card-label">📅 VENCE HOJE</div>
-            <div class="status-card-total" style="color: #ffaa00;">${vencemHoje}</div>
-        </div>
-    `;
-    
-    document.getElementById('resumoStatusMensalistas').innerHTML = html;
-}
-
-function filtrarMensalistasPorStatus(status, usarFiltrosAvancados = false) {
-    filtroStatusAtual = status;
-    
-    // Atualizar botões ativos
-    document.querySelectorAll('.status-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    const btnAtivo = Array.from(document.querySelectorAll('.status-btn')).find(btn => 
-        btn.textContent.includes(status === 'todos' ? 'Todos' : 
-                                status === 'pago' ? 'Pagos' : 
-                                status === 'pendente' ? 'Pendentes' : 
-                                status === 'vencido' ? 'Vencidos' : 'Vence Hoje')
-    );
-    
-    if (btnAtivo) btnAtivo.classList.add('active');
-    
-    // Aplicar filtros
-    const hoje = new Date();
-    let mensalistasFiltrados = [...dados.mensalistas];
-    
-    // Filtro por status
-    if (status !== 'todos') {
-        if (status === 'hoje') {
-            mensalistasFiltrados = mensalistasFiltrados.filter(m => {
-                if (m.status === 'pago') return false;
-                const dataVenc = new Date(m.dataVencimento || m.vencimento);
-                const diffDias = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
-                return diffDias === 0;
-            });
-        } else {
-            mensalistasFiltrados = mensalistasFiltrados.filter(m => m.status === status);
-        }
-    }
-    
-    // Aplicar filtros avançados se solicitado
-    if (usarFiltrosAvancados) {
-        const dataInicio = document.getElementById('dataInicioMensalistas').value;
-        const dataFim = document.getElementById('dataFimMensalistas').value;
-        const filtroStatusAvancado = document.getElementById('filtroStatusMensalistas').value;
-        const filtroBarbeiro = document.getElementById('filtroBarbeiroMensalistas').value;
-        
-        if (dataInicio && dataFim) {
-            mensalistasFiltrados = mensalistasFiltrados.filter(mensalista => {
-                const dataVenc = new Date(mensalista.dataVencimento || mensalista.vencimento || mensalista.dataInicio);
-                const dataInicioDate = new Date(dataInicio);
-                const dataFimDate = new Date(dataFim);
-                
-                if (dataVenc < dataInicioDate || dataVenc > dataFimDate) return false;
-                if (filtroStatusAvancado !== 'todos' && mensalista.status !== filtroStatusAvancado) return false;
-                if (filtroBarbeiro !== 'todos' && mensalista.barbeiro !== filtroBarbeiro) return false;
-                
-                return true;
-            });
-        }
-    }
-    
-    // Ordenar por status (vencidos primeiro) e data
-    mensalistasFiltrados.sort((a, b) => {
-        // Ordem por status: vencido > pendente > pago
-        const statusOrder = { 'vencido': 1, 'pendente': 2, 'pago': 3 };
-        if (statusOrder[a.status] !== statusOrder[b.status]) {
-            return statusOrder[a.status] - statusOrder[b.status];
-        }
-        
-        // Por data de vencimento
-        const dataA = new Date(a.dataVencimento || a.vencimento);
-        const dataB = new Date(b.dataVencimento || b.vencimento);
-        return dataA - dataB;
-    });
-    
-    // Gerar HTML
-    let html = '';
-    
-    if (mensalistasFiltrados.length > 0) {
-        mensalistasFiltrados.forEach(mensalista => {
-            const statusClass = mensalista.status === 'pago' ? 'status-pago' : 
-                              mensalista.status === 'pendente' ? 'status-pendente' : 'status-vencido';
-            const statusTexto = mensalista.status === 'pago' ? '✅ PAGO' : 
-                               mensalista.status === 'pendente' ? '⏳ PENDENTE' : '⚠️ VENCIDO';
-            
-            const dataVencimento = mensalista.dataVencimento || mensalista.vencimento;
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-            const vencimento = new Date(dataVencimento);
-            vencimento.setHours(0, 0, 0, 0);
-            const diffDias = Math.ceil((vencimento - hoje) / (1000 * 60 * 60 * 24));
-            
-            let vencimentoTexto = '';
-            let vencimentoClass = '';
-            
-            if (mensalista.status === 'pago') {
-                vencimentoTexto = `📅 Próximo: ${formatarDataBR(calcularProximoVencimento(dataVencimento))}`;
-            } else if (diffDias > 0) {
-                vencimentoTexto = `📅 Vence em ${diffDias} ${diffDias === 1 ? 'dia' : 'dias'}`;
-                vencimentoClass = diffDias <= 3 ? 'proximo' : '';
-            } else if (diffDias === 0) {
-                vencimentoTexto = '⚠️ VENCE HOJE!';
-                vencimentoClass = 'hoje';
-            } else {
-                vencimentoTexto = `⏰ Vencido há ${Math.abs(diffDias)} ${Math.abs(diffDias) === 1 ? 'dia' : 'dias'}`;
-                vencimentoClass = 'vencido';
-            }
-            
-            // Determinar classe do card
-            let cardClass = 'mensalista-card';
-            if (mensalista.status === 'vencido') cardClass += ' vencido';
-            if (mensalista.status === 'pendente' && diffDias <= 3) cardClass += ' pendente';
-            
-            html += `
-                <div class="${cardClass}" id="mensalista-${mensalista.id}">
-                    <div class="mensalista-header">
-                        <div>
-                            <div class="mensalista-nome">${mensalista.nome}</div>
-                            <span class="badge ${mensalista.barbeiro === 'Gabriel' ? 'badge-warning' : 'badge-success'}" style="margin-top: 5px;">
-                                ${mensalista.barbeiro}
-                            </span>
-                        </div>
-                        <div class="mensalista-actions">
-                            <span class="status-tag ${statusClass}">${statusTexto}</span>
-                            ${mensalista.status !== 'pago' ? `
-                                <button class="action-btn success" onclick="pagarMensalidade(${mensalista.id})" data-tooltip="Pagar mensalidade">
-                                    💰
-                                </button>
-                            ` : ''}
-                            ${mensalista.telefone ? `
-                                <button class="action-btn whatsapp" onclick="enviarLembreteMensalista(${mensalista.id})" data-tooltip="Enviar lembrete">
-                                    📱
-                                </button>
-                            ` : ''}
-                            <button class="action-btn edit" onclick="editarMensalista(${mensalista.id})" data-tooltip="Editar">
-                                ✏️
-                            </button>
-                            <button class="action-btn" onclick="removerMensalista(${mensalista.id})" data-tooltip="Remover mensalista" style="background: rgba(255,0,0,0.2); color: #ff0000;">
-                                ×
-                            </button>
-                        </div>
-                    </div>
-                    <div class="mensalista-detalhes">
-                        <div class="mensalista-detalhes-item">
-                            <div class="mensalista-detalhes-label">Valor Mensal</div>
-                            <div class="mensalista-valor">R$ ${mensalista.valor.toFixed(2)}</div>
-                        </div>
-                        <div class="mensalista-detalhes-item">
-                            <div class="mensalista-detalhes-label">Vencimento</div>
-                            <div class="mensalista-detalhes-value">${formatarDataBR(dataVencimento)}</div>
-                        </div>
-                        <div class="mensalista-detalhes-item">
-                            <div class="mensalista-detalhes-label">Status</div>
-                            <div class="mensalista-vencimento ${vencimentoClass}">${vencimentoTexto}</div>
-                        </div>
-                        ${mensalista.telefone ? `
-                            <div class="mensalista-detalhes-item">
-                                <div class="mensalista-detalhes-label">Contato</div>
-                                <div class="mensalista-telefone">${mensalista.telefone}</div>
-                            </div>
-                        ` : ''}
-                    </div>
-                    ${mensalista.observacoes ? `
-                        <div style="font-size: 12px; color: #888; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
-                            📝 ${mensalista.observacoes}
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        });
-    } else {
-        html = `
-            <div class="empty-state">
-                <div class="empty-state-icon">👥</div>
-                <div class="empty-state-title">Nenhum mensalista encontrado</div>
-                <div class="empty-state-subtitle">
-                    ${status === 'vencido' ? '✅ Todos os mensalistas estão em dia!' : 
-                      status === 'hoje' ? '🎉 Ninguém vence hoje!' : 
-                      'Tente ajustar os filtros ou cadastre um novo mensalista'}
-                </div>
-                <button class="btn btn-success" onclick="abrirModalMensalistas()" style="margin-top: 20px;">
-                    + Adicionar Mensalista
-                </button>
-            </div>
-        `;
-    }
-    
-    document.getElementById('listaMensalistasDashboard').innerHTML = html;
-}
-
-function limparFiltrosMensalistas() {
-    document.getElementById('dataInicioMensalistas').value = '';
-    document.getElementById('dataFimMensalistas').value = '';
-    document.getElementById('filtroStatusMensalistas').value = 'todos';
-    document.getElementById('filtroBarbeiroMensalistas').value = 'todos';
-    
-    filtrarMensalistasPorStatus('todos');
-}
-
-function verificarVencimentosMensalistas() {
-    if (!dados.config.notificacoesAtivas) return;
-    
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    const diasAlerta = dados.config.diasAlerta || 3;
-    
-    let alertasHTML = '';
-    let vencidosParaNotificar = [];
-    let proximosParaNotificar = [];
-    
-    dados.mensalistas.forEach(mensalista => {
-        if (mensalista.status === 'pago') return;
-        
-        const dataVencimento = new Date(mensalista.dataVencimento || mensalista.vencimento);
-        dataVencimento.setHours(0, 0, 0, 0);
-        
-        const diffDias = Math.ceil((dataVencimento - hoje) / (1000 * 60 * 60 * 24));
-        
-        // Atualizar status se necessário
-        if (diffDias < 0 && mensalista.status !== 'vencido') {
-            mensalista.status = 'vencido';
-            vencidosParaNotificar.push(mensalista);
-        } else if (diffDias === 0 && mensalista.status !== 'vencido') {
-            mensalista.status = 'pendente';
-            proximosParaNotificar.push(mensalista);
-        } else if (diffDias > 0 && diffDias <= diasAlerta && mensalista.status === 'pendente') {
-            proximosParaNotificar.push(mensalista);
-        }
-    });
-    
-    // Salvar alterações de status
-    if (vencidosParaNotificar.length > 0 || proximosParaNotificar.length > 0) {
-        salvarDados();
-    }
-    
-    // Gerar alertas visuais
-    if (vencidosParaNotificar.length > 0) {
-        alertasHTML += `
-            <div class="notificacao">
-                <div class="notificacao-titulo">⚠️ ${vencidosParaNotificar.length} MENSALISTA(S) VENCIDO(S)</div>
-                <div style="display: grid; gap: 8px; margin-top: 10px;">
-                    ${vencidosParaNotificar.slice(0, 3).map(m => `
-                        <div class="notificacao-mensalista">
-                            <div>
-                                <div style="font-weight: 600;">${m.nome}</div>
-                                <div style="font-size: 12px; color: #ff9999;">
-                                    ${m.barbeiro} • Venceu ${formatarDataBR(m.dataVencimento)}
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 5px;">
-                                <button class="action-btn success" onclick="pagarMensalidade(${m.id})">
-                                    💰
-                                </button>
-                                <button class="action-btn whatsapp" onclick="enviarLembreteMensalista(${m.id})">
-                                    📱
-                                </button>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                ${vencidosParaNotificar.length > 3 ? `
-                    <div style="text-align: center; margin-top: 10px; color: #ff9999; font-size: 12px;">
-                        + ${vencidosParaNotificar.length - 3} outros vencidos
-                    </div>
-                ` : ''}
-                <button class="btn btn-danger" onclick="filtrarMensalistasPorStatus('vencido')" style="margin-top: 15px; width: 100%;">
-                    👁️ Ver Todos os Vencidos
-                </button>
-            </div>
-        `;
-    }
-    
-    if (proximosParaNotificar.length > 0) {
-        alertasHTML += `
-            <div class="notificacao" style="background: linear-gradient(135deg, rgba(255,149,0,0.1), rgba(255,149,0,0.05)); border-color: rgba(255,149,0,0.3);">
-                <div class="notificacao-titulo" style="color: #FF9500;">⏰ ${proximosParaNotificar.length} VENCIMENTO(S) PRÓXIMO(S)</div>
-                <div style="display: grid; gap: 8px; margin-top: 10px;">
-                    ${proximosParaNotificar.slice(0, 3).map(m => {
-                        const dataVenc = new Date(m.dataVencimento || m.vencimento);
-                        const diffDias = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
-                        return `
-                            <div class="notificacao-mensalista" style="background: rgba(255,149,0,0.1);">
-                                <div>
-                                    <div style="font-weight: 600;">${m.nome}</div>
-                                    <div style="font-size: 12px; color: #ffb366;">
-                                        ${m.barbeiro} • Vence em ${diffDias} ${diffDias === 1 ? 'dia' : 'dias'}
-                                    </div>
-                                </div>
-                                <div style="display: flex; gap: 5px;">
-                                    <button class="action-btn whatsapp" onclick="enviarLembreteMensalista(${m.id})">
-                                        📱
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-        `;
-    }
-    
-    document.getElementById('alertasVencimento').innerHTML = alertasHTML;
-    
-    // Mostrar notificação push se houver vencidos
-    if (vencidosParaNotificar.length > 0 && !notificacaoAtiva) {
-        mostrarNotificacaoPush(vencidosParaNotificar);
-    }
-    
-    // Atualizar listas
-    atualizarResumoStatusMensalistas();
-    if (filtroStatusAtual !== 'todos') {
-        filtrarMensalistasPorStatus(filtroStatusAtual);
-    }
-}
-
-function mostrarNotificacaoPush(mensalistas) {
-    if (!dados.config.notificacoesAtivas) return;
-    
-    const notificacao = document.getElementById('pushNotification');
-    const title = document.getElementById('pushNotificationTitle');
-    const message = document.getElementById('pushNotificationMessage');
-    
-    if (!notificacao || !title || !message) return;
-    
-    if (mensalistas.length === 1) {
-        title.innerHTML = '⚠️ MENSALISTA VENCIDO';
-        message.textContent = `${mensalistas[0].nome} está com mensalidade vencida!`;
-    } else {
-        title.innerHTML = `⚠️ ${mensalistas.length} MENSALISTAS VENCIDOS`;
-        message.textContent = `${mensalistas.slice(0, 2).map(m => m.nome).join(', ')}${mensalistas.length > 2 ? ' e outros' : ''} estão vencidos!`;
-    }
-    
-    notificacao.style.display = 'block';
-    notificacaoAtiva = true;
-    
-    // Tocar som de alerta
-    try {
-        document.getElementById('alertSound').play();
-    } catch (error) {
-        console.log('Som de alerta não disponível');
-    }
-    
-    // Auto-fechar após 10 segundos
-    setTimeout(() => {
-        fecharNotificacao();
-    }, 10000);
-}
-
-function fecharNotificacao() {
-    const notificacao = document.getElementById('pushNotification');
-    if (notificacao) {
-        notificacao.style.display = 'none';
-        notificacaoAtiva = false;
-    }
-}
-
-function notificarTodosMensalistas() {
-    const mensalistasPendentes = dados.mensalistas.filter(m => m.status === 'pendente' || m.status === 'vencido');
-    
-    if (mensalistasPendentes.length === 0) {
-        alert('✅ Não há mensalistas pendentes para notificar!');
-        return;
-    }
-    
-    if (!confirm(`📢 Enviar notificações para ${mensalistasPendentes.length} mensalista(s)?\n\nEsta ação enviará mensagens de lembrete via WhatsApp.`)) {
-        return;
-    }
-    
-    // Filtrar apenas os que têm telefone
-    const mensalistasComTelefone = mensalistasPendentes.filter(m => m.telefone && m.telefone.replace(/\D/g, '').length >= 11);
-    
-    if (mensalistasComTelefone.length === 0) {
-        alert('❌ Nenhum mensalista com telefone válido encontrado!');
-        return;
-    }
-    
-    // Mostrar progresso
-    let progresso = 0;
-    const total = mensalistasComTelefone.length;
-    
-    const enviarProximo = () => {
-        if (progresso < total) {
-            const mensalista = mensalistasComTelefone[progresso];
-            enviarLembreteMensalista(mensalista.id);
-            progresso++;
-            
-            // Atualizar interface
-            const notificacao = document.getElementById('pushNotification');
-            notificacao.style.display = 'block';
-            notificacao.style.background = 'linear-gradient(135deg, rgba(37,211,102,0.9), rgba(18,140,126,0.9))';
-            document.getElementById('pushNotificationTitle').innerHTML = `📱 ENVIANDO NOTIFICAÇÕES`;
-            document.getElementById('pushNotificationMessage').textContent = `${progresso}/${total} • ${mensalista.nome}`;
-            
-            // Próximo após 3 segundos
-            setTimeout(enviarProximo, 3000);
-        } else {
-            // Concluído
-            const notificacao = document.getElementById('pushNotification');
-            notificacao.style.background = 'linear-gradient(135deg, rgba(37,211,102,0.9), rgba(18,140,126,0.9))';
-            document.getElementById('pushNotificationTitle').innerHTML = `✅ CONCLUÍDO`;
-            document.getElementById('pushNotificationMessage').textContent = `${total} notificações enviadas!`;
-            
-            setTimeout(() => {
-                fecharNotificacao();
-                alert(`✅ ${total} notificações enviadas com sucesso!`);
-            }, 3000);
-        }
-    };
-    
-    // Iniciar envio
-    enviarProximo();
-}
-
-// ========== CRUD MENSALISTAS ==========
-function adicionarOuAtualizarMensalista() {
-    const nome = document.getElementById('nomeMensalista').value.trim();
-    const telefone = document.getElementById('telefoneMensalista').value.trim();
-    const barbeiro = document.getElementById('barbeiroMensalista').value;
-    const valor = parseFloat(document.getElementById('valorMensalista').value);
-    const dataInicio = document.getElementById('dataInicioMensalista').value;
-    const diaVencimento = parseInt(document.getElementById('diaVencimentoMensalista').value);
-    const status = document.getElementById('statusMensalista').value;
-    const observacoes = document.getElementById('observacoesMensalista').value.trim();
-    
-    if (!nome || !barbeiro || isNaN(valor) || !dataInicio || !diaVencimento) {
-        alert('❌ Preencha todos os campos obrigatórios!');
-        return;
-    }
-    
-    if (editandoMensalistaId) {
-        // Atualizar mensalista existente
-        atualizarMensalista(editandoMensalistaId, nome, telefone, barbeiro, valor, dataInicio, diaVencimento, status, observacoes);
-    } else {
-        // Adicionar novo mensalista
-        adicionarNovoMensalista(nome, telefone, barbeiro, valor, dataInicio, diaVencimento, status, observacoes);
-    }
-}
-
-function adicionarNovoMensalista(nome, telefone, barbeiro, valor, dataInicio, diaVencimento, status, observacoes) {
-    // Gerar ID único
-    const id = dados.mensalistas.length > 0 ? Math.max(...dados.mensalistas.map(m => m.id)) + 1 : 1;
-    
-    // Calcular data de vencimento
-    const dataInicioObj = new Date(dataInicio);
-    let dataVencimento = new Date(dataInicioObj.getFullYear(), dataInicioObj.getMonth(), diaVencimento);
-    
-    // Se o dia de vencimento for menor que o dia atual, vai para o próximo mês
-    if (dataVencimento < dataInicioObj) {
-        dataVencimento = new Date(dataInicioObj.getFullYear(), dataInicioObj.getMonth() + 1, diaVencimento);
-    }
-    
-    const novoMensalista = {
-        id: id,
-        nome: nome,
-        telefone: telefone,
-        barbeiro: barbeiro,
-        valor: valor,
-        dataInicio: dataInicio,
-        diaVencimento: diaVencimento,
-        dataVencimento: dataVencimento.toISOString().split('T')[0],
-        status: status,
-        observacoes: observacoes,
-        historicoPagamentos: []
-    };
-    
-    dados.mensalistas.push(novoMensalista);
-    salvarDados();
-    
-    // Limpar formulário
-    limparFormMensalista();
-    
-    // Atualizar interface
-    atualizarDashboardCompleto();
-    
-    // Fechar modal se estiver aberto
-    fecharModal('modalMensalistas');
-    
-    // Mostrar confirmação
-    alert(`✅ Mensalista "${nome}" cadastrado com sucesso!`);
-}
-
-function atualizarMensalista(id, nome, telefone, barbeiro, valor, dataInicio, diaVencimento, status, observacoes) {
-    const mensalista = dados.mensalistas.find(m => m.id === id);
-    if (!mensalista) {
-        alert('❌ Mensalista não encontrado!');
-        return;
-    }
-    
-    // Atualizar dados
-    mensalista.nome = nome;
-    mensalista.telefone = telefone;
-    mensalista.barbeiro = barbeiro;
-    mensalista.valor = valor;
-    mensalista.dataInicio = dataInicio;
-    mensalista.diaVencimento = diaVencimento;
-    mensalista.status = status;
-    mensalista.observacoes = observacoes;
-    
-    // Recalcular vencimento se necessário
-    if (diaVencimento !== mensalista.diaVencimento || dataInicio !== mensalista.dataInicio) {
-        const dataInicioObj = new Date(dataInicio);
-        let dataVencimento = new Date(dataInicioObj.getFullYear(), dataInicioObj.getMonth(), diaVencimento);
-        
-        if (dataVencimento < dataInicioObj) {
-            dataVencimento = new Date(dataInicioObj.getFullYear(), dataInicioObj.getMonth() + 1, diaVencimento);
-        }
-        
-        mensalista.dataVencimento = dataVencimento.toISOString().split('T')[0];
-    }
-    
-    salvarDados();
-    
-    // Resetar modo edição
-    editandoMensalistaId = null;
-    document.getElementById('btnAdicionarMensalista').textContent = '✅ Cadastrar Mensalista';
-    
-    // Limpar formulário
-    limparFormMensalista();
-    
-    // Atualizar interface
-    atualizarDashboardCompleto();
-    
-    // Fechar modal
-    fecharModal('modalMensalistas');
-    
-    alert(`✅ Mensalista "${nome}" atualizado com sucesso!`);
-}
-
-function editarMensalista(id) {
-    const mensalista = dados.mensalistas.find(m => m.id === id);
-    if (!mensalista) {
-        alert('❌ Mensalista não encontrado!');
-        return;
-    }
-    
-    // Preencher formulário
-    document.getElementById('nomeMensalista').value = mensalista.nome;
-    document.getElementById('telefoneMensalista').value = mensalista.telefone || '';
-    document.getElementById('barbeiroMensalista').value = mensalista.barbeiro;
-    document.getElementById('valorMensalista').value = mensalista.valor;
-    document.getElementById('dataInicioMensalista').value = mensalista.dataInicio;
-    document.getElementById('diaVencimentoMensalista').value = mensalista.diaVencimento;
-    document.getElementById('statusMensalista').value = mensalista.status;
-    document.getElementById('observacoesMensalista').value = mensalista.observacoes || '';
-    
-    // Mudar para modo edição
-    editandoMensalistaId = id;
-    document.getElementById('btnAdicionarMensalista').textContent = '💾 Atualizar Mensalista';
-    
-    // Abrir modal
-    abrirModalMensalistas();
-}
-
-function pagarMensalidade(id) {
-    const mensalista = dados.mensalistas.find(m => m.id === id);
-    if (!mensalista) {
-        alert('❌ Mensalista não encontrado!');
-        return;
-    }
-    
-    const hoje = new Date();
-    const confirmar = confirm(`💵 Registrar pagamento de R$ ${mensalista.valor.toFixed(2)} para ${mensalista.nome}?`);
-    
-    if (!confirmar) return;
-    
-    // Registrar pagamento
-    if (!mensalista.historicoPagamentos) {
-        mensalista.historicoPagamentos = [];
-    }
-    
-    mensalista.historicoPagamentos.push({
-        data: hoje.toISOString().split('T')[0],
-        valor: mensalista.valor,
-        pagoPor: 'Sistema'
-    });
-    
-    // Atualizar status e calcular próximo vencimento
-    mensalista.status = 'pago';
-    mensalista.dataUltimoPagamento = hoje.toISOString().split('T')[0];
-    
-    // Calcular próximo vencimento
-    const dataVencimentoAtual = new Date(mensalista.dataVencimento);
-    const proximoVencimento = new Date(dataVencimentoAtual.getFullYear(), dataVencimentoAtual.getMonth() + 1, mensalista.diaVencimento);
-    mensalista.dataVencimento = proximoVencimento.toISOString().split('T')[0];
-    
-    salvarDados();
-    
-    // Atualizar interface
-    atualizarDashboardCompleto();
-    
-    alert(`✅ Pagamento de R$ ${mensalista.valor.toFixed(2)} registrado para ${mensalista.nome}!`);
-}
-
-function removerMensalista(id) {
-    if (!confirm('⚠️ Tem certeza que deseja remover este mensalista?')) {
-        return;
-    }
-    
-    const index = dados.mensalistas.findIndex(m => m.id === id);
-    if (index === -1) {
-        alert('❌ Mensalista não encontrado!');
-        return;
-    }
-    
-    const nomeRemovido = dados.mensalistas[index].nome;
-    dados.mensalistas.splice(index, 1);
-    salvarDados();
-    
-    // Atualizar interface
-    atualizarDashboardCompleto();
-    
-    alert(`🗑️ Mensalista "${nomeRemovido}" removido com sucesso!`);
-}
-
-function enviarLembreteMensalista(id) {
-    const mensalista = dados.mensalistas.find(m => m.id === id);
-    if (!mensalista) {
-        alert('❌ Mensalista não encontrado!');
-        return;
-    }
-    
-    if (!mensalista.telefone || mensalista.telefone.replace(/\D/g, '').length < 11) {
-        alert('❌ Número de telefone inválido para envio de mensagem!');
-        return;
-    }
-    
-    const hoje = new Date();
-    const dataVencimento = new Date(mensalista.dataVencimento);
-    const diasAteVencimento = Math.ceil((dataVencimento - hoje) / (1000 * 60 * 60 * 24));
-    
-    let mensagem = '';
-    if (mensalista.status === 'vencido') {
-        mensagem = `*LEMBRETE MENSALIDADE VENCIDA*%0A%0A` +
-                  `Olá ${mensalista.nome},%0A%0A` +
-                  `Sua mensalidade está *VENCIDA*!%0A` +
-                  `Valor: R$ ${mensalista.valor.toFixed(2)}%0A` +
-                  `Vencimento: ${formatarDataBR(mensalista.dataVencimento)}%0A` +
-                  `Barbeiro: ${mensalista.barbeiro}%0A%0A` +
-                  `*Por favor, regularize o pagamento.*%0A%0A` +
-                  `BarbaPRO Duo`;
-    } else if (mensalista.status === 'pendente') {
-        mensagem = `*LEMBRETE MENSALIDADE*%0A%0A` +
-                  `Olá ${mensalista.nome},%0A%0A` +
-                  `Lembrete da sua mensalidade:%0A` +
-                  `Valor: R$ ${mensalista.valor.toFixed(2)}%0A` +
-                  `Vencimento: ${formatarDataBR(mensalista.dataVencimento)}%0A` +
-                  `Vence em: ${diasAteVencimento} ${diasAteVencimento === 1 ? 'dia' : 'dias'}%0A` +
-                  `Barbeiro: ${mensalista.barbeiro}%0A%0A` +
-                  `*Obrigado pela preferência!*%0A%0A` +
-                  `BarbaPRO Duo`;
-    } else {
-        mensagem = `*CONFIRMAÇÃO DE PAGAMENTO*%0A%0A` +
-                  `Olá ${mensalista.nome},%0A%0A` +
-                  `Pagamento confirmado!%0A` +
-                  `Valor: R$ ${mensalista.valor.toFixed(2)}%0A` +
-                  `Próximo vencimento: ${formatarDataBR(mensalista.dataVencimento)}%0A` +
-                  `Barbeiro: ${mensalista.barbeiro}%0A%0A` +
-                  `*Obrigado pela preferência!*%0A%0A` +
-                  `BarbaPRO Duo`;
-    }
-    
-    const telefoneFormatado = mensalista.telefone.replace(/\D/g, '');
-    const urlWhatsApp = `https://wa.me/55${telefoneFormatado}?text=${mensagem}`;
-    
-    // Abrir em nova aba
-    window.open(urlWhatsApp, '_blank');
-}
-
-function enviarLembretesMensalistas() {
-    const mensalistasPendentes = dados.mensalistas.filter(m => m.status === 'pendente' || m.status === 'vencido');
-    
-    if (mensalistasPendentes.length === 0) {
-        alert('✅ Não há mensalistas pendentes para enviar lembretes!');
-        return;
-    }
-    
-    notificarTodosMensalistas();
-}
-
-function limparFormMensalista() {
-    document.getElementById('nomeMensalista').value = '';
-    document.getElementById('telefoneMensalista').value = '';
-    document.getElementById('valorMensalista').value = '';
-    document.getElementById('observacoesMensalista').value = '';
-    
-    // Resetar valores padrão
-    const hoje = new Date();
-    document.getElementById('dataInicioMensalista').value = hoje.toISOString().split('T')[0];
-    document.getElementById('diaVencimentoMensalista').value = hoje.getDate();
-    
-    // Resetar modo edição
-    editandoMensalistaId = null;
-    document.getElementById('btnAdicionarMensalista').textContent = '✅ Cadastrar Mensalista';
-}
-
-// ========== FUNÇÕES DE SERVIÇOS ==========
-function atualizarListaServicosRecentes() {
-    const dataInicio = document.getElementById('dataInicioServicos').value;
-    const dataFim = document.getElementById('dataFimServicos').value;
-    const filtroBarbeiro = document.getElementById('filtroBarbeiroServicos').value;
-    const filtroPagamento = document.getElementById('filtroPagamentoServicos').value;
-    
-    let todosServicos = [...dados.Gabriel, ...dados.Wagner];
-    
-    // Aplicar filtros
-    if (dataInicio && dataFim) {
-        todosServicos = todosServicos.filter(servico => {
-            // Filtro por data
-            if (servico.data < dataInicio || servico.data > dataFim) return false;
-            
-            // Filtro por barbeiro
-            if (filtroBarbeiro !== 'todos' && servico.barbeiro !== filtroBarbeiro) return false;
-            
-            // Filtro por pagamento
-            if (filtroPagamento === 'pago' && !servico.pago) return false;
-            if (filtroPagamento === 'fiado' && servico.pago) return false;
-            
-            return true;
-        });
-    }
-    
-    // Ordenar por data e hora (mais recente primeiro)
-    todosServicos.sort((a, b) => {
-        const dataA = new Date(a.data + 'T' + (a.hora || '00:00'));
-        const dataB = new Date(b.data + 'T' + (b.hora || '00:00'));
-        return dataB - dataA;
-    });
-    
-    // Calcular totais filtrados
-    const totalFiltrado = todosServicos.reduce((sum, s) => sum + s.valor, 0);
-    const totalPagoFiltrado = todosServicos.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
-    
-    let html = '';
-    
-    if (todosServicos.length > 0) {
-        html = `
-            <div style="background: rgba(255,255,255,0.03); border-radius: 15px; padding: 20px; margin-bottom: 20px;">
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;">
-                    <div>
-                        <div style="font-size: 12px; color: #aaa;">TOTAL FILTRADO</div>
-                        <div style="font-size: 24px; font-weight: 700; color: #ffaa00;">R$ ${totalFiltrado.toFixed(2)}</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 12px; color: #aaa;">SERVIÇOS</div>
-                        <div style="font-size: 24px; font-weight: 700; color: #fff;">${todosServicos.length}</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 12px; color: #aaa;">RECEBIDO</div>
-                        <div style="font-size: 20px; font-weight: 600; color: #25D366;">R$ ${totalPagoFiltrado.toFixed(2)}</div>
-                    </div>
-                </div>
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>📅 Data</th>
-                        <th>⏰ Hora</th>
-                        <th>👤 Barbeiro</th>
-                        <th>✂️ Serviço</th>
-                        <th>👤 Cliente</th>
-                        <th>💰 Valor</th>
-                        <th>💳 Pagamento</th>
-                        <th>📊 Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        todosServicos.slice(0, 50).forEach(servico => {
-            const statusClass = servico.pago ? 'status-pago' : 'status-pendente';
-            const statusTexto = servico.pago ? 'PAGO' : 'FIADO';
-            const metodoPagamento = servico.metodoPagamento || 'N/A';
-            
-            let metodoIcon = '💰';
-            switch(metodoPagamento) {
-                case 'dinheiro': metodoIcon = '💵'; break;
-                case 'pix': metodoIcon = '📱'; break;
-                case 'debito': metodoIcon = '💳'; break;
-                case 'credito': metodoIcon = '💳'; break;
-            }
-            
-            html += `
-                <tr>
-                    <td>${formatarDataBR(servico.data)}</td>
-                    <td>${servico.hora}</td>
-                    <td>
-                        <span class="badge ${servico.barbeiro === 'Gabriel' ? 'badge-warning' : 'badge-success'}">
-                            ${servico.barbeiro}
-                        </span>
-                    </td>
-                    <td>${servico.tipo}</td>
-                    <td>${servico.cliente}</td>
-                    <td style="font-weight: 600; color: #ffaa00;">R$ ${servico.valor.toFixed(2)}</td>
-                    <td>${metodoIcon} ${metodoPagamento.toUpperCase()}</td>
-                    <td><span class="status-tag ${statusClass}">${statusTexto}</span></td>
-                </tr>
-            `;
-        });
-        
-        html += `
-                </tbody>
-            </table>
-            
-            <div style="text-align: center; margin-top: 20px; color: #aaa; font-size: 14px;">
-                Mostrando ${Math.min(todosServicos.length, 50)} de ${todosServicos.length} serviços
-                ${todosServicos.length > 50 ? '(use filtros para ver mais)' : ''}
-            </div>
-        `;
-    } else {
-        html = `
-            <div class="empty-state">
-                <div class="empty-state-icon">📝</div>
-                <div class="empty-state-title">Nenhum serviço encontrado</div>
-                <div class="empty-state-subtitle">
-                    Tente ajustar os filtros ou datas
-                </div>
-            </div>
-        `;
-    }
-    
-    document.getElementById('listaServicosRecentes').innerHTML = html;
-}
-
-function exportarDadosServicos() {
-    const dataInicio = document.getElementById('dataInicioServicos').value;
-    const dataFim = document.getElementById('dataFimServicos').value;
-    const filtroBarbeiro = document.getElementById('filtroBarbeiroServicos').value;
-    const filtroPagamento = document.getElementById('filtroPagamentoServicos').value;
-    
-    let servicos = [...dados.Gabriel, ...dados.Wagner].filter(s => {
-        if (s.data < dataInicio || s.data > dataFim) return false;
-        if (filtroBarbeiro !== 'todos' && s.barbeiro !== filtroBarbeiro) return false;
-        if (filtroPagamento === 'pago' && !s.pago) return false;
-        if (filtroPagamento === 'fiado' && s.pago) return false;
-        return true;
-    });
-    
-    // Converter para CSV
-    let csv = 'Data,Hora,Barbeiro,Cliente,Serviço,Valor,Status Pagamento,Método Pagamento,Observações\n';
-    
-    servicos.forEach(s => {
-        const linha = [
-            s.data,
-            s.hora,
-            s.barbeiro,
-            s.cliente,
-            s.tipo,
-            s.valor.toFixed(2),
-            s.pago ? 'PAGO' : 'FIADO',
-            s.metodoPagamento || 'N/A',
-            s.observacoes || ''
-        ].map(campo => `"${campo}"`).join(',');
-        
-        csv += linha + '\n';
-    });
-    
-    // Criar arquivo e baixar
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', `servicos_${dataInicio}_a_${dataFim}.csv`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    alert(`📥 Arquivo CSV gerado com ${servicos.length} serviços!`);
-}
-
-// ========== MODAIS ==========
 function abrirModalResumoCompleto() {
     const hoje = new Date();
     const mesAtual = hoje.getMonth();
@@ -2801,12 +2709,718 @@ function abrirModalPagamentos() {
     gerarRelatorioPagamentosDetalhado();
 }
 
+function abrirModalConfiguracoes() {
+    // Preencher valores atuais
+    document.getElementById('numWhats').value = dados.config.whatsapp || '';
+    document.getElementById('novoPin').value = '';
+    document.getElementById('valCorte').value = dados.config.corte || 28;
+    document.getElementById('valBarba').value = dados.config.barba || 15;
+    document.getElementById('valCombo').value = dados.config.combo || 40;
+    document.getElementById('orcamentoDespesas').value = dados.config.orcamentoDespesas || 1500;
+    document.getElementById('notificacoesAtivas').value = dados.config.notificacoesAtivas ? 'true' : 'false';
+    document.getElementById('diasAlerta').value = dados.config.diasAlerta || 3;
+    
+    document.getElementById('modalConfig').style.display = 'flex';
+}
+
+// ========== FUNÇÕES DE MENSALISTAS ==========
+function atualizarResumoStatusMensalistas() {
+    const hoje = new Date();
+    const mensalistas = dados.mensalistas;
+    
+    const pagos = mensalistas.filter(m => m.status === 'pago').length;
+    const pendentes = mensalistas.filter(m => m.status === 'pendente').length;
+    const vencidos = mensalistas.filter(m => m.status === 'vencido').length;
+    
+    const vencemHoje = mensalistas.filter(m => {
+        if (m.status === 'pago') return false;
+        const dataVenc = new Date(m.dataVencimento || m.vencimento);
+        const diffDias = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
+        return diffDias === 0;
+    }).length;
+    
+    document.getElementById('counterTodos').textContent = mensalistas.length;
+    document.getElementById('counterPagos').textContent = pagos;
+    document.getElementById('counterPendentes').textContent = pendentes;
+    document.getElementById('counterVencidos').textContent = vencidos;
+    document.getElementById('counterHoje').textContent = vencemHoje;
+    
+    const html = `
+        <div class="status-card pago">
+            <div class="status-card-label">✅ PAGOS</div>
+            <div class="status-card-total">${pagos}</div>
+        </div>
+        <div class="status-card pendente">
+            <div class="status-card-label">⏳ PENDENTES</div>
+            <div class="status-card-total">${pendentes}</div>
+        </div>
+        <div class="status-card vencido">
+            <div class="status-card-label">⚠️ VENCIDOS</div>
+            <div class="status-card-total">${vencidos}</div>
+        </div>
+        <div class="status-card" style="border-top: 4px solid #ffaa00;">
+            <div class="status-card-label">📅 VENCE HOJE</div>
+            <div class="status-card-total" style="color: #ffaa00;">${vencemHoje}</div>
+        </div>
+    `;
+    
+    document.getElementById('resumoStatusMensalistas').innerHTML = html;
+}
+
+function filtrarMensalistasPorStatus(status, usarFiltrosAvancados = false) {
+    filtroStatusAtual = status;
+    
+    // Atualizar botões ativos
+    document.querySelectorAll('.status-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    const btnAtivo = Array.from(document.querySelectorAll('.status-btn')).find(btn => 
+        btn.textContent.includes(status === 'todos' ? 'Todos' : 
+                                status === 'pago' ? 'Pagos' : 
+                                status === 'pendente' ? 'Pendentes' : 
+                                status === 'vencido' ? 'Vencidos' : 'Vence Hoje')
+    );
+    
+    if (btnAtivo) btnAtivo.classList.add('active');
+    
+    const hoje = new Date();
+    let mensalistasFiltrados = [...dados.mensalistas];
+    
+    if (status !== 'todos') {
+        if (status === 'hoje') {
+            mensalistasFiltrados = mensalistasFiltrados.filter(m => {
+                if (m.status === 'pago') return false;
+                const dataVenc = new Date(m.dataVencimento || m.vencimento);
+                const diffDias = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
+                return diffDias === 0;
+            });
+        } else {
+            mensalistasFiltrados = mensalistasFiltrados.filter(m => m.status === status);
+        }
+    }
+    
+    // Aplicar filtros avançados
+    if (usarFiltrosAvancados) {
+        const dataInicio = document.getElementById('dataInicioMensalistas').value;
+        const dataFim = document.getElementById('dataFimMensalistas').value;
+        const filtroStatusAvancado = document.getElementById('filtroStatusMensalistas').value;
+        const filtroBarbeiro = document.getElementById('filtroBarbeiroMensalistas').value;
+        
+        if (dataInicio && dataFim) {
+            mensalistasFiltrados = mensalistasFiltrados.filter(mensalista => {
+                const dataVenc = new Date(mensalista.dataVencimento || mensalista.vencimento || mensalista.dataInicio);
+                const dataInicioDate = new Date(dataInicio);
+                const dataFimDate = new Date(dataFim);
+                
+                if (dataVenc < dataInicioDate || dataVenc > dataFimDate) return false;
+                if (filtroStatusAvancado !== 'todos' && mensalista.status !== filtroStatusAvancado) return false;
+                if (filtroBarbeiro !== 'todos' && mensalista.barbeiro !== filtroBarbeiro) return false;
+                
+                return true;
+            });
+        }
+    }
+    
+    // Ordenar
+    mensalistasFiltrados.sort((a, b) => {
+        const statusOrder = { 'vencido': 1, 'pendente': 2, 'pago': 3 };
+        if (statusOrder[a.status] !== statusOrder[b.status]) {
+            return statusOrder[a.status] - statusOrder[b.status];
+        }
+        
+        const dataA = new Date(a.dataVencimento || a.vencimento);
+        const dataB = new Date(b.dataVencimento || b.vencimento);
+        return dataA - dataB;
+    });
+    
+    // Gerar HTML
+    let html = '';
+    
+    if (mensalistasFiltrados.length > 0) {
+        mensalistasFiltrados.forEach(mensalista => {
+            const statusClass = mensalista.status === 'pago' ? 'status-pago' : 
+                              mensalista.status === 'pendente' ? 'status-pendente' : 'status-vencido';
+            const statusTexto = mensalista.status === 'pago' ? '✅ PAGO' : 
+                               mensalista.status === 'pendente' ? '⏳ PENDENTE' : '⚠️ VENCIDO';
+            
+            const dataVencimento = mensalista.dataVencimento || mensalista.vencimento;
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            const vencimento = new Date(dataVencimento);
+            vencimento.setHours(0, 0, 0, 0);
+            const diffDias = Math.ceil((vencimento - hoje) / (1000 * 60 * 60 * 24));
+            
+            let vencimentoTexto = '';
+            let vencimentoClass = '';
+            
+            if (mensalista.status === 'pago') {
+                vencimentoTexto = `📅 Próximo: ${formatarDataBR(calcularProximoVencimento(dataVencimento))}`;
+            } else if (diffDias > 0) {
+                vencimentoTexto = `📅 Vence em ${diffDias} ${diffDias === 1 ? 'dia' : 'dias'}`;
+                vencimentoClass = diffDias <= 3 ? 'proximo' : '';
+            } else if (diffDias === 0) {
+                vencimentoTexto = '⚠️ VENCE HOJE!';
+                vencimentoClass = 'hoje';
+            } else {
+                vencimentoTexto = `⏰ Vencido há ${Math.abs(diffDias)} ${Math.abs(diffDias) === 1 ? 'dia' : 'dias'}`;
+                vencimentoClass = 'vencido';
+            }
+            
+            let cardClass = 'mensalista-card';
+            if (mensalista.status === 'vencido') cardClass += ' vencido';
+            if (mensalista.status === 'pendente' && diffDias <= 3) cardClass += ' pendente';
+            
+            html += `
+                <div class="${cardClass}" id="mensalista-${mensalista.id}">
+                    <div class="mensalista-header">
+                        <div>
+                            <div class="mensalista-nome">${mensalista.nome}</div>
+                            <span class="badge ${mensalista.barbeiro === 'Gabriel' ? 'badge-warning' : 'badge-success'}" style="margin-top: 5px;">
+                                ${mensalista.barbeiro}
+                            </span>
+                        </div>
+                        <div class="mensalista-actions">
+                            <span class="status-tag ${statusClass}">${statusTexto}</span>
+                            ${mensalista.status !== 'pago' ? `
+                                <button class="action-btn success" onclick="pagarMensalidade(${mensalista.id})" title="Pagar mensalidade">
+                                    💰
+                                </button>
+                            ` : ''}
+                            <button class="action-btn" onclick="removerMensalista(${mensalista.id})" title="Remover mensalista">
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mensalista-detalhes">
+                        <div class="mensalista-detalhes-item">
+                            <div class="mensalista-detalhes-label">Valor Mensal</div>
+                            <div class="mensalista-valor">R$ ${mensalista.valor.toFixed(2)}</div>
+                        </div>
+                        <div class="mensalista-detalhes-item">
+                            <div class="mensalista-detalhes-label">Vencimento</div>
+                            <div class="mensalista-detalhes-value">${formatarDataBR(dataVencimento)}</div>
+                        </div>
+                        <div class="mensalista-detalhes-item">
+                            <div class="mensalista-detalhes-label">Status</div>
+                            <div class="mensalista-vencimento ${vencimentoClass}">${vencimentoTexto}</div>
+                        </div>
+                        ${mensalista.telefone ? `
+                            <div class="mensalista-detalhes-item">
+                                <div class="mensalista-detalhes-label">Contato</div>
+                                <div class="mensalista-telefone">${mensalista.telefone}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    ${mensalista.observacoes ? `
+                        <div style="font-size: 12px; color: #888; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            📝 ${mensalista.observacoes}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+    } else {
+        html = `
+            <div class="empty-state">
+                <div class="empty-state-icon">👥</div>
+                <div class="empty-state-title">Nenhum mensalista encontrado</div>
+                <div class="empty-state-subtitle">
+                    ${status === 'vencido' ? '✅ Todos os mensalistas estão em dia!' : 
+                      status === 'hoje' ? '🎉 Ninguém vence hoje!' : 
+                      'Tente ajustar os filtros ou cadastre um novo mensalista'}
+                </div>
+                <button class="btn btn-success" onclick="abrirModalMensalistas()" style="margin-top: 20px;">
+                    + Adicionar Mensalista
+                </button>
+            </div>
+        `;
+    }
+    
+    document.getElementById('listaMensalistasDashboard').innerHTML = html;
+}
+
+// ========== FUNÇÕES AUXILIARES ==========
+function formatarDataBR(dataString) {
+    if (!dataString) return '';
+    const date = new Date(dataString);
+    return date.toLocaleDateString('pt-BR');
+}
+
+function calcularProximoVencimento(dataVencimento) {
+    const data = new Date(dataVencimento);
+    data.setMonth(data.getMonth() + 1);
+    return data.toISOString().split('T')[0];
+}
+
+function voltarParaRegistro() {
+    alert('Voltando para página de registro...');
+    // window.location.href = 'registro.html';
+}
+
+function fecharModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function fecharNotificacao() {
+    const notificacao = document.getElementById('pushNotification');
+    if (notificacao) {
+        notificacao.style.display = 'none';
+        notificacaoAtiva = false;
+    }
+}
+
+// ========== FUNÇÕES QUE PRECISAM SER COMPLETADAS ==========
+function removerDespesa(id) {
+    if (!confirm('⚠️ Tem certeza que deseja remover esta despesa?\n\nEsta ação não pode ser desfeita.')) {
+        return;
+    }
+    
+    const index = dados.despesas.findIndex(d => d.id === id);
+    if (index === -1) {
+        alert('❌ Despesa não encontrada!');
+        return;
+    }
+    
+    const descricaoRemovida = dados.despesas[index].descricao;
+    dados.despesas.splice(index, 1);
+    salvarDados();
+    
+    atualizarDashboardCompleto();
+    
+    alert(`🗑️ Despesa "${descricaoRemovida}" removida com sucesso!`);
+}
+
+function removerMensalista(id) {
+    if (!confirm('⚠️ Tem certeza que deseja remover este mensalista?')) {
+        return;
+    }
+    
+    const index = dados.mensalistas.findIndex(m => m.id === id);
+    if (index === -1) {
+        alert('❌ Mensalista não encontrado!');
+        return;
+    }
+    
+    const nomeRemovido = dados.mensalistas[index].nome;
+    dados.mensalistas.splice(index, 1);
+    salvarDados();
+    
+    atualizarDashboardCompleto();
+    
+    alert(`🗑️ Mensalista "${nomeRemovido}" removido com sucesso!`);
+}
+
+function pagarMensalidade(id) {
+    const mensalista = dados.mensalistas.find(m => m.id === id);
+    if (!mensalista) {
+        alert('❌ Mensalista não encontrado!');
+        return;
+    }
+    
+    const hoje = new Date();
+    const confirmar = confirm(`💵 Registrar pagamento de R$ ${mensalista.valor.toFixed(2)} para ${mensalista.nome}?`);
+    
+    if (!confirmar) return;
+    
+    // Registrar pagamento
+    if (!mensalista.historicoPagamentos) {
+        mensalista.historicoPagamentos = [];
+    }
+    
+    mensalista.historicoPagamentos.push({
+        data: hoje.toISOString().split('T')[0],
+        valor: mensalista.valor,
+        pagoPor: 'Sistema'
+    });
+    
+    // Atualizar status e calcular próximo vencimento
+    mensalista.status = 'pago';
+    mensalista.dataUltimoPagamento = hoje.toISOString().split('T')[0];
+    
+    // Calcular próximo vencimento
+    const dataVencimentoAtual = new Date(mensalista.dataVencimento);
+    const proximoVencimento = new Date(dataVencimentoAtual.getFullYear(), dataVencimentoAtual.getMonth() + 1, mensalista.diaVencimento);
+    mensalista.dataVencimento = proximoVencimento.toISOString().split('T')[0];
+    
+    salvarDados();
+    
+    // Atualizar interface
+    atualizarDashboardCompleto();
+    
+    alert(`✅ Pagamento de R$ ${mensalista.valor.toFixed(2)} registrado para ${mensalista.nome}!`);
+}
+
+function atualizarResumoFinanceiroDespesas() {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth();
+    const anoAtual = hoje.getFullYear();
+    
+    // Despesas do mês
+    const despesasMes = dados.despesas.filter(d => {
+        const dataDespesa = new Date(d.data);
+        return dataDespesa.getMonth() === mesAtual && dataDespesa.getFullYear() === anoAtual;
+    });
+    
+    const totalDespesas = despesasMes.reduce((sum, d) => sum + d.valor, 0);
+    const orcamento = dados.config.orcamentoDespesas || 1500;
+    const percentualUsado = (totalDespesas / orcamento) * 100;
+    
+    // Calcular por categoria
+    const categorias = {};
+    despesasMes.forEach(d => {
+        if (!categorias[d.categoria]) {
+            categorias[d.categoria] = 0;
+        }
+        categorias[d.categoria] += d.valor;
+    });
+    
+    let categoriasHtml = '';
+    Object.keys(categorias).forEach(categoria => {
+        const totalCategoria = categorias[categoria];
+        const percentualCategoria = (totalCategoria / totalDespesas) * 100;
+        
+        categoriasHtml += `
+            <div class="categoria-item">
+                <div>${categoria}</div>
+                <div class="categoria-total">R$ ${totalCategoria.toFixed(2)}</div>
+            </div>
+            <div class="progresso-despesa">
+                <div class="progresso-bar" style="width: ${percentualCategoria}%;"></div>
+            </div>
+        `;
+    });
+    
+    const html = `
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+            <div>
+                <div style="font-size: 12px; color: #aaa;">ORÇAMENTO MENSAL</div>
+                <div style="font-size: 24px; font-weight: 700; color: #fff;">R$ ${orcamento.toFixed(2)}</div>
+            </div>
+            <div>
+                <div style="font-size: 12px; color: #aaa;">DESPESAS MÊS</div>
+                <div style="font-size: 24px; font-weight: 700; color: ${totalDespesas > orcamento ? '#ff3366' : '#25D366'};">R$ ${totalDespesas.toFixed(2)}</div>
+            </div>
+        </div>
+        
+        <div class="progresso-despesa" style="margin: 15px 0;">
+            <div class="progresso-bar" style="width: ${Math.min(percentualUsado, 100)}%; background: ${percentualUsado > 100 ? 'linear-gradient(90deg, #ff3366, #ff0066)' : 'linear-gradient(90deg, #ff3366, #ff6699)'};"></div>
+        </div>
+        
+        <div style="text-align: center; margin: 10px 0; color: ${percentualUsado > 100 ? '#ff3366' : '#aaa'};">
+            ${percentualUsado.toFixed(1)}% do orçamento utilizado
+            ${percentualUsado > 100 ? '⚠️ EXCEDIDO!' : ''}
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 10px;">📊 DISTRIBUIÇÃO POR CATEGORIA</div>
+            ${categoriasHtml || '<div style="text-align: center; color: #aaa; padding: 20px;">Nenhuma despesa registrada este mês</div>'}
+        </div>
+    `;
+    
+    document.getElementById('resumoFinanceiroDespesas').innerHTML = html;
+}
+
+function atualizarListaDespesasModal() {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth();
+    const anoAtual = hoje.getFullYear();
+    
+    const despesasMes = dados.despesas.filter(d => {
+        const dataDespesa = new Date(d.data);
+        return dataDespesa.getMonth() === mesAtual && dataDespesa.getFullYear() === anoAtual;
+    }).sort((a, b) => new Date(b.data) - new Date(a.data));
+    
+    let html = '';
+    
+    if (despesasMes.length > 0) {
+        html = `
+            <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 10px;">📅 DESPESAS DESTE MÊS (${despesasMes.length})</div>
+            </div>
+        `;
+        
+        despesasMes.forEach(despesa => {
+            html += `
+                <div class="despesa-card" id="despesa-modal-${despesa.id}">
+                    <div class="despesa-header">
+                        <div>
+                            <div style="font-weight: 600; font-size: 16px; margin-bottom: 5px;">${despesa.descricao}</div>
+                            <div class="despesa-categoria">${despesa.categoria}</div>
+                        </div>
+                        <div class="despesa-valor">R$ ${despesa.valor.toFixed(2)}</div>
+                    </div>
+                    
+                    <div class="despesa-detalhes">
+                        <div>
+                            <div style="font-size: 11px; color: #888;">Data</div>
+                            <div>${formatarDataBR(despesa.data)}</div>
+                        </div>
+                        ${despesa.comprovante ? `
+                            <div>
+                                <div style="font-size: 11px; color: #888;">Comprovante</div>
+                                <div>${despesa.comprovante}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="despesa-actions">
+                        <button class="action-btn" onclick="removerDespesa(${despesa.id})" title="Remover despesa">
+                            ×
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        html = `
+            <div style="text-align: center; padding: 40px; color: #aaa;">
+                <div style="font-size: 48px; margin-bottom: 20px;">💸</div>
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 10px;">Nenhuma despesa este mês</div>
+                <div>Registre sua primeira despesa usando o formulário acima</div>
+            </div>
+        `;
+    }
+    
+    document.getElementById('listaDespesasModal').innerHTML = html;
+}
+
+// ========== FUNÇÕES PARA DEMONSTRAÇÃO (PODE SER IMPLEMENTADAS DEPOIS) ==========
+function verificarVencimentosMensalistas() {
+    // Implementação básica
+    if (!dados.config.notificacoesAtivas) return;
+    
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const diasAlerta = dados.config.diasAlerta || 3;
+    
+    let vencidosParaNotificar = [];
+    
+    dados.mensalistas.forEach(mensalista => {
+        if (mensalista.status === 'pago') return;
+        
+        const dataVencimento = new Date(mensalista.dataVencimento || mensalista.vencimento);
+        dataVencimento.setHours(0, 0, 0, 0);
+        
+        const diffDias = Math.ceil((dataVencimento - hoje) / (1000 * 60 * 60 * 24));
+        
+        if (diffDias < 0 && mensalista.status !== 'vencido') {
+            mensalista.status = 'vencido';
+            vencidosParaNotificar.push(mensalista);
+        }
+    });
+    
+    if (vencidosParaNotificar.length > 0) {
+        salvarDados();
+        atualizarResumoStatusMensalistas();
+    }
+}
+
+function verificarOrcamentoDespesas() {
+    // Implementação básica
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth();
+    const anoAtual = hoje.getFullYear();
+    
+    const despesasMes = dados.despesas.filter(d => {
+        const dataDespesa = new Date(d.data);
+        return dataDespesa.getMonth() === mesAtual && dataDespesa.getFullYear() === anoAtual;
+    });
+    
+    const totalDespesas = despesasMes.reduce((sum, d) => sum + d.valor, 0);
+    const orcamento = dados.config.orcamentoDespesas || 1500;
+    const percentual = (totalDespesas / orcamento) * 100;
+    
+    if (percentual > 100) {
+        console.log('⚠️ Orçamento excedido!');
+    }
+}
+
+function adicionarOuAtualizarDespesa() {
+    const descricao = document.getElementById('descricaoDespesa').value.trim();
+    const categoria = document.getElementById('categoriaDespesa').value;
+    const valor = parseFloat(document.getElementById('valorDespesa').value);
+    const data = document.getElementById('dataDespesa').value;
+    const tags = document.getElementById('tagsDespesa').value.trim();
+    const comprovante = document.getElementById('comprovanteDespesa').value.trim();
+    const observacoes = document.getElementById('observacoesDespesa').value.trim();
+    
+    if (!descricao || !categoria || isNaN(valor) || !data) {
+        alert('❌ Preencha todos os campos obrigatórios!');
+        return;
+    }
+    
+    if (editandoDespesaId) {
+        // Atualizar despesa existente
+        atualizarDespesa(editandoDespesaId, descricao, categoria, valor, data, tags, comprovante, observacoes);
+    } else {
+        // Adicionar nova despesa
+        adicionarNovaDespesa(descricao, categoria, valor, data, tags, comprovante, observacoes);
+    }
+}
+
+function adicionarNovaDespesa(descricao, categoria, valor, data, tags, comprovante, observacoes) {
+    const id = dados.despesas.length > 0 ? Math.max(...dados.despesas.map(d => d.id)) + 1 : 1;
+    
+    const novaDespesa = {
+        id: id,
+        data: data,
+        descricao: descricao,
+        categoria: categoria,
+        valor: valor,
+        tags: tags ? tags.split(',').map(t => t.trim()) : [],
+        comprovante: comprovante,
+        observacoes: observacoes
+    };
+    
+    dados.despesas.push(novaDespesa);
+    salvarDados();
+    
+    limparFormDespesa();
+    atualizarDashboardCompleto();
+    
+    alert(`✅ Despesa "${descricao}" registrada com sucesso!`);
+    fecharModal('modalDespesas');
+}
+
+function limparFormDespesa() {
+    document.getElementById('descricaoDespesa').value = '';
+    document.getElementById('valorDespesa').value = '';
+    document.getElementById('tagsDespesa').value = '';
+    document.getElementById('comprovanteDespesa').value = '';
+    document.getElementById('observacoesDespesa').value = '';
+    
+    const hoje = new Date();
+    document.getElementById('dataDespesa').value = hoje.toISOString().split('T')[0];
+    
+    editandoDespesaId = null;
+    document.getElementById('btnAdicionarDespesa').textContent = '💾 Registrar Despesa';
+}
+
+function limparFiltrosMensalistas() {
+    document.getElementById('dataInicioMensalistas').value = '';
+    document.getElementById('dataFimMensalistas').value = '';
+    document.getElementById('filtroStatusMensalistas').value = 'todos';
+    document.getElementById('filtroBarbeiroMensalistas').value = 'todos';
+    
+    filtrarMensalistasPorStatus('todos');
+}
+
+function adicionarOuAtualizarMensalista() {
+    const nome = document.getElementById('nomeMensalista').value.trim();
+    const telefone = document.getElementById('telefoneMensalista').value.trim();
+    const barbeiro = document.getElementById('barbeiroMensalista').value;
+    const valor = parseFloat(document.getElementById('valorMensalista').value);
+    const dataInicio = document.getElementById('dataInicioMensalista').value;
+    const diaVencimento = parseInt(document.getElementById('diaVencimentoMensalista').value);
+    const status = document.getElementById('statusMensalista').value;
+    const observacoes = document.getElementById('observacoesMensalista').value.trim();
+    
+    if (!nome || !barbeiro || isNaN(valor) || !dataInicio || !diaVencimento) {
+        alert('❌ Preencha todos os campos obrigatórios!');
+        return;
+    }
+    
+    if (editandoMensalistaId) {
+        atualizarMensalista(editandoMensalistaId, nome, telefone, barbeiro, valor, dataInicio, diaVencimento, status, observacoes);
+    } else {
+        adicionarNovoMensalista(nome, telefone, barbeiro, valor, dataInicio, diaVencimento, status, observacoes);
+    }
+}
+
+function adicionarNovoMensalista(nome, telefone, barbeiro, valor, dataInicio, diaVencimento, status, observacoes) {
+    const id = dados.mensalistas.length > 0 ? Math.max(...dados.mensalistas.map(m => m.id)) + 1 : 1;
+    
+    const dataInicioObj = new Date(dataInicio);
+    let dataVencimento = new Date(dataInicioObj.getFullYear(), dataInicioObj.getMonth(), diaVencimento);
+    
+    if (dataVencimento < dataInicioObj) {
+        dataVencimento = new Date(dataInicioObj.getFullYear(), dataInicioObj.getMonth() + 1, diaVencimento);
+    }
+    
+    const novoMensalista = {
+        id: id,
+        nome: nome,
+        telefone: telefone,
+        barbeiro: barbeiro,
+        valor: valor,
+        dataInicio: dataInicio,
+        diaVencimento: diaVencimento,
+        dataVencimento: dataVencimento.toISOString().split('T')[0],
+        status: status,
+        observacoes: observacoes,
+        historicoPagamentos: []
+    };
+    
+    dados.mensalistas.push(novoMensalista);
+    salvarDados();
+    
+    limparFormMensalista();
+    atualizarDashboardCompleto();
+    
+    alert(`✅ Mensalista "${nome}" cadastrado com sucesso!`);
+    fecharModal('modalMensalistas');
+}
+
+function limparFormMensalista() {
+    document.getElementById('nomeMensalista').value = '';
+    document.getElementById('telefoneMensalista').value = '';
+    document.getElementById('valorMensalista').value = '';
+    document.getElementById('observacoesMensalista').value = '';
+    
+    const hoje = new Date();
+    document.getElementById('dataInicioMensalista').value = hoje.toISOString().split('T')[0];
+    document.getElementById('diaVencimentoMensalista').value = hoje.getDate();
+    
+    editandoMensalistaId = null;
+    document.getElementById('btnAdicionarMensalista').textContent = '✅ Cadastrar Mensalista';
+}
+
+function salvarConfiguracoes() {
+    const whatsapp = document.getElementById('numWhats').value.trim();
+    const novoPin = document.getElementById('novoPin').value.trim();
+    const corte = parseFloat(document.getElementById('valCorte').value);
+    const barba = parseFloat(document.getElementById('valBarba').value);
+    const combo = parseFloat(document.getElementById('valCombo').value);
+    const orcamentoDespesas = parseFloat(document.getElementById('orcamentoDespesas').value);
+    const notificacoesAtivas = document.getElementById('notificacoesAtivas').value === 'true';
+    const diasAlerta = parseInt(document.getElementById('diasAlerta').value);
+    
+    if (whatsapp && !/^\d{10,15}$/.test(whatsapp.replace(/\D/g, ''))) {
+        alert('❌ Número de WhatsApp inválido!');
+        return;
+    }
+    
+    if (novoPin && !/^\d{4}$/.test(novoPin)) {
+        alert('❌ PIN deve conter 4 dígitos!');
+        return;
+    }
+    
+    if (isNaN(corte) || isNaN(barba) || isNaN(combo) || isNaN(orcamentoDespesas) || isNaN(diasAlerta)) {
+        alert('❌ Valores inválidos!');
+        return;
+    }
+    
+    if (whatsapp) dados.config.whatsapp = whatsapp;
+    if (novoPin) dados.config.pin = novoPin;
+    dados.config.corte = corte;
+    dados.config.barba = barba;
+    dados.config.combo = combo;
+    dados.config.orcamentoDespesas = orcamentoDespesas;
+    dados.config.notificacoesAtivas = notificacoesAtivas;
+    dados.config.diasAlerta = diasAlerta;
+    
+    salvarDados();
+    fecharModal('modalConfig');
+    
+    alert('✅ Configurações salvas com sucesso!');
+}
+
 function gerarRelatorioPagamentosDetalhado() {
     const dataInicio = document.getElementById('dataInicioPagamentos').value;
     const dataFim = document.getElementById('dataFimPagamentos').value;
     const filtroBarbeiro = document.getElementById('filtroBarbeiroPagamentos').value;
     
-    // Coletar serviços no período
     let todosServicos = [...dados.Gabriel, ...dados.Wagner].filter(s => {
         return s.data >= dataInicio && s.data <= dataFim;
     });
@@ -2815,13 +3429,11 @@ function gerarRelatorioPagamentosDetalhado() {
         todosServicos = todosServicos.filter(s => s.barbeiro === filtroBarbeiro);
     }
     
-    // Calcular totais
     const totalPeriodo = todosServicos.reduce((sum, s) => sum + s.valor, 0);
     const totalPago = todosServicos.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
     const totalFiado = totalPeriodo - totalPago;
     
-    // Gerar HTML
-    let html = `
+    const html = `
         <div style="background: linear-gradient(135deg, rgba(255,170,0,0.1), rgba(51,102,255,0.1)); border-radius: 15px; padding: 25px; margin-bottom: 25px;">
             <div style="text-align: center; margin-bottom: 20px;">
                 <div style="font-size: 20px; font-weight: 800; color: #ffaa00;">💰 RELATÓRIO DE PAGAMENTOS</div>
@@ -2850,68 +3462,6 @@ function gerarRelatorioPagamentosDetalhado() {
     `;
     
     document.getElementById('relatorioPagamentosDetalhado').innerHTML = html;
-}
-
-function abrirModalMensalistas() {
-    document.getElementById('modalMensalistas').style.display = 'flex';
-}
-
-function abrirModalConfiguracoes() {
-    // Preencher valores atuais
-    document.getElementById('numWhats').value = dados.config.whatsapp || '';
-    document.getElementById('novoPin').value = '';
-    document.getElementById('valCorte').value = dados.config.corte || 28;
-    document.getElementById('valBarba').value = dados.config.barba || 15;
-    document.getElementById('valCombo').value = dados.config.combo || 40;
-    document.getElementById('orcamentoDespesas').value = dados.config.orcamentoDespesas || 1500;
-    document.getElementById('notificacoesAtivas').value = dados.config.notificacoesAtivas ? 'true' : 'false';
-    document.getElementById('diasAlerta').value = dados.config.diasAlerta || 3;
-    
-    document.getElementById('modalConfig').style.display = 'flex';
-}
-
-function salvarConfiguracoes() {
-    const whatsapp = document.getElementById('numWhats').value.trim();
-    const novoPin = document.getElementById('novoPin').value.trim();
-    const corte = parseFloat(document.getElementById('valCorte').value);
-    const barba = parseFloat(document.getElementById('valBarba').value);
-    const combo = parseFloat(document.getElementById('valCombo').value);
-    const orcamentoDespesas = parseFloat(document.getElementById('orcamentoDespesas').value);
-    const notificacoesAtivas = document.getElementById('notificacoesAtivas').value === 'true';
-    const diasAlerta = parseInt(document.getElementById('diasAlerta').value);
-    
-    // Validar valores
-    if (whatsapp && !/^\d{10,15}$/.test(whatsapp.replace(/\D/g, ''))) {
-        alert('❌ Número de WhatsApp inválido!');
-        return;
-    }
-    
-    if (novoPin && !/^\d{4}$/.test(novoPin)) {
-        alert('❌ PIN deve conter 4 dígitos!');
-        return;
-    }
-    
-    if (isNaN(corte) || isNaN(barba) || isNaN(combo) || isNaN(orcamentoDespesas) || isNaN(diasAlerta)) {
-        alert('❌ Valores inválidos!');
-        return;
-    }
-    
-    // Atualizar configurações
-    if (whatsapp) dados.config.whatsapp = whatsapp;
-    if (novoPin) dados.config.pin = novoPin;
-    dados.config.corte = corte;
-    dados.config.barba = barba;
-    dados.config.combo = combo;
-    dados.config.orcamentoDespesas = orcamentoDespesas;
-    dados.config.notificacoesAtivas = notificacoesAtivas;
-    dados.config.diasAlerta = diasAlerta;
-    
-    salvarDados();
-    
-    // Fechar modal
-    fecharModal('modalConfig');
-    
-    alert('✅ Configurações salvas com sucesso!');
 }
 
 function enviarRelatorioWhatsApp(tipo) {
@@ -3004,33 +3554,90 @@ function enviarRelatorioWhatsApp(tipo) {
     window.open(url, '_blank');
 }
 
-// ========== FUNÇÕES AUXILIARES ==========
-function formatarDataBR(dataString) {
-    if (!dataString) return '';
-    const date = new Date(dataString);
-    return date.toLocaleDateString('pt-BR');
+function enviarLembretesMensalistas() {
+    const mensalistasPendentes = dados.mensalistas.filter(m => m.status === 'pendente' || m.status === 'vencido');
+    
+    if (mensalistasPendentes.length === 0) {
+        alert('✅ Não há mensalistas pendentes para enviar lembretes!');
+        return;
+    }
+    
+    alert(`📢 Enviar lembretes para ${mensalistasPendentes.length} mensalista(s)`);
 }
 
-function calcularProximoVencimento(dataVencimento) {
-    const data = new Date(dataVencimento);
-    data.setMonth(data.getMonth() + 1);
-    return data.toISOString().split('T')[0];
+function exportarDadosDespesas() {
+    alert('Funcionalidade de exportação de despesas - Em desenvolvimento');
 }
 
-function filtrarPorMetodo(metodo) {
-    filtroMetodoAtual = filtroMetodoAtual === metodo ? null : metodo;
-    atualizarListaServicosRecentes();
+function exportarDadosServicos() {
+    alert('Funcionalidade de exportação de serviços - Em desenvolvimento');
 }
 
-function voltarParaRegistro() {
-    // Simulando volta para página de registro
-    alert('Voltando para página de registro...');
-    // Em um sistema real, você redirecionaria para a página de registro
-    // window.location.href = 'registro.html';
+// ========== FUNÇÕES ADICIONAIS ==========
+function atualizarDespesa(id, descricao, categoria, valor, data, tags, comprovante, observacoes) {
+    const despesa = dados.despesas.find(d => d.id === id);
+    if (!despesa) {
+        alert('❌ Despesa não encontrada!');
+        return;
+    }
+    
+    despesa.descricao = descricao;
+    despesa.categoria = categoria;
+    despesa.valor = valor;
+    despesa.data = data;
+    despesa.tags = tags ? tags.split(',').map(t => t.trim()) : [];
+    despesa.comprovante = comprovante;
+    despesa.observacoes = observacoes;
+    
+    salvarDados();
+    
+    editandoDespesaId = null;
+    document.getElementById('btnAdicionarDespesa').textContent = '💾 Registrar Despesa';
+    
+    limparFormDespesa();
+    atualizarDashboardCompleto();
+    
+    alert(`✅ Despesa "${descricao}" atualizada com sucesso!`);
+    fecharModal('modalDespesas');
 }
 
-function fecharModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+function atualizarMensalista(id, nome, telefone, barbeiro, valor, dataInicio, diaVencimento, status, observacoes) {
+    const mensalista = dados.mensalistas.find(m => m.id === id);
+    if (!mensalista) {
+        alert('❌ Mensalista não encontrado!');
+        return;
+    }
+    
+    mensalista.nome = nome;
+    mensalista.telefone = telefone;
+    mensalista.barbeiro = barbeiro;
+    mensalista.valor = valor;
+    mensalista.dataInicio = dataInicio;
+    mensalista.diaVencimento = diaVencimento;
+    mensalista.status = status;
+    mensalista.observacoes = observacoes;
+    
+    if (diaVencimento !== mensalista.diaVencimento || dataInicio !== mensalista.dataInicio) {
+        const dataInicioObj = new Date(dataInicio);
+        let dataVencimento = new Date(dataInicioObj.getFullYear(), dataInicioObj.getMonth(), diaVencimento);
+        
+        if (dataVencimento < dataInicioObj) {
+            dataVencimento = new Date(dataInicioObj.getFullYear(), dataInicioObj.getMonth() + 1, diaVencimento);
+        }
+        
+        mensalista.dataVencimento = dataVencimento.toISOString().split('T')[0];
+    }
+    
+    salvarDados();
+    
+    editandoMensalistaId = null;
+    document.getElementById('btnAdicionarMensalista').textContent = '✅ Cadastrar Mensalista';
+    
+    limparFormMensalista();
+    atualizarDashboardCompleto();
+    
+    alert(`✅ Mensalista "${nome}" atualizado com sucesso!`);
+    fecharModal('modalMensalistas');
 }
     </script>
 </body>

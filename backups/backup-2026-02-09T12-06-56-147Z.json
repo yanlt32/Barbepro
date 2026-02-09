@@ -1,0 +1,82 @@
+{
+  "Gabriel": [
+    {
+      "id": 1770600285791,
+      "hora": "22:24",
+      "data": "2026-02-08",
+      "tipo": "Corte",
+      "valor": 28,
+      "cliente": "Cliente",
+      "pago": true,
+      "metodoPagamento": "dinheiro",
+      "barbeiro": "Gabriel",
+      "timestamp": 1770600285791,
+      "timezone": "America/Sao_Paulo"
+    },
+    {
+      "id": 1770499554749,
+      "hora": "18:25",
+      "data": "2026-02-07",
+      "tipo": "Corte",
+      "valor": 28,
+      "cliente": "Cliente",
+      "pago": true,
+      "metodoPagamento": "dinheiro",
+      "barbeiro": "Gabriel",
+      "timestamp": 1770499554786
+    },
+    {
+      "hora": "10:49",
+      "tipo": "Barba + Cabelo",
+      "valor": 40,
+      "cliente": "Cliente",
+      "pago": true,
+      "metodoPagamento": "dinheiro",
+      "data": "2025-12-01"
+    },
+    {
+      "hora": "17:36",
+      "tipo": "Corte",
+      "valor": 28,
+      "cliente": "Cliente",
+      "pago": true,
+      "metodoPagamento": "dinheiro",
+      "data": "2025-11-30"
+    },
+    {
+      "hora": "17:15",
+      "tipo": "Corte",
+      "valor": 28,
+      "cliente": "Cliente",
+      "pago": true,
+      "metodoPagamento": "dinheiro",
+      "data": "2025-11-30"
+    }
+  ],
+  "Wagner": [],
+  "despesas": [
+    {
+      "id": 1769924876511,
+      "descricao": "pomada",
+      "valor": 200,
+      "data": "2026-02-01",
+      "dataCriacao": "2026-02-01T05:47:56.511Z"
+    }
+  ],
+  "mensalistas": [],
+  "config": {
+    "pin": "9828",
+    "whatsapp": "11974065186",
+    "corte": 28,
+    "barba": 15,
+    "combo": 40,
+    "metaDiaria": 300,
+    "metasBarbeiros": {
+      "Gabriel": 300,
+      "Wagner": 300
+    },
+    "orcamentoDespesas": 1500,
+    "notificacoesAtivas": false,
+    "diasAlerta": 3
+  }
+}
