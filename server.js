@@ -66,6 +66,285 @@ function saveData(data) {
     }
 }
 
+// ===================== ROTA ESPECIAL PARA LIMPAR TUDO AGORA =====================
+// ACESSE: http://localhost:3000/limpar-tudo
+app.get('/limpar-tudo', (req, res) => {
+    try {
+        // Carregar dados atuais
+        const dados = loadData();
+        
+        // Manter apenas a configuração, apagar TODO o resto
+        const dadosLimpos = {
+            Gabriel: [],           // LIMPO
+            Wagner: [],           // LIMPO
+            despesas: [],         // LIMPO
+            mensalistas: [],      // LIMPO
+            config: dados.config || {  // Mantém a configuração
+                pin: '1234',
+                whatsapp: '11974065186',
+                corte: 28,
+                barba: 15,
+                combo: 40,
+                orcamentoDespesas: 1500,
+                notificacoesAtivas: true,
+                diasAlerta: 3
+            }
+        };
+        
+        // Salvar dados limpos
+        if (saveData(dadosLimpos)) {
+            
+            // Notificar todos os clientes WebSocket que os dados foram resetados
+            wss.clients.forEach(function each(client) {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify({
+                        type: 'sync_completo',
+                        data: dadosLimpos
+                    }));
+                }
+            });
+            
+            // Criar um backup ANTES de limpar (caso queira recuperar depois)
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const backupDir = path.join(__dirname, 'backups');
+            
+            if (!fs.existsSync(backupDir)) {
+                fs.mkdirSync(backupDir, { recursive: true });
+            }
+            
+            const backupFile = path.join(backupDir, `backup-antes-limpeza-${timestamp}.json`);
+            fs.writeFileSync(backupFile, JSON.stringify(dados, null, 2));
+            
+            // Enviar resposta HTML bonita
+            res.send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>🧹 Sistema Limpo - BarbaPRO</title>
+                    <style>
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            margin: 0;
+                            padding: 0;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            min-height: 100vh;
+                            color: #333;
+                        }
+                        .container {
+                            background: white;
+                            border-radius: 20px;
+                            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                            padding: 40px;
+                            max-width: 600px;
+                            margin: 20px;
+                            text-align: center;
+                        }
+                        h1 {
+                            color: #4CAF50;
+                            font-size: 2.5em;
+                            margin-bottom: 20px;
+                        }
+                        .emoji {
+                            font-size: 4em;
+                            margin-bottom: 20px;
+                        }
+                        .stats {
+                            background: #f5f5f5;
+                            border-radius: 10px;
+                            padding: 20px;
+                            margin: 20px 0;
+                            text-align: left;
+                        }
+                        .stats h3 {
+                            color: #555;
+                            margin-top: 0;
+                        }
+                        .stats ul {
+                            list-style: none;
+                            padding: 0;
+                        }
+                        .stats li {
+                            padding: 10px;
+                            border-bottom: 1px solid #ddd;
+                            display: flex;
+                            justify-content: space-between;
+                        }
+                        .stats li:last-child {
+                            border-bottom: none;
+                        }
+                        .btn {
+                            background: #4CAF50;
+                            color: white;
+                            border: none;
+                            padding: 15px 30px;
+                            font-size: 1.2em;
+                            border-radius: 10px;
+                            cursor: pointer;
+                            margin: 10px;
+                            transition: transform 0.3s;
+                            text-decoration: none;
+                            display: inline-block;
+                        }
+                        .btn:hover {
+                            transform: scale(1.05);
+                            background: #45a049;
+                        }
+                        .btn-backup {
+                            background: #2196F3;
+                        }
+                        .btn-backup:hover {
+                            background: #0b7dda;
+                        }
+                        .warning {
+                            background: #fff3cd;
+                            border: 1px solid #ffeeba;
+                            color: #856404;
+                            padding: 15px;
+                            border-radius: 10px;
+                            margin: 20px 0;
+                        }
+                        .success {
+                            background: #d4edda;
+                            border: 1px solid #c3e6cb;
+                            color: #155724;
+                            padding: 15px;
+                            border-radius: 10px;
+                            margin: 20px 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="emoji">🧹✨</div>
+                        <h1>SISTEMA LIMPO!</h1>
+                        
+                        <div class="success">
+                            ✅ Todos os serviços, despesas e mensalistas foram APAGADOS!
+                        </div>
+                        
+                        <div class="stats">
+                            <h3>📊 Status Atual:</h3>
+                            <ul>
+                                <li><span>✂️ Serviços Gabriel:</span> <strong>0</strong></li>
+                                <li><span>✂️ Serviços Wagner:</span> <strong>0</strong></li>
+                                <li><span>💰 Despesas:</span> <strong>0</strong></li>
+                                <li><span>📅 Mensalistas:</span> <strong>0</strong></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="warning">
+                            ⚠️ Um backup dos dados ANTES da limpeza foi criado:<br>
+                            <strong>backup-antes-limpeza-${timestamp}.json</strong><br>
+                            <small>Você pode restaurar este backup se necessário</small>
+                        </div>
+                        
+                        <a href="/" class="btn">🏠 Ir para o Sistema</a>
+                        <a href="/dashboard" class="btn btn-backup">📊 Ir para Dashboard</a>
+                        <br>
+                        <a href="/api/backup/list" style="color: #666; margin-top: 20px; display: block;">
+                            📁 Ver lista de backups
+                        </a>
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            console.log('🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹');
+            console.log('🧹 TODOS OS DADOS FORAM LIMPOS!');
+            console.log('🧹 Gabriel: 0 serviços');
+            console.log('🧹 Wagner: 0 serviços');
+            console.log('🧹 Despesas: 0');
+            console.log('🧹 Mensalistas: 0');
+            console.log('🧹 Backup salvo em: backup-antes-limpeza-' + timestamp + '.json');
+            console.log('🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹🧹');
+            
+        } else {
+            res.status(500).send('Erro ao limpar dados');
+        }
+    } catch (error) {
+        console.error('❌ Erro ao limpar dados:', error);
+        res.status(500).send('Erro: ' + error.message);
+    }
+});
+
+// ===================== ROTA PARA LIMPAR APENAS SERVIÇOS =====================
+app.get('/limpar-servicos', (req, res) => {
+    try {
+        const dados = loadData();
+        
+        dados.Gabriel = [];
+        dados.Wagner = [];
+        
+        saveData(dados);
+        
+        // Notificar clientes
+        wss.clients.forEach(function each(client) {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                    type: 'sync_completo',
+                    data: dados
+                }));
+            }
+        });
+        
+        res.send('✅ Serviços limpos! Gabriel e Wagner estão com 0 serviços.');
+        
+    } catch (error) {
+        res.status(500).send('Erro: ' + error.message);
+    }
+});
+
+// ===================== ROTA PARA LIMPAR APENAS DESPESAS =====================
+app.get('/limpar-despesas', (req, res) => {
+    try {
+        const dados = loadData();
+        dados.despesas = [];
+        saveData(dados);
+        
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                    type: 'sync_completo',
+                    data: dados
+                }));
+            }
+        });
+        
+        res.send('💰 Despesas limpas!');
+        
+    } catch (error) {
+        res.status(500).send('Erro: ' + error.message);
+    }
+});
+
+// ===================== ROTA PARA LIMPAR APENAS MENSALISTAS =====================
+app.get('/limpar-mensalistas', (req, res) => {
+    try {
+        const dados = loadData();
+        dados.mensalistas = [];
+        saveData(dados);
+        
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                    type: 'sync_completo',
+                    data: dados
+                }));
+            }
+        });
+        
+        res.send('📅 Mensalistas limpos!');
+        
+    } catch (error) {
+        res.status(500).send('Erro: ' + error.message);
+    }
+});
+
 // Backup automático
 function criarBackup() {
     try {
@@ -74,7 +353,6 @@ function criarBackup() {
         const backupDir = path.join(__dirname, 'backups');
         const backupFile = path.join(backupDir, `backup-${timestamp}.json`);
         
-        // Criar pasta de backups se não existir
         if (!fs.existsSync(backupDir)) {
             fs.mkdirSync(backupDir, { recursive: true });
         }
@@ -82,13 +360,11 @@ function criarBackup() {
         fs.writeFileSync(backupFile, JSON.stringify(data, null, 2));
         console.log(`💾 Backup criado: ${backupFile}`);
         
-        // Limitar a 10 backups mais recentes
         const files = fs.readdirSync(backupDir)
             .filter(file => file.endsWith('.json'))
             .map(file => ({ file, time: fs.statSync(path.join(backupDir, file)).mtime.getTime() }))
             .sort((a, b) => b.time - a.time);
         
-        // Remover backups antigos (manter apenas os 10 mais recentes)
         if (files.length > 10) {
             files.slice(10).forEach(({ file }) => {
                 fs.unlinkSync(path.join(backupDir, file));
@@ -103,11 +379,10 @@ function criarBackup() {
     }
 }
 
-// WebSocket - Notificações em tempo real
+// WebSocket
 wss.on('connection', function connection(ws) {
     console.log('📱 Novo dispositivo conectado');
     
-    // Enviar dados iniciais
     const dados = loadData();
     ws.send(JSON.stringify({
         type: 'dados_iniciais',
@@ -118,7 +393,6 @@ wss.on('connection', function connection(ws) {
         try {
             const message = JSON.parse(data);
             
-            // Sincronização de dados
             if (message.type === 'sync_request') {
                 const dados = loadData();
                 ws.send(JSON.stringify({
@@ -127,10 +401,8 @@ wss.on('connection', function connection(ws) {
                 }));
             }
             
-            // Atualizar dados
             if (message.type === 'update_data') {
                 if (saveData(message.data)) {
-                    // Enviar atualização para todos os clientes
                     wss.clients.forEach(function each(client) {
                         if (client.readyState === WebSocket.OPEN) {
                             client.send(JSON.stringify({
@@ -147,7 +419,6 @@ wss.on('connection', function connection(ws) {
                 }
             }
             
-            // Notificação de novo serviço
             if (message.type === 'novo_servico') {
                 wss.clients.forEach(function each(client) {
                     if (client !== ws && client.readyState === WebSocket.OPEN) {
@@ -183,12 +454,10 @@ wss.on('connection', function connection(ws) {
 
 // ===================== ROTAS PRINCIPAIS =====================
 
-// Rota raiz
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Dashboard
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
@@ -213,7 +482,6 @@ app.post('/api/save', (req, res) => {
         }
         
         if (saveData(data)) {
-            // Notificar todos os clientes WebSocket
             wss.clients.forEach(function each(client) {
                 if (client.readyState === WebSocket.OPEN) {
                     client.send(JSON.stringify({
@@ -305,7 +573,6 @@ app.post('/api/backup/restore', (req, res) => {
             const backupData = JSON.parse(fs.readFileSync(backupFile, 'utf8'));
             
             if (saveData(backupData)) {
-                // Notificar todos os clientes
                 wss.clients.forEach(function each(client) {
                     if (client.readyState === WebSocket.OPEN) {
                         client.send(JSON.stringify({
@@ -454,14 +721,14 @@ app.get('/status', (req, res) => {
     });
 });
 
-// Rota para SPA (todas as outras rotas vão para index.html)
+// Rota para SPA
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ===================== INICIAR SERVIDOR =====================
 
-// Criar backup a cada 1 hora
+// Backup a cada 1 hora
 setInterval(() => {
     criarBackup();
 }, 60 * 60 * 1000);
@@ -484,8 +751,12 @@ server.listen(PORT, '0.0.0.0', () => {
     💸 Despesas: ${data.despesas?.length || 0}
     📅 Mensalistas: ${data.mensalistas?.length || 0}
     📈 Total serviços: ${totalServicos}
-    ⚙️  PIN: ${data.config?.pin || '1234'}
-    📱 WhatsApp: ${data.config?.whatsapp || 'Não configurado'}
+    
+    🧹 ROTAS PARA LIMPAR DADOS:
+    🔴 LIMPAR TUDO: http://localhost:${PORT}/limpar-tudo
+    ✂️  Limpar só serviços: http://localhost:${PORT}/limpar-servicos
+    💰 Limpar só despesas: http://localhost:${PORT}/limpar-despesas
+    📅 Limpar só mensalistas: http://localhost:${PORT}/limpar-mensalistas
     
     🌐 ENDPOINTS DISPONÍVEIS:
     🔗 App: http://localhost:${PORT}
@@ -504,14 +775,12 @@ server.listen(PORT, '0.0.0.0', () => {
 process.on('SIGTERM', () => {
     console.log('🛑 Recebido SIGTERM, encerrando graciosamente...');
     
-    // Fechar conexões WebSocket
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
             client.close();
         }
     });
     
-    // Criar backup final
     criarBackup();
     
     server.close(() => {
@@ -539,7 +808,7 @@ process.on('SIGINT', () => {
 
 process.on('uncaughtException', (err) => {
     console.error('❌ Erro não tratado:', err);
-    criarBackup(); // Salvar dados antes de sair
+    criarBackup();
     process.exit(1);
 });
 
