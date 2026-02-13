@@ -1892,21 +1892,56 @@ let notificacaoAtiva = false;
 let editandoMensalistaId = null;
 let editandoDespesaId = null;
 let filtroStatusAtual = 'todos';
+let barbeiroAtual = 'Wagner'; // 🟢 WAGNER é o PADRÃO (principal)
+let barbeiroAuxiliar = 'Gabriel'; // 🔵 Gabriel é o auxiliar
 
 // ========== INICIALIZAÇÃO ==========
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Dashboard inicializando...');
+    
+    // DETECTAR QUAL BARBEIRO ESTÁ LOGADO
+    detectarBarbeiroLogado();
+    
     inicializarDashboard();
 });
 
-function inicializarDashboard() {
-    carregarDadosDoServidor();
-    configurarDatasDashboard();
-    configurarEventListenersDashboard();
-    inicializarGraficos();
-    iniciarVerificacoesPeriodicas();
-    conectarWebSocket();
-    console.log('✅ Dashboard inicializado!');
+function detectarBarbeiroLogado() {
+    // Tenta pegar da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const barbeiro = urlParams.get('barbeiro');
+    
+    if (barbeiro === 'Gabriel' || barbeiro === 'Wagner') {
+        barbeiroAtual = barbeiro;
+        console.log(`👤 Barbeiro detectado na URL: ${barbeiroAtual}`);
+    } else {
+        // 🟢 WAGNER é o PADRÃO (principal)
+        barbeiroAtual = 'Wagner';
+        console.log(`👤 Usando barbeiro padrão: ${barbeiroAtual} (Principal)`);
+    }
+    
+    // Atualizar UI para mostrar qual barbeiro está ativo
+    setTimeout(() => {
+        const headerTitle = document.querySelector('.logo h1');
+        if (headerTitle) {
+            headerTitle.innerHTML = `BarbaPRO Duo - <span style="color: ${barbeiroAtual === 'Wagner' ? '#3366ff' : '#ffaa00'};">${barbeiroAtual} ${barbeiroAtual === 'Wagner' ? '⭐' : ''}</span>`;
+        }
+        
+        // Atualizar badge no card de estatísticas
+        const gabrielCard = document.querySelector('.card:first-child .badge');
+        const wagnerCard = document.querySelector('.card:nth-child(2) .badge');
+        
+        if (gabrielCard) {
+            gabrielCard.textContent = 'AUXILIAR';
+            gabrielCard.classList.remove('badge-success');
+            gabrielCard.classList.add('badge-warning');
+        }
+        
+        if (wagnerCard) {
+            wagnerCard.textContent = 'PRINCIPAL ⭐';
+            wagnerCard.classList.remove('badge-success');
+            wagnerCard.classList.add('badge-primary');
+        }
+    }, 500);
 }
 
 // ========== CARREGAR DADOS DO SERVIDOR VIA API ==========
@@ -1977,60 +2012,104 @@ function configurarDatasDashboard() {
     
     const formatarData = (date) => date.toISOString().split('T')[0];
     
-    document.getElementById('dataInicioServicos').value = formatarData(umaSemanaAtras);
-    document.getElementById('dataFimServicos').value = formatarData(hoje);
-    document.getElementById('dataInicioDespesas').value = formatarData(umaSemanaAtras);
-    document.getElementById('dataFimDespesas').value = formatarData(hoje);
-    document.getElementById('dataInicioPagamentos').value = formatarData(primeiroDiaMes);
-    document.getElementById('dataFimPagamentos').value = formatarData(hoje);
-    document.getElementById('dataInicioMensalistas').value = formatarData(primeiroDiaMes);
-    document.getElementById('dataFimMensalistas').value = formatarData(hoje);
-    document.getElementById('dataInicioMensalista').value = formatarData(hoje);
-    document.getElementById('diaVencimentoMensalista').value = hoje.getDate();
-    document.getElementById('dataDespesa').value = formatarData(hoje);
+    const dataInicioServicos = document.getElementById('dataInicioServicos');
+    const dataFimServicos = document.getElementById('dataFimServicos');
+    const dataInicioDespesas = document.getElementById('dataInicioDespesas');
+    const dataFimDespesas = document.getElementById('dataFimDespesas');
+    const dataInicioPagamentos = document.getElementById('dataInicioPagamentos');
+    const dataFimPagamentos = document.getElementById('dataFimPagamentos');
+    const dataInicioMensalistas = document.getElementById('dataInicioMensalistas');
+    const dataFimMensalistas = document.getElementById('dataFimMensalistas');
+    const dataInicioMensalista = document.getElementById('dataInicioMensalista');
+    const diaVencimentoMensalista = document.getElementById('diaVencimentoMensalista');
+    const dataDespesa = document.getElementById('dataDespesa');
+    
+    if (dataInicioServicos) dataInicioServicos.value = formatarData(umaSemanaAtras);
+    if (dataFimServicos) dataFimServicos.value = formatarData(hoje);
+    if (dataInicioDespesas) dataInicioDespesas.value = formatarData(umaSemanaAtras);
+    if (dataFimDespesas) dataFimDespesas.value = formatarData(hoje);
+    if (dataInicioPagamentos) dataInicioPagamentos.value = formatarData(primeiroDiaMes);
+    if (dataFimPagamentos) dataFimPagamentos.value = formatarData(hoje);
+    if (dataInicioMensalistas) dataInicioMensalistas.value = formatarData(primeiroDiaMes);
+    if (dataFimMensalistas) dataFimMensalistas.value = formatarData(hoje);
+    if (dataInicioMensalista) dataInicioMensalista.value = formatarData(hoje);
+    if (diaVencimentoMensalista) diaVencimentoMensalista.value = hoje.getDate();
+    if (dataDespesa) dataDespesa.value = formatarData(hoje);
 }
 
 // ========== EVENT LISTENERS ==========
 function configurarEventListenersDashboard() {
     // Botões principais
-    document.getElementById('btnVoltarRegistro')?.addEventListener('click', voltarParaRegistro);
-    document.getElementById('btnConfiguracoes')?.addEventListener('click', abrirModalConfiguracoes);
-    document.getElementById('btnEnviarResumo')?.addEventListener('click', () => abrirModalResumoCompleto());
+    const btnVoltarRegistro = document.getElementById('btnVoltarRegistro');
+    const btnConfiguracoes = document.getElementById('btnConfiguracoes');
+    const btnEnviarResumo = document.getElementById('btnEnviarResumo');
+    
+    if (btnVoltarRegistro) btnVoltarRegistro.addEventListener('click', voltarParaRegistro);
+    if (btnConfiguracoes) btnConfiguracoes.addEventListener('click', abrirModalConfiguracoes);
+    if (btnEnviarResumo) btnEnviarResumo.addEventListener('click', () => abrirModalResumoCompleto());
     
     // Ações rápidas
-    document.getElementById('btnVerResumoCompleto')?.addEventListener('click', () => abrirModalResumoCompleto());
-    document.getElementById('btnRelatorioDetalhado')?.addEventListener('click', abrirModalPagamentos);
-    document.getElementById('btnEnviarMensalistas')?.addEventListener('click', enviarLembretesMensalistas);
-    document.getElementById('btnGerenciarDespesas')?.addEventListener('click', () => abrirModalDespesas());
+    const btnVerResumoCompleto = document.getElementById('btnVerResumoCompleto');
+    const btnRelatorioDetalhado = document.getElementById('btnRelatorioDetalhado');
+    const btnEnviarMensalistas = document.getElementById('btnEnviarMensalistas');
+    const btnGerenciarDespesas = document.getElementById('btnGerenciarDespesas');
+    
+    if (btnVerResumoCompleto) btnVerResumoCompleto.addEventListener('click', () => abrirModalResumoCompleto());
+    if (btnRelatorioDetalhado) btnRelatorioDetalhado.addEventListener('click', abrirModalPagamentos);
+    if (btnEnviarMensalistas) btnEnviarMensalistas.addEventListener('click', enviarLembretesMensalistas);
+    if (btnGerenciarDespesas) btnGerenciarDespesas.addEventListener('click', () => abrirModalDespesas());
     
     // Despesas
-    document.getElementById('btnNovaDespesa')?.addEventListener('click', () => abrirModalDespesas());
-    document.getElementById('btnNovaDespesaRapida')?.addEventListener('click', () => abrirModalDespesas());
-    document.getElementById('btnFiltrarDespesas')?.addEventListener('click', atualizarListaDespesasRecentes);
-    document.getElementById('btnExportarDespesas')?.addEventListener('click', exportarDadosDespesas);
-    document.getElementById('btnAdicionarDespesa')?.addEventListener('click', adicionarOuAtualizarDespesa);
-    document.getElementById('btnLimparFormDespesa')?.addEventListener('click', limparFormDespesa);
+    const btnNovaDespesa = document.getElementById('btnNovaDespesa');
+    const btnNovaDespesaRapida = document.getElementById('btnNovaDespesaRapida');
+    const btnFiltrarDespesas = document.getElementById('btnFiltrarDespesas');
+    const btnExportarDespesas = document.getElementById('btnExportarDespesas');
+    const btnAdicionarDespesa = document.getElementById('btnAdicionarDespesa');
+    const btnLimparFormDespesa = document.getElementById('btnLimparFormDespesa');
+    
+    if (btnNovaDespesa) btnNovaDespesa.addEventListener('click', () => abrirModalDespesas());
+    if (btnNovaDespesaRapida) btnNovaDespesaRapida.addEventListener('click', () => abrirModalDespesas());
+    if (btnFiltrarDespesas) btnFiltrarDespesas.addEventListener('click', atualizarListaDespesasRecentes);
+    if (btnExportarDespesas) btnExportarDespesas.addEventListener('click', exportarDadosDespesas);
+    if (btnAdicionarDespesa) btnAdicionarDespesa.addEventListener('click', adicionarOuAtualizarDespesa);
+    if (btnLimparFormDespesa) btnLimparFormDespesa.addEventListener('click', limparFormDespesa);
     
     // Mensalistas
-    document.getElementById('btnNovoMensalista')?.addEventListener('click', abrirModalMensalistas);
-    document.getElementById('btnFiltrarMensalistas')?.addEventListener('click', () => filtrarMensalistasPorStatus('todos', true));
-    document.getElementById('btnLimparFiltros')?.addEventListener('click', limparFiltrosMensalistas);
-    document.getElementById('btnAdicionarMensalista')?.addEventListener('click', adicionarOuAtualizarMensalista);
-    document.getElementById('btnLimparFormMensalista')?.addEventListener('click', limparFormMensalista);
+    const btnNovoMensalista = document.getElementById('btnNovoMensalista');
+    const btnFiltrarMensalistas = document.getElementById('btnFiltrarMensalistas');
+    const btnLimparFiltros = document.getElementById('btnLimparFiltros');
+    const btnAdicionarMensalista = document.getElementById('btnAdicionarMensalista');
+    const btnLimparFormMensalista = document.getElementById('btnLimparFormMensalista');
+    
+    if (btnNovoMensalista) btnNovoMensalista.addEventListener('click', abrirModalMensalistas);
+    if (btnFiltrarMensalistas) btnFiltrarMensalistas.addEventListener('click', () => filtrarMensalistasPorStatus('todos', true));
+    if (btnLimparFiltros) btnLimparFiltros.addEventListener('click', limparFiltrosMensalistas);
+    if (btnAdicionarMensalista) btnAdicionarMensalista.addEventListener('click', adicionarOuAtualizarMensalista);
+    if (btnLimparFormMensalista) btnLimparFormMensalista.addEventListener('click', limparFormMensalista);
     
     // Serviços
-    document.getElementById('btnFiltrarServicos')?.addEventListener('click', atualizarListaServicosRecentes);
-    document.getElementById('btnEnviarRelatorioServicos')?.addEventListener('click', () => enviarRelatorioWhatsApp('servicos'));
-    document.getElementById('btnExportarServicos')?.addEventListener('click', exportarDadosServicos);
+    const btnFiltrarServicos = document.getElementById('btnFiltrarServicos');
+    const btnEnviarRelatorioServicos = document.getElementById('btnEnviarRelatorioServicos');
+    const btnExportarServicos = document.getElementById('btnExportarServicos');
+    
+    if (btnFiltrarServicos) btnFiltrarServicos.addEventListener('click', atualizarListaServicosRecentes);
+    if (btnEnviarRelatorioServicos) btnEnviarRelatorioServicos.addEventListener('click', () => enviarRelatorioWhatsApp('servicos'));
+    if (btnExportarServicos) btnExportarServicos.addEventListener('click', exportarDadosServicos);
     
     // Pagamentos
-    document.getElementById('btnEnviarPagamentos')?.addEventListener('click', () => abrirModalPagamentos());
-    document.getElementById('btnGerarRelatorio')?.addEventListener('click', gerarRelatorioPagamentosDetalhado);
-    document.getElementById('btnEnviarRelatorioWhatsApp')?.addEventListener('click', () => enviarRelatorioWhatsApp('pagamentos'));
-    document.getElementById('btnEnviarResumoCompleto')?.addEventListener('click', () => enviarRelatorioWhatsApp('resumo'));
+    const btnEnviarPagamentos = document.getElementById('btnEnviarPagamentos');
+    const btnGerarRelatorio = document.getElementById('btnGerarRelatorio');
+    const btnEnviarRelatorioWhatsApp = document.getElementById('btnEnviarRelatorioWhatsApp');
+    const btnEnviarResumoCompleto = document.getElementById('btnEnviarResumoCompleto');
+    
+    if (btnEnviarPagamentos) btnEnviarPagamentos.addEventListener('click', () => abrirModalPagamentos());
+    if (btnGerarRelatorio) btnGerarRelatorio.addEventListener('click', gerarRelatorioPagamentosDetalhado);
+    if (btnEnviarRelatorioWhatsApp) btnEnviarRelatorioWhatsApp.addEventListener('click', () => enviarRelatorioWhatsApp('pagamentos'));
+    if (btnEnviarResumoCompleto) btnEnviarResumoCompleto.addEventListener('click', () => enviarRelatorioWhatsApp('resumo'));
     
     // Configurações
-    document.getElementById('btnSalvarConfiguracoes')?.addEventListener('click', salvarConfiguracoes);
+    const btnSalvarConfiguracoes = document.getElementById('btnSalvarConfiguracoes');
+    if (btnSalvarConfiguracoes) btnSalvarConfiguracoes.addEventListener('click', salvarConfiguracoes);
     
     // Fechar modais
     document.querySelectorAll('.close-btn').forEach(btn => {
@@ -2093,27 +2172,37 @@ function atualizarDashboardCompleto() {
 function atualizarEstatisticasBarbeiros() {
     const hoje = new Date().toISOString().split('T')[0];
     
-    // Gabriel
-    const servicosGabrielHoje = dados.Gabriel.filter(s => s.data === hoje);
-    const totalGabrielHoje = servicosGabrielHoje.reduce((sum, s) => sum + s.valor, 0);
-    const fiadoGabrielHoje = servicosGabrielHoje.filter(s => !s.pago).reduce((sum, s) => sum + s.valor, 0);
-    const mediaGabriel = servicosGabrielHoje.length > 0 ? totalGabrielHoje / servicosGabrielHoje.length : 0;
-    
-    document.getElementById('gabrielHoje').textContent = servicosGabrielHoje.length;
-    document.getElementById('gabrielTotalHoje').textContent = `R$ ${totalGabrielHoje.toFixed(2)}`;
-    document.getElementById('gabrielFiadoHoje').textContent = `R$ ${fiadoGabrielHoje.toFixed(2)}`;
-    document.getElementById('gabrielMedia').textContent = `R$ ${mediaGabriel.toFixed(2)}`;
-    
-    // Wagner
-    const servicosWagnerHoje = dados.Wagner.filter(s => s.data === hoje);
-    const totalWagnerHoje = servicosWagnerHoje.reduce((sum, s) => sum + s.valor, 0);
-    const fiadoWagnerHoje = servicosWagnerHoje.filter(s => !s.pago).reduce((sum, s) => sum + s.valor, 0);
+    // Wagner (PRINCIPAL)
+    const servicosWagnerHoje = dados.Wagner ? dados.Wagner.filter(s => s.data === hoje) : [];
+    const totalWagnerHoje = servicosWagnerHoje.reduce((sum, s) => sum + (s.valor || 0), 0);
+    const fiadoWagnerHoje = servicosWagnerHoje.filter(s => !s.pago).reduce((sum, s) => sum + (s.valor || 0), 0);
     const mediaWagner = servicosWagnerHoje.length > 0 ? totalWagnerHoje / servicosWagnerHoje.length : 0;
     
-    document.getElementById('wagnerHoje').textContent = servicosWagnerHoje.length;
-    document.getElementById('wagnerTotalHoje').textContent = `R$ ${totalWagnerHoje.toFixed(2)}`;
-    document.getElementById('wagnerFiadoHoje').textContent = `R$ ${fiadoWagnerHoje.toFixed(2)}`;
-    document.getElementById('wagnerMedia').textContent = `R$ ${mediaWagner.toFixed(2)}`;
+    const wagnerHoje = document.getElementById('wagnerHoje');
+    const wagnerTotalHoje = document.getElementById('wagnerTotalHoje');
+    const wagnerFiadoHoje = document.getElementById('wagnerFiadoHoje');
+    const wagnerMedia = document.getElementById('wagnerMedia');
+    
+    if (wagnerHoje) wagnerHoje.textContent = servicosWagnerHoje.length;
+    if (wagnerTotalHoje) wagnerTotalHoje.textContent = `R$ ${totalWagnerHoje.toFixed(2)}`;
+    if (wagnerFiadoHoje) wagnerFiadoHoje.textContent = `R$ ${fiadoWagnerHoje.toFixed(2)}`;
+    if (wagnerMedia) wagnerMedia.textContent = `R$ ${mediaWagner.toFixed(2)}`;
+    
+    // Gabriel (AUXILIAR)
+    const servicosGabrielHoje = dados.Gabriel ? dados.Gabriel.filter(s => s.data === hoje) : [];
+    const totalGabrielHoje = servicosGabrielHoje.reduce((sum, s) => sum + (s.valor || 0), 0);
+    const fiadoGabrielHoje = servicosGabrielHoje.filter(s => !s.pago).reduce((sum, s) => sum + (s.valor || 0), 0);
+    const mediaGabriel = servicosGabrielHoje.length > 0 ? totalGabrielHoje / servicosGabrielHoje.length : 0;
+    
+    const gabrielHoje = document.getElementById('gabrielHoje');
+    const gabrielTotalHoje = document.getElementById('gabrielTotalHoje');
+    const gabrielFiadoHoje = document.getElementById('gabrielFiadoHoje');
+    const gabrielMedia = document.getElementById('gabrielMedia');
+    
+    if (gabrielHoje) gabrielHoje.textContent = servicosGabrielHoje.length;
+    if (gabrielTotalHoje) gabrielTotalHoje.textContent = `R$ ${totalGabrielHoje.toFixed(2)}`;
+    if (gabrielFiadoHoje) gabrielFiadoHoje.textContent = `R$ ${fiadoGabrielHoje.toFixed(2)}`;
+    if (gabrielMedia) gabrielMedia.textContent = `R$ ${mediaGabriel.toFixed(2)}`;
 }
 
 function atualizarEstatisticasGerais() {
@@ -2121,37 +2210,46 @@ function atualizarEstatisticasGerais() {
     const mesAtual = hoje.getMonth();
     const anoAtual = hoje.getFullYear();
     
-    const servicosGabrielMes = dados.Gabriel.filter(s => {
+    const servicosWagnerMes = dados.Wagner ? dados.Wagner.filter(s => {
+        if (!s.data) return false;
         const data = new Date(s.data);
         return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
-    });
+    }) : [];
     
-    const servicosWagnerMes = dados.Wagner.filter(s => {
+    const servicosGabrielMes = dados.Gabriel ? dados.Gabriel.filter(s => {
+        if (!s.data) return false;
         const data = new Date(s.data);
         return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
-    });
+    }) : [];
     
-    const totalGabrielMes = servicosGabrielMes.reduce((sum, s) => sum + s.valor, 0);
-    const totalWagnerMes = servicosWagnerMes.reduce((sum, s) => sum + s.valor, 0);
-    const totalMes = totalGabrielMes + totalWagnerMes;
-    const servicosMes = servicosGabrielMes.length + servicosWagnerMes.length;
+    const totalWagnerMes = servicosWagnerMes.reduce((sum, s) => sum + (s.valor || 0), 0);
+    const totalGabrielMes = servicosGabrielMes.reduce((sum, s) => sum + (s.valor || 0), 0);
+    const totalMes = totalWagnerMes + totalGabrielMes;
+    const servicosMes = servicosWagnerMes.length + servicosGabrielMes.length;
     
-    const fiadoMes = [...dados.Gabriel, ...dados.Wagner]
+    const fiadoMes = [...(dados.Wagner || []), ...(dados.Gabriel || [])]
         .filter(s => {
+            if (!s.data) return false;
             const data = new Date(s.data);
             return data.getMonth() === mesAtual && data.getFullYear() === anoAtual && !s.pago;
         })
-        .reduce((sum, s) => sum + s.valor, 0);
+        .reduce((sum, s) => sum + (s.valor || 0), 0);
     
-    const despesasMes = dados.despesas.filter(d => {
+    const despesasMes = dados.despesas ? dados.despesas.filter(d => {
+        if (!d.data) return false;
         const data = new Date(d.data);
         return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
-    }).reduce((sum, d) => sum + d.valor, 0);
+    }).reduce((sum, d) => sum + (d.valor || 0), 0) : 0;
     
-    document.getElementById('totalMes').textContent = `R$ ${totalMes.toFixed(2)}`;
-    document.getElementById('servicosMes').textContent = servicosMes;
-    document.getElementById('fiadoMes').textContent = `R$ ${fiadoMes.toFixed(2)}`;
-    document.getElementById('despesasMes').textContent = `R$ ${despesasMes.toFixed(2)}`;
+    const totalMesEl = document.getElementById('totalMes');
+    const servicosMesEl = document.getElementById('servicosMes');
+    const fiadoMesEl = document.getElementById('fiadoMes');
+    const despesasMesEl = document.getElementById('despesasMes');
+    
+    if (totalMesEl) totalMesEl.textContent = `R$ ${totalMes.toFixed(2)}`;
+    if (servicosMesEl) servicosMesEl.textContent = servicosMes;
+    if (fiadoMesEl) fiadoMesEl.textContent = `R$ ${fiadoMes.toFixed(2)}`;
+    if (despesasMesEl) despesasMesEl.textContent = `R$ ${despesasMes.toFixed(2)}`;
 }
 
 function atualizarEstatisticasDespesas() {
@@ -2159,37 +2257,52 @@ function atualizarEstatisticasDespesas() {
     const mesAtual = hoje.getMonth();
     const anoAtual = hoje.getFullYear();
     
-    const despesasMes = dados.despesas.filter(d => {
+    const despesasMes = dados.despesas ? dados.despesas.filter(d => {
+        if (!d.data) return false;
         const data = new Date(d.data);
         return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
-    });
+    }) : [];
     
-    const totalDespesasMes = despesasMes.reduce((sum, d) => sum + d.valor, 0);
+    const totalDespesasMes = despesasMes.reduce((sum, d) => sum + (d.valor || 0), 0);
     const numDespesasMes = despesasMes.length;
-    const maiorDespesaMes = despesasMes.length > 0 ? Math.max(...despesasMes.map(d => d.valor)) : 0;
+    const maiorDespesaMes = despesasMes.length > 0 ? Math.max(...despesasMes.map(d => d.valor || 0)) : 0;
     
-    const totalReceitaMes = parseFloat(document.getElementById('totalMes').textContent.replace('R$ ', '')) || 0;
+    const totalMesEl = document.getElementById('totalMes');
+    const totalReceitaMes = totalMesEl ? parseFloat(totalMesEl.textContent.replace('R$ ', '')) || 0 : 0;
     const lucroLiquido = totalReceitaMes - totalDespesasMes;
     
-    document.getElementById('totalDespesasMes').textContent = `R$ ${totalDespesasMes.toFixed(2)}`;
-    document.getElementById('numDespesasMes').textContent = numDespesasMes;
-    document.getElementById('maiorDespesaMes').textContent = `R$ ${maiorDespesaMes.toFixed(2)}`;
-    document.getElementById('lucroLiquido').textContent = `R$ ${lucroLiquido.toFixed(2)}`;
+    const totalDespesasMesEl = document.getElementById('totalDespesasMes');
+    const numDespesasMesEl = document.getElementById('numDespesasMes');
+    const maiorDespesaMesEl = document.getElementById('maiorDespesaMes');
+    const lucroLiquidoEl = document.getElementById('lucroLiquido');
+    
+    if (totalDespesasMesEl) totalDespesasMesEl.textContent = `R$ ${totalDespesasMes.toFixed(2)}`;
+    if (numDespesasMesEl) numDespesasMesEl.textContent = numDespesasMes;
+    if (maiorDespesaMesEl) maiorDespesaMesEl.textContent = `R$ ${maiorDespesaMes.toFixed(2)}`;
+    if (lucroLiquidoEl) {
+        lucroLiquidoEl.textContent = `R$ ${lucroLiquido.toFixed(2)}`;
+        lucroLiquidoEl.style.color = lucroLiquido >= 0 ? '#25D366' : '#ff3366';
+    }
 }
 
 function atualizarResumoPagamentos() {
     const hoje = new Date().toISOString().split('T')[0];
-    const servicosHoje = [...dados.Gabriel, ...dados.Wagner].filter(s => s.data === hoje);
+    const servicosHoje = [...(dados.Wagner || []), ...(dados.Gabriel || [])].filter(s => s.data === hoje);
     
-    const totalDinheiro = servicosHoje.filter(s => s.metodoPagamento === 'dinheiro').reduce((sum, s) => sum + s.valor, 0);
-    const totalPix = servicosHoje.filter(s => s.metodoPagamento === 'pix').reduce((sum, s) => sum + s.valor, 0);
-    const totalDebito = servicosHoje.filter(s => s.metodoPagamento === 'debito').reduce((sum, s) => sum + s.valor, 0);
-    const totalCredito = servicosHoje.filter(s => s.metodoPagamento === 'credito').reduce((sum, s) => sum + s.valor, 0);
+    const totalDinheiro = servicosHoje.filter(s => s.metodoPagamento === 'dinheiro').reduce((sum, s) => sum + (s.valor || 0), 0);
+    const totalPix = servicosHoje.filter(s => s.metodoPagamento === 'pix').reduce((sum, s) => sum + (s.valor || 0), 0);
+    const totalDebito = servicosHoje.filter(s => s.metodoPagamento === 'debito').reduce((sum, s) => sum + (s.valor || 0), 0);
+    const totalCredito = servicosHoje.filter(s => s.metodoPagamento === 'credito').reduce((sum, s) => sum + (s.valor || 0), 0);
     
-    document.getElementById('totalDinheiro').textContent = `R$ ${totalDinheiro.toFixed(2)}`;
-    document.getElementById('totalPix').textContent = `R$ ${totalPix.toFixed(2)}`;
-    document.getElementById('totalDebito').textContent = `R$ ${totalDebito.toFixed(2)}`;
-    document.getElementById('totalCredito').textContent = `R$ ${totalCredito.toFixed(2)}`;
+    const totalDinheiroEl = document.getElementById('totalDinheiro');
+    const totalPixEl = document.getElementById('totalPix');
+    const totalDebitoEl = document.getElementById('totalDebito');
+    const totalCreditoEl = document.getElementById('totalCredito');
+    
+    if (totalDinheiroEl) totalDinheiroEl.textContent = `R$ ${totalDinheiro.toFixed(2)}`;
+    if (totalPixEl) totalPixEl.textContent = `R$ ${totalPix.toFixed(2)}`;
+    if (totalDebitoEl) totalDebitoEl.textContent = `R$ ${totalDebito.toFixed(2)}`;
+    if (totalCreditoEl) totalCreditoEl.textContent = `R$ ${totalCredito.toFixed(2)}`;
 }
 
 // ========== GRÁFICOS ==========
@@ -2200,11 +2313,11 @@ function inicializarGraficos() {
     graficoPizza = new Chart(ctxPizza.getContext('2d'), {
         type: 'pie',
         data: {
-            labels: ['Gabriel', 'Wagner', 'Fiado'],
+            labels: ['Wagner ⭐', 'Gabriel', 'Fiado'],
             datasets: [{
                 data: [0, 0, 0],
-                backgroundColor: ['rgba(255,170,0,0.8)', 'rgba(51,102,255,0.8)', 'rgba(255,51,102,0.8)'],
-                borderColor: ['rgba(255,170,0,1)', 'rgba(51,102,255,1)', 'rgba(255,51,102,1)'],
+                backgroundColor: ['rgba(51,102,255,0.8)', 'rgba(255,170,0,0.8)', 'rgba(255,51,102,0.8)'],
+                borderColor: ['rgba(51,102,255,1)', 'rgba(255,170,0,1)', 'rgba(255,51,102,1)'],
                 borderWidth: 2
             }]
         },
@@ -2228,56 +2341,77 @@ function atualizarGraficoPizza() {
     
     const hoje = new Date().toISOString().split('T')[0];
     
-    const totalGabriel = dados.Gabriel.filter(s => s.data === hoje).reduce((sum, s) => sum + s.valor, 0);
-    const totalWagner = dados.Wagner.filter(s => s.data === hoje).reduce((sum, s) => sum + s.valor, 0);
-    const totalFiado = [...dados.Gabriel, ...dados.Wagner]
+    const totalWagner = dados.Wagner ? dados.Wagner.filter(s => s.data === hoje).reduce((sum, s) => sum + (s.valor || 0), 0) : 0;
+    const totalGabriel = dados.Gabriel ? dados.Gabriel.filter(s => s.data === hoje).reduce((sum, s) => sum + (s.valor || 0), 0) : 0;
+    const totalFiado = [...(dados.Wagner || []), ...(dados.Gabriel || [])]
         .filter(s => s.data === hoje && !s.pago)
-        .reduce((sum, s) => sum + s.valor, 0);
+        .reduce((sum, s) => sum + (s.valor || 0), 0);
     
-    graficoPizza.data.datasets[0].data = [totalGabriel, totalWagner, totalFiado];
+    graficoPizza.data.datasets[0].data = [totalWagner, totalGabriel, totalFiado];
     graficoPizza.update();
 }
 
 // ========== LISTA DE SERVIÇOS COM EXCLUSÃO ==========
 function atualizarListaServicosRecentes() {
-    const dataInicio = document.getElementById('dataInicioServicos').value;
-    const dataFim = document.getElementById('dataFimServicos').value;
-    const filtroBarbeiro = document.getElementById('filtroBarbeiroServicos').value;
-    const filtroPagamento = document.getElementById('filtroPagamentoServicos').value;
+    const dataInicio = document.getElementById('dataInicioServicos')?.value;
+    const dataFim = document.getElementById('dataFimServicos')?.value;
+    const filtroBarbeiro = document.getElementById('filtroBarbeiroServicos')?.value || 'todos';
+    const filtroPagamento = document.getElementById('filtroPagamentoServicos')?.value || 'todos';
     
-    let todosServicos = [...dados.Gabriel, ...dados.Wagner];
+    if (!dataInicio || !dataFim) return;
+    
+    let todosServicos = [...(dados.Wagner || []), ...(dados.Gabriel || [])];
     
     // Aplicar filtros
     todosServicos = todosServicos.filter(s => 
-        s.data >= dataInicio && s.data <= dataFim &&
+        s.data && s.data >= dataInicio && s.data <= dataFim &&
         (filtroBarbeiro === 'todos' || s.barbeiro === filtroBarbeiro) &&
         (filtroPagamento === 'todos' || 
          (filtroPagamento === 'pago' && s.pago) || 
          (filtroPagamento === 'fiado' && !s.pago))
     );
     
-    todosServicos.sort((a, b) => new Date(b.data + 'T' + (b.hora || '00:00')) - new Date(a.data + 'T' + (a.hora || '00:00')));
+    // Ordenar por data e hora (mais recente primeiro)
+    todosServicos.sort((a, b) => {
+        const dataA = new Date(a.data + 'T' + (a.hora || '00:00'));
+        const dataB = new Date(b.data + 'T' + (b.hora || '00:00'));
+        return dataB - dataA;
+    });
     
     let html = '';
     
     if (todosServicos.length > 0) {
-        html = `<table><thead><tr>
-            <th>📅 Data</th><th>⏰ Hora</th><th>👤 Barbeiro</th>
-            <th>✂️ Serviço</th><th>👤 Cliente</th><th>💰 Valor</th>
-            <th>💳 Pagamento</th><th>📊 Status</th><th>🗑️</th>
+        html = `<table style="width:100%;"><thead><tr>
+            <th>📅 Data</th>
+            <th>⏰ Hora</th>
+            <th>👤 Barbeiro</th>
+            <th>✂️ Serviço</th>
+            <th>👤 Cliente</th>
+            <th>💰 Valor</th>
+            <th>💳 Pagamento</th>
+            <th>📊 Status</th>
+            <th>🗑️</th>
         </tr></thead><tbody>`;
         
         todosServicos.slice(0, 50).forEach(s => {
+            const statusClass = s.pago ? 'status-pago' : 'status-pendente';
+            const statusTexto = s.pago ? 'PAGO' : 'FIADO';
+            const isPrincipal = s.barbeiro === 'Wagner';
+            
             html += `<tr>
                 <td>${formatarDataBR(s.data)}</td>
                 <td>${s.hora || '--:--'}</td>
-                <td><span class="badge ${s.barbeiro === 'Gabriel' ? 'badge-warning' : 'badge-success'}">${s.barbeiro}</span></td>
+                <td>
+                    <span class="badge" style="background:${isPrincipal ? 'rgba(51,102,255,0.2)' : 'rgba(255,170,0,0.2)'}; color:${isPrincipal ? '#3366ff' : '#ffaa00'}; padding:6px 12px; border-radius:20px; font-weight:600;">
+                        ${s.barbeiro || 'N/A'} ${isPrincipal ? '⭐' : ''}
+                    </span>
+                </td>
                 <td>${s.tipo || 'Corte'}</td>
                 <td>${s.cliente || 'Cliente'}</td>
-                <td style="font-weight:600;color:#ffaa00;">R$ ${s.valor.toFixed(2)}</td>
+                <td style="font-weight:600; color:#ffaa00;">R$ ${(s.valor || 0).toFixed(2)}</td>
                 <td>${obterIconeMetodo(s.metodoPagamento)}</td>
-                <td><span class="status-tag ${s.pago ? 'status-pago' : 'status-pendente'}">${s.pago ? 'PAGO' : 'FIADO'}</span></td>
-                <td><button class="delete-service-btn" onclick="excluirServico(${s.id}, '${s.barbeiro}')">×</button></td>
+                <td><span class="status-tag ${statusClass}">${statusTexto}</span></td>
+                <td><button class="delete-service-btn" onclick="excluirServico(${s.id}, '${s.barbeiro}')" title="Excluir serviço">×</button></td>
             </tr>`;
         });
         
@@ -2286,10 +2420,12 @@ function atualizarListaServicosRecentes() {
         html = `<div class="empty-state">
             <div class="empty-state-icon">📝</div>
             <div class="empty-state-title">Nenhum serviço encontrado</div>
+            <div class="empty-state-subtitle">Tente ajustar os filtros ou período</div>
         </div>`;
     }
     
-    document.getElementById('listaServicosRecentes').innerHTML = html;
+    const listaServicosRecentes = document.getElementById('listaServicosRecentes');
+    if (listaServicosRecentes) listaServicosRecentes.innerHTML = html;
 }
 
 function obterIconeMetodo(metodo) {
@@ -2306,6 +2442,11 @@ function obterIconeMetodo(metodo) {
 function excluirServico(servicoId, barbeiro) {
     if (!confirm('⚠️ Excluir este serviço permanentemente?')) return;
     
+    if (!dados[barbeiro]) {
+        alert('❌ Barbeiro não encontrado!');
+        return;
+    }
+    
     const index = dados[barbeiro].findIndex(s => s.id === servicoId);
     if (index === -1) {
         alert('❌ Serviço não encontrado!');
@@ -2320,12 +2461,14 @@ function excluirServico(servicoId, barbeiro) {
 
 // ========== DESPESAS ==========
 function atualizarListaDespesasRecentes() {
-    const dataInicio = document.getElementById('dataInicioDespesas').value;
-    const dataFim = document.getElementById('dataFimDespesas').value;
-    const filtroCategoria = document.getElementById('filtroCategoriaDespesas').value;
+    const dataInicio = document.getElementById('dataInicioDespesas')?.value;
+    const dataFim = document.getElementById('dataFimDespesas')?.value;
+    const filtroCategoria = document.getElementById('filtroCategoriaDespesas')?.value || 'todos';
     
-    let despesasFiltradas = dados.despesas.filter(d => 
-        d.data >= dataInicio && d.data <= dataFim &&
+    if (!dataInicio || !dataFim) return;
+    
+    let despesasFiltradas = (dados.despesas || []).filter(d => 
+        d.data && d.data >= dataInicio && d.data <= dataFim &&
         (filtroCategoria === 'todos' || d.categoria === filtroCategoria)
     ).sort((a, b) => new Date(b.data) - new Date(a.data));
     
@@ -2335,15 +2478,18 @@ function atualizarListaDespesasRecentes() {
         despesasFiltradas.slice(0, 20).forEach(d => {
             html += `<div class="despesa-card">
                 <div class="despesa-header">
-                    <div><div style="font-weight:600;">${d.descricao}</div>
-                    <span class="despesa-categoria">${d.categoria}</span></div>
-                    <div class="despesa-valor">R$ ${d.valor.toFixed(2)}</div>
+                    <div>
+                        <div style="font-weight:600; margin-bottom:5px;">${d.descricao || 'Sem descrição'}</div>
+                        <span class="despesa-categoria">${d.categoria || 'Outros'}</span>
+                    </div>
+                    <div class="despesa-valor">R$ ${(d.valor || 0).toFixed(2)}</div>
                 </div>
                 <div class="despesa-detalhes">
                     <div>📅 ${formatarDataBR(d.data)}</div>
+                    ${d.comprovante ? `<div>🧾 ${d.comprovante}</div>` : ''}
                 </div>
                 <div class="despesa-actions">
-                    <button class="action-btn" onclick="removerDespesa(${d.id})">×</button>
+                    <button class="action-btn" onclick="removerDespesa(${d.id})" title="Remover despesa">×</button>
                 </div>
             </div>`;
         });
@@ -2351,43 +2497,54 @@ function atualizarListaDespesasRecentes() {
         html = `<div class="empty-state">
             <div class="empty-state-icon">💸</div>
             <div class="empty-state-title">Nenhuma despesa encontrada</div>
+            <div class="empty-state-subtitle">Cadastre sua primeira despesa</div>
+            <button class="btn btn-danger" onclick="abrirModalDespesas()" style="margin-top:20px;">+ Nova Despesa</button>
         </div>`;
     }
     
-    document.getElementById('listaDespesasRecentes').innerHTML = html;
+    const listaDespesasRecentes = document.getElementById('listaDespesasRecentes');
+    if (listaDespesasRecentes) listaDespesasRecentes.innerHTML = html;
 }
 
 function removerDespesa(id) {
     if (!confirm('⚠️ Remover esta despesa?')) return;
     
-    const index = dados.despesas.findIndex(d => d.id === id);
+    const index = (dados.despesas || []).findIndex(d => d.id === id);
     if (index === -1) return;
     
     dados.despesas.splice(index, 1);
     salvarDadosNoServidor();
     atualizarDashboardCompleto();
+    alert('✅ Despesa removida!');
 }
 
 function adicionarOuAtualizarDespesa() {
-    const descricao = document.getElementById('descricaoDespesa').value.trim();
-    const categoria = document.getElementById('categoriaDespesa').value;
-    const valor = parseFloat(document.getElementById('valorDespesa').value);
-    const data = document.getElementById('dataDespesa').value;
-    const tags = document.getElementById('tagsDespesa').value.trim();
-    const comprovante = document.getElementById('comprovanteDespesa').value.trim();
-    const observacoes = document.getElementById('observacoesDespesa').value.trim();
+    const descricao = document.getElementById('descricaoDespesa')?.value?.trim();
+    const categoria = document.getElementById('categoriaDespesa')?.value;
+    const valor = parseFloat(document.getElementById('valorDespesa')?.value);
+    const data = document.getElementById('dataDespesa')?.value;
+    const tags = document.getElementById('tagsDespesa')?.value?.trim();
+    const comprovante = document.getElementById('comprovanteDespesa')?.value?.trim();
+    const observacoes = document.getElementById('observacoesDespesa')?.value?.trim();
     
     if (!descricao || !categoria || isNaN(valor) || !data) {
         alert('❌ Preencha campos obrigatórios!');
         return;
     }
     
-    const id = dados.despesas.length > 0 ? Math.max(...dados.despesas.map(d => d.id)) + 1 : 1;
+    if (!dados.despesas) dados.despesas = [];
+    
+    const id = dados.despesas.length > 0 ? Math.max(...dados.despesas.map(d => d.id || 0)) + 1 : 1;
     
     dados.despesas.push({
-        id, data, descricao, categoria, valor,
+        id, 
+        data, 
+        descricao, 
+        categoria, 
+        valor,
         tags: tags ? tags.split(',').map(t => t.trim()) : [],
-        comprovante, observacoes
+        comprovante, 
+        observacoes
     });
     
     salvarDadosNoServidor();
@@ -2398,52 +2555,83 @@ function adicionarOuAtualizarDespesa() {
 }
 
 function limparFormDespesa() {
-    document.getElementById('descricaoDespesa').value = '';
-    document.getElementById('valorDespesa').value = '';
-    document.getElementById('tagsDespesa').value = '';
-    document.getElementById('comprovanteDespesa').value = '';
-    document.getElementById('observacoesDespesa').value = '';
+    const descricao = document.getElementById('descricaoDespesa');
+    const valor = document.getElementById('valorDespesa');
+    const tags = document.getElementById('tagsDespesa');
+    const comprovante = document.getElementById('comprovanteDespesa');
+    const observacoes = document.getElementById('observacoesDespesa');
+    
+    if (descricao) descricao.value = '';
+    if (valor) valor.value = '';
+    if (tags) tags.value = '';
+    if (comprovante) comprovante.value = '';
+    if (observacoes) observacoes.value = '';
 }
 
 // ========== MENSALISTAS ==========
 function atualizarResumoStatusMensalistas() {
-    const m = dados.mensalistas;
+    const m = dados.mensalistas || [];
     const pagos = m.filter(m => m.status === 'pago').length;
     const pendentes = m.filter(m => m.status === 'pendente').length;
     const vencidos = m.filter(m => m.status === 'vencido').length;
     const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
     
     const vencemHoje = m.filter(m => {
         if (m.status === 'pago') return false;
         const venc = new Date(m.dataVencimento || m.vencimento);
-        return venc.toDateString() === hoje.toDateString();
+        venc.setHours(0, 0, 0, 0);
+        return venc.getTime() === hoje.getTime();
     }).length;
     
-    document.getElementById('counterTodos').textContent = m.length;
-    document.getElementById('counterPagos').textContent = pagos;
-    document.getElementById('counterPendentes').textContent = pendentes;
-    document.getElementById('counterVencidos').textContent = vencidos;
-    document.getElementById('counterHoje').textContent = vencemHoje;
+    const counterTodos = document.getElementById('counterTodos');
+    const counterPagos = document.getElementById('counterPagos');
+    const counterPendentes = document.getElementById('counterPendentes');
+    const counterVencidos = document.getElementById('counterVencidos');
+    const counterHoje = document.getElementById('counterHoje');
+    const resumoStatus = document.getElementById('resumoStatusMensalistas');
     
-    document.getElementById('resumoStatusMensalistas').innerHTML = `
-        <div class="status-card pago"><div class="status-card-label">✅ PAGOS</div><div class="status-card-total">${pagos}</div></div>
-        <div class="status-card pendente"><div class="status-card-label">⏳ PENDENTES</div><div class="status-card-total">${pendentes}</div></div>
-        <div class="status-card vencido"><div class="status-card-label">⚠️ VENCIDOS</div><div class="status-card-total">${vencidos}</div></div>
-        <div class="status-card" style="border-top:4px solid #ffaa00;"><div class="status-card-label">📅 VENCE HOJE</div><div class="status-card-total" style="color:#ffaa00;">${vencemHoje}</div></div>
-    `;
+    if (counterTodos) counterTodos.textContent = m.length;
+    if (counterPagos) counterPagos.textContent = pagos;
+    if (counterPendentes) counterPendentes.textContent = pendentes;
+    if (counterVencidos) counterVencidos.textContent = vencidos;
+    if (counterHoje) counterHoje.textContent = vencemHoje;
+    
+    if (resumoStatus) {
+        resumoStatus.innerHTML = `
+            <div class="status-card pago">
+                <div class="status-card-label">✅ PAGOS</div>
+                <div class="status-card-total">${pagos}</div>
+            </div>
+            <div class="status-card pendente">
+                <div class="status-card-label">⏳ PENDENTES</div>
+                <div class="status-card-total">${pendentes}</div>
+            </div>
+            <div class="status-card vencido">
+                <div class="status-card-label">⚠️ VENCIDOS</div>
+                <div class="status-card-total">${vencidos}</div>
+            </div>
+            <div class="status-card" style="border-top:4px solid #ffaa00;">
+                <div class="status-card-label">📅 VENCE HOJE</div>
+                <div class="status-card-total" style="color:#ffaa00;">${vencemHoje}</div>
+            </div>
+        `;
+    }
 }
 
 function filtrarMensalistasPorStatus(status, usarFiltros = false) {
     filtroStatusAtual = status;
     
-    let filtrados = [...dados.mensalistas];
+    let filtrados = [...(dados.mensalistas || [])];
     
     if (status === 'hoje') {
-        const hoje = new Date().toDateString();
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
         filtrados = filtrados.filter(m => {
             if (m.status === 'pago') return false;
             const venc = new Date(m.dataVencimento || m.vencimento);
-            return venc.toDateString() === hoje;
+            venc.setHours(0, 0, 0, 0);
+            return venc.getTime() === hoje.getTime();
         });
     } else if (status !== 'todos') {
         filtrados = filtrados.filter(m => m.status === status);
@@ -2452,76 +2640,92 @@ function filtrarMensalistasPorStatus(status, usarFiltros = false) {
     // Ordenar: vencidos primeiro, depois pendentes, depois pagos
     filtrados.sort((a, b) => {
         const ordem = { 'vencido': 1, 'pendente': 2, 'pago': 3 };
-        return ordem[a.status] - ordem[b.status];
+        return (ordem[a.status] || 99) - (ordem[b.status] || 99);
     });
     
     let html = '';
     
-    filtrados.forEach(m => {
-        const statusClass = `status-${m.status}`;
-        const statusTexto = m.status === 'pago' ? '✅ PAGO' : m.status === 'pendente' ? '⏳ PENDENTE' : '⚠️ VENCIDO';
-        const dataVenc = formatarDataBR(m.dataVencimento || m.vencimento);
-        
-        html += `<div class="mensalista-card ${m.status === 'vencido' ? 'vencido' : ''}">
-            <div class="mensalista-header">
-                <div>
-                    <div class="mensalista-nome">${m.nome}</div>
-                    <span class="badge ${m.barbeiro === 'Gabriel' ? 'badge-warning' : 'badge-success'}">${m.barbeiro}</span>
+    if (filtrados.length > 0) {
+        filtrados.forEach(m => {
+            const statusClass = `status-${m.status}`;
+            const statusTexto = m.status === 'pago' ? '✅ PAGO' : m.status === 'pendente' ? '⏳ PENDENTE' : '⚠️ VENCIDO';
+            const dataVenc = formatarDataBR(m.dataVencimento || m.vencimento);
+            const isPrincipal = m.barbeiro === 'Wagner';
+            
+            html += `<div class="mensalista-card ${m.status === 'vencido' ? 'vencido' : ''}">
+                <div class="mensalista-header">
+                    <div>
+                        <div class="mensalista-nome">${m.nome || 'Sem nome'}</div>
+                        <span class="badge" style="background:${isPrincipal ? 'rgba(51,102,255,0.2)' : 'rgba(255,170,0,0.2)'}; color:${isPrincipal ? '#3366ff' : '#ffaa00'}; padding:4px 12px; border-radius:20px; margin-top:5px; display:inline-block; font-weight:600;">
+                            ${m.barbeiro || 'N/A'} ${isPrincipal ? '⭐' : ''}
+                        </span>
+                    </div>
+                    <div class="mensalista-actions">
+                        <span class="status-tag ${statusClass}">${statusTexto}</span>
+                        ${m.status !== 'pago' ? `<button class="action-btn success" onclick="pagarMensalidade(${m.id})" title="Pagar mensalidade">💰</button>` : ''}
+                        <button class="action-btn" onclick="removerMensalista(${m.id})" title="Remover mensalista">×</button>
+                    </div>
                 </div>
-                <div class="mensalista-actions">
-                    <span class="status-tag ${statusClass}">${statusTexto}</span>
-                    ${m.status !== 'pago' ? `<button class="action-btn success" onclick="pagarMensalidade(${m.id})">💰</button>` : ''}
-                    <button class="action-btn" onclick="removerMensalista(${m.id})">×</button>
+                <div class="mensalista-detalhes">
+                    <div class="mensalista-detalhes-item">
+                        <div class="mensalista-detalhes-label">Valor Mensal</div>
+                        <div class="mensalista-valor">R$ ${(m.valor || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="mensalista-detalhes-item">
+                        <div class="mensalista-detalhes-label">Vencimento</div>
+                        <div>${dataVenc}</div>
+                    </div>
+                    ${m.telefone ? `<div class="mensalista-detalhes-item">
+                        <div class="mensalista-detalhes-label">Contato</div>
+                        <div class="mensalista-telefone">${m.telefone}</div>
+                    </div>` : ''}
                 </div>
-            </div>
-            <div class="mensalista-detalhes">
-                <div class="mensalista-detalhes-item">
-                    <div class="mensalista-detalhes-label">Valor</div>
-                    <div class="mensalista-valor">R$ ${m.valor.toFixed(2)}</div>
-                </div>
-                <div class="mensalista-detalhes-item">
-                    <div class="mensalista-detalhes-label">Vencimento</div>
-                    <div>${dataVenc}</div>
-                </div>
-                ${m.telefone ? `<div class="mensalista-detalhes-item">
-                    <div class="mensalista-detalhes-label">Contato</div>
-                    <div class="mensalista-telefone">${m.telefone}</div>
-                </div>` : ''}
-            </div>
-        </div>`;
-    });
-    
-    if (filtrados.length === 0) {
+                ${m.observacoes ? `
+                    <div style="font-size:12px; color:#aaa; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1);">
+                        📝 ${m.observacoes}
+                    </div>
+                ` : ''}
+            </div>`;
+        });
+    } else {
         html = `<div class="empty-state">
             <div class="empty-state-icon">👥</div>
             <div class="empty-state-title">Nenhum mensalista encontrado</div>
+            <div class="empty-state-subtitle">
+                ${status === 'vencido' ? '✅ Todos os mensalistas estão em dia!' : 
+                  status === 'hoje' ? '🎉 Ninguém vence hoje!' : 
+                  'Cadastre seu primeiro mensalista'}
+            </div>
+            <button class="btn btn-success" onclick="abrirModalMensalistas()" style="margin-top:20px;">+ Novo Mensalista</button>
         </div>`;
     }
     
-    document.getElementById('listaMensalistasDashboard').innerHTML = html;
+    const listaMensalistas = document.getElementById('listaMensalistasDashboard');
+    if (listaMensalistas) listaMensalistas.innerHTML = html;
 }
 
 function removerMensalista(id) {
     if (!confirm('⚠️ Remover mensalista?')) return;
     
-    const index = dados.mensalistas.findIndex(m => m.id === id);
+    const index = (dados.mensalistas || []).findIndex(m => m.id === id);
     if (index === -1) return;
     
     dados.mensalistas.splice(index, 1);
     salvarDadosNoServidor();
     atualizarDashboardCompleto();
+    alert('✅ Mensalista removido!');
 }
 
 function pagarMensalidade(id) {
-    const m = dados.mensalistas.find(m => m.id === id);
+    const m = (dados.mensalistas || []).find(m => m.id === id);
     if (!m) return;
     
-    if (!confirm(`💵 Registrar pagamento de R$ ${m.valor.toFixed(2)} para ${m.nome}?`)) return;
+    if (!confirm(`💵 Registrar pagamento de R$ ${(m.valor || 0).toFixed(2)} para ${m.nome || 'cliente'}?`)) return;
     
     const hoje = new Date().toISOString().split('T')[0];
     
     if (!m.historicoPagamentos) m.historicoPagamentos = [];
-    m.historicoPagamentos.push({ data: hoje, valor: m.valor });
+    m.historicoPagamentos.push({ data: hoje, valor: m.valor || 0 });
     
     m.status = 'pago';
     m.dataUltimoPagamento = hoje;
@@ -2538,14 +2742,14 @@ function pagarMensalidade(id) {
 }
 
 function adicionarOuAtualizarMensalista() {
-    const nome = document.getElementById('nomeMensalista').value.trim();
-    const telefone = document.getElementById('telefoneMensalista').value.trim();
-    const barbeiro = document.getElementById('barbeiroMensalista').value;
-    const valor = parseFloat(document.getElementById('valorMensalista').value);
-    const dataInicio = document.getElementById('dataInicioMensalista').value;
-    const diaVencimento = parseInt(document.getElementById('diaVencimentoMensalista').value);
-    const status = document.getElementById('statusMensalista').value;
-    const observacoes = document.getElementById('observacoesMensalista').value.trim();
+    const nome = document.getElementById('nomeMensalista')?.value?.trim();
+    const telefone = document.getElementById('telefoneMensalista')?.value?.trim();
+    const barbeiro = document.getElementById('barbeiroMensalista')?.value;
+    const valor = parseFloat(document.getElementById('valorMensalista')?.value);
+    const dataInicio = document.getElementById('dataInicioMensalista')?.value;
+    const diaVencimento = parseInt(document.getElementById('diaVencimentoMensalista')?.value);
+    const status = document.getElementById('statusMensalista')?.value || 'pendente';
+    const observacoes = document.getElementById('observacoesMensalista')?.value?.trim();
     
     if (!nome || !barbeiro || isNaN(valor) || !dataInicio || !diaVencimento) {
         alert('❌ Preencha campos obrigatórios!');
@@ -2558,14 +2762,22 @@ function adicionarOuAtualizarMensalista() {
         dataVencimento = new Date(dataInicioObj.getFullYear(), dataInicioObj.getMonth() + 1, diaVencimento);
     }
     
-    const id = dados.mensalistas.length > 0 ? Math.max(...dados.mensalistas.map(m => m.id)) + 1 : 1;
+    if (!dados.mensalistas) dados.mensalistas = [];
+    
+    const id = dados.mensalistas.length > 0 ? Math.max(...dados.mensalistas.map(m => m.id || 0)) + 1 : 1;
     
     dados.mensalistas.push({
-        id, nome, telefone, barbeiro, valor,
-        dataInicio, diaVencimento,
+        id, 
+        nome, 
+        telefone, 
+        barbeiro, 
+        valor,
+        dataInicio, 
+        diaVencimento,
         dataVencimento: dataVencimento.toISOString().split('T')[0],
         vencimento: dataVencimento.toISOString().split('T')[0],
-        status, observacoes,
+        status, 
+        observacoes,
         historicoPagamentos: []
     });
     
@@ -2577,39 +2789,54 @@ function adicionarOuAtualizarMensalista() {
 }
 
 function limparFormMensalista() {
-    document.getElementById('nomeMensalista').value = '';
-    document.getElementById('telefoneMensalista').value = '';
-    document.getElementById('valorMensalista').value = '';
-    document.getElementById('observacoesMensalista').value = '';
+    const nome = document.getElementById('nomeMensalista');
+    const telefone = document.getElementById('telefoneMensalista');
+    const valor = document.getElementById('valorMensalista');
+    const observacoes = document.getElementById('observacoesMensalista');
+    const dataInicio = document.getElementById('dataInicioMensalista');
+    const diaVencimento = document.getElementById('diaVencimentoMensalista');
+    
+    if (nome) nome.value = '';
+    if (telefone) telefone.value = '';
+    if (valor) valor.value = '';
+    if (observacoes) observacoes.value = '';
     
     const hoje = new Date();
-    document.getElementById('dataInicioMensalista').value = hoje.toISOString().split('T')[0];
-    document.getElementById('diaVencimentoMensalista').value = hoje.getDate();
+    if (dataInicio) dataInicio.value = hoje.toISOString().split('T')[0];
+    if (diaVencimento) diaVencimento.value = hoje.getDate();
 }
 
 function limparFiltrosMensalistas() {
-    document.getElementById('dataInicioMensalistas').value = '';
-    document.getElementById('dataFimMensalistas').value = '';
-    document.getElementById('filtroStatusMensalistas').value = 'todos';
-    document.getElementById('filtroBarbeiroMensalistas').value = 'todos';
+    const dataInicio = document.getElementById('dataInicioMensalistas');
+    const dataFim = document.getElementById('dataFimMensalistas');
+    const filtroStatus = document.getElementById('filtroStatusMensalistas');
+    const filtroBarbeiro = document.getElementById('filtroBarbeiroMensalistas');
+    
+    if (dataInicio) dataInicio.value = '';
+    if (dataFim) dataFim.value = '';
+    if (filtroStatus) filtroStatus.value = 'todos';
+    if (filtroBarbeiro) filtroBarbeiro.value = 'todos';
+    
     filtrarMensalistasPorStatus('todos');
 }
 
 // ========== CONFIGURAÇÕES ==========
 function salvarConfiguracoes() {
-    const whatsapp = document.getElementById('numWhats').value.trim();
-    const novoPin = document.getElementById('novoPin').value.trim();
-    const corte = parseFloat(document.getElementById('valCorte').value);
-    const barba = parseFloat(document.getElementById('valBarba').value);
-    const combo = parseFloat(document.getElementById('valCombo').value);
-    const orcamentoDespesas = parseFloat(document.getElementById('orcamentoDespesas').value);
-    const notificacoesAtivas = document.getElementById('notificacoesAtivas').value === 'true';
-    const diasAlerta = parseInt(document.getElementById('diasAlerta').value);
+    const whatsapp = document.getElementById('numWhats')?.value?.trim();
+    const novoPin = document.getElementById('novoPin')?.value?.trim();
+    const corte = parseFloat(document.getElementById('valCorte')?.value);
+    const barba = parseFloat(document.getElementById('valBarba')?.value);
+    const combo = parseFloat(document.getElementById('valCombo')?.value);
+    const orcamentoDespesas = parseFloat(document.getElementById('orcamentoDespesas')?.value);
+    const notificacoesAtivas = document.getElementById('notificacoesAtivas')?.value === 'true';
+    const diasAlerta = parseInt(document.getElementById('diasAlerta')?.value);
     
     if (isNaN(corte) || isNaN(barba) || isNaN(combo) || isNaN(orcamentoDespesas) || isNaN(diasAlerta)) {
         alert('❌ Valores inválidos!');
         return;
     }
+    
+    if (!dados.config) dados.config = {};
     
     if (whatsapp) dados.config.whatsapp = whatsapp;
     if (novoPin) dados.config.pin = novoPin;
@@ -2628,11 +2855,13 @@ function salvarConfiguracoes() {
 // ========== MODAIS ==========
 function abrirModalDespesas() {
     atualizarResumoFinanceiroDespesas();
-    document.getElementById('modalDespesas').style.display = 'flex';
+    const modal = document.getElementById('modalDespesas');
+    if (modal) modal.style.display = 'flex';
 }
 
 function abrirModalMensalistas() {
-    document.getElementById('modalMensalistas').style.display = 'flex';
+    const modal = document.getElementById('modalMensalistas');
+    if (modal) modal.style.display = 'flex';
 }
 
 function abrirModalResumoCompleto() {
@@ -2640,105 +2869,130 @@ function abrirModalResumoCompleto() {
     const mesAtual = hoje.getMonth();
     const anoAtual = hoje.getFullYear();
     
-    const servicosGabriel = dados.Gabriel.filter(s => {
+    const servicosWagner = dados.Wagner ? dados.Wagner.filter(s => {
+        if (!s.data) return false;
         const d = new Date(s.data);
         return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
-    });
+    }) : [];
     
-    const servicosWagner = dados.Wagner.filter(s => {
+    const servicosGabriel = dados.Gabriel ? dados.Gabriel.filter(s => {
+        if (!s.data) return false;
         const d = new Date(s.data);
         return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
-    });
+    }) : [];
     
-    const totalGabriel = servicosGabriel.reduce((s, v) => s + v.valor, 0);
-    const totalWagner = servicosWagner.reduce((s, v) => s + v.valor, 0);
-    const totalMes = totalGabriel + totalWagner;
-    const fiadoGabriel = servicosGabriel.filter(s => !s.pago).reduce((s, v) => s + v.valor, 0);
-    const fiadoWagner = servicosWagner.filter(s => !s.pago).reduce((s, v) => s + v.valor, 0);
-    const despesasMes = dados.despesas.filter(d => {
+    const totalWagner = servicosWagner.reduce((s, v) => s + (v.valor || 0), 0);
+    const totalGabriel = servicosGabriel.reduce((s, v) => s + (v.valor || 0), 0);
+    const totalMes = totalWagner + totalGabriel;
+    const fiadoWagner = servicosWagner.filter(s => !s.pago).reduce((s, v) => s + (v.valor || 0), 0);
+    const fiadoGabriel = servicosGabriel.filter(s => !s.pago).reduce((s, v) => s + (v.valor || 0), 0);
+    const despesasMes = dados.despesas ? dados.despesas.filter(d => {
+        if (!d.data) return false;
         const data = new Date(d.data);
         return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
-    }).reduce((s, d) => s + d.valor, 0);
+    }).reduce((s, d) => s + (d.valor || 0), 0) : 0;
     
     const html = `<div style="padding:20px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
-            <div style="background:rgba(255,170,0,0.1);padding:20px;border-radius:15px;">
-                <h3 style="color:#ffaa00;margin-bottom:10px;">👨‍🦱 GABRIEL</h3>
-                <div style="font-size:28px;font-weight:800;">R$ ${totalGabriel.toFixed(2)}</div>
-                <div style="display:flex;justify-content:space-between;margin-top:15px;">
-                    <span>✅ R$ ${(totalGabriel - fiadoGabriel).toFixed(2)}</span>
-                    <span style="color:#FF9500;">⏳ R$ ${fiadoGabriel.toFixed(2)}</span>
-                </div>
-                <div>${servicosGabriel.length} serviços</div>
-            </div>
-            <div style="background:rgba(51,102,255,0.1);padding:20px;border-radius:15px;">
-                <h3 style="color:#3366ff;margin-bottom:10px;">👨‍🦱 WAGNER</h3>
-                <div style="font-size:28px;font-weight:800;">R$ ${totalWagner.toFixed(2)}</div>
-                <div style="display:flex;justify-content:space-between;margin-top:15px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+            <div style="background:rgba(51,102,255,0.1); padding:20px; border-radius:15px;">
+                <h3 style="color:#3366ff; margin-bottom:10px;">👨‍🦱 WAGNER ⭐</h3>
+                <div style="font-size:28px; font-weight:800;">R$ ${totalWagner.toFixed(2)}</div>
+                <div style="display:flex; justify-content:space-between; margin-top:15px;">
                     <span>✅ R$ ${(totalWagner - fiadoWagner).toFixed(2)}</span>
                     <span style="color:#FF9500;">⏳ R$ ${fiadoWagner.toFixed(2)}</span>
                 </div>
-                <div>${servicosWagner.length} serviços</div>
+                <div style="margin-top:10px; color:#aaa;">${servicosWagner.length} serviços</div>
+            </div>
+            <div style="background:rgba(255,170,0,0.1); padding:20px; border-radius:15px;">
+                <h3 style="color:#ffaa00; margin-bottom:10px;">👨‍🦱 GABRIEL</h3>
+                <div style="font-size:28px; font-weight:800;">R$ ${totalGabriel.toFixed(2)}</div>
+                <div style="display:flex; justify-content:space-between; margin-top:15px;">
+                    <span>✅ R$ ${(totalGabriel - fiadoGabriel).toFixed(2)}</span>
+                    <span style="color:#FF9500;">⏳ R$ ${fiadoGabriel.toFixed(2)}</span>
+                </div>
+                <div style="margin-top:10px; color:#aaa;">${servicosGabriel.length} serviços</div>
             </div>
         </div>
-        <div style="background:rgba(255,51,102,0.1);padding:20px;border-radius:15px;margin-bottom:20px;">
-            <div style="display:flex;justify-content:space-between;">
+        <div style="background:rgba(255,51,102,0.1); padding:20px; border-radius:15px; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between;">
                 <div>
-                    <div style="color:#ff3366;font-size:14px;">DESPESAS MÊS</div>
-                    <div style="font-size:28px;font-weight:800;color:#ff3366;">R$ ${despesasMes.toFixed(2)}</div>
+                    <div style="color:#ff3366; font-size:14px;">DESPESAS MÊS</div>
+                    <div style="font-size:28px; font-weight:800; color:#ff3366;">R$ ${despesasMes.toFixed(2)}</div>
                 </div>
                 <div>
-                    <div style="color:#25D366;font-size:14px;">LUCRO LÍQUIDO</div>
-                    <div style="font-size:32px;font-weight:800;color:#25D366;">R$ ${(totalMes - despesasMes).toFixed(2)}</div>
+                    <div style="color:#25D366; font-size:14px;">LUCRO LÍQUIDO</div>
+                    <div style="font-size:32px; font-weight:800; color:#25D366;">R$ ${(totalMes - despesasMes).toFixed(2)}</div>
                 </div>
             </div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;text-align:center;">
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:15px; text-align:center;">
             <div>
-                <div style="color:#aaa;font-size:12px;">RECEITA TOTAL</div>
-                <div style="font-size:20px;font-weight:700;color:#25D366;">R$ ${totalMes.toFixed(2)}</div>
+                <div style="color:#aaa; font-size:12px;">RECEITA TOTAL</div>
+                <div style="font-size:20px; font-weight:700; color:#25D366;">R$ ${totalMes.toFixed(2)}</div>
             </div>
             <div>
-                <div style="color:#aaa;font-size:12px;">SERVIÇOS</div>
-                <div style="font-size:20px;font-weight:700;">${servicosGabriel.length + servicosWagner.length}</div>
+                <div style="color:#aaa; font-size:12px;">SERVIÇOS</div>
+                <div style="font-size:20px; font-weight:700;">${servicosWagner.length + servicosGabriel.length}</div>
             </div>
             <div>
-                <div style="color:#aaa;font-size:12px;">MÉDIA</div>
-                <div style="font-size:20px;font-weight:700;color:#ffaa00;">R$ ${((totalMes) / (servicosGabriel.length + servicosWagner.length || 1)).toFixed(2)}</div>
+                <div style="color:#aaa; font-size:12px;">MÉDIA/SERVIÇO</div>
+                <div style="font-size:20px; font-weight:700; color:#ffaa00;">R$ ${(totalMes / ((servicosWagner.length + servicosGabriel.length) || 1)).toFixed(2)}</div>
             </div>
         </div>
     </div>`;
     
-    document.getElementById('conteudoResumo').innerHTML = html;
-    document.getElementById('modalResumo').style.display = 'flex';
+    const conteudoResumo = document.getElementById('conteudoResumo');
+    if (conteudoResumo) conteudoResumo.innerHTML = html;
+    
+    const modal = document.getElementById('modalResumo');
+    if (modal) modal.style.display = 'flex';
 }
 
 function abrirModalPagamentos() {
-    document.getElementById('modalPagamentos').style.display = 'flex';
-    gerarRelatorioPagamentosDetalhado();
+    const modal = document.getElementById('modalPagamentos');
+    if (modal) {
+        modal.style.display = 'flex';
+        gerarRelatorioPagamentosDetalhado();
+    }
 }
 
 function abrirModalConfiguracoes() {
-    document.getElementById('numWhats').value = dados.config.whatsapp || '';
-    document.getElementById('novoPin').value = '';
-    document.getElementById('valCorte').value = dados.config.corte || 28;
-    document.getElementById('valBarba').value = dados.config.barba || 15;
-    document.getElementById('valCombo').value = dados.config.combo || 40;
-    document.getElementById('orcamentoDespesas').value = dados.config.orcamentoDespesas || 1500;
-    document.getElementById('notificacoesAtivas').value = dados.config.notificacoesAtivas ? 'true' : 'false';
-    document.getElementById('diasAlerta').value = dados.config.diasAlerta || 3;
-    document.getElementById('modalConfig').style.display = 'flex';
+    const numWhats = document.getElementById('numWhats');
+    const novoPin = document.getElementById('novoPin');
+    const valCorte = document.getElementById('valCorte');
+    const valBarba = document.getElementById('valBarba');
+    const valCombo = document.getElementById('valCombo');
+    const orcamentoDespesas = document.getElementById('orcamentoDespesas');
+    const notificacoesAtivas = document.getElementById('notificacoesAtivas');
+    const diasAlerta = document.getElementById('diasAlerta');
+    
+    if (numWhats) numWhats.value = dados.config?.whatsapp || '';
+    if (novoPin) novoPin.value = '';
+    if (valCorte) valCorte.value = dados.config?.corte || 28;
+    if (valBarba) valBarba.value = dados.config?.barba || 15;
+    if (valCombo) valCombo.value = dados.config?.combo || 40;
+    if (orcamentoDespesas) orcamentoDespesas.value = dados.config?.orcamentoDespesas || 1500;
+    if (notificacoesAtivas) notificacoesAtivas.value = dados.config?.notificacoesAtivas ? 'true' : 'false';
+    if (diasAlerta) diasAlerta.value = dados.config?.diasAlerta || 3;
+    
+    const modal = document.getElementById('modalConfig');
+    if (modal) modal.style.display = 'flex';
 }
 
 function fecharModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const modal = document.getElementById(modalId);
+    if (modal) modal.style.display = 'none';
 }
 
 // ========== FUNÇÕES AUXILIARES ==========
 function formatarDataBR(data) {
     if (!data) return '';
-    const d = new Date(data);
-    return d.toLocaleDateString('pt-BR');
+    try {
+        const d = new Date(data);
+        return d.toLocaleDateString('pt-BR');
+    } catch (e) {
+        return data;
+    }
 }
 
 function voltarParaRegistro() {
@@ -2751,15 +3005,15 @@ function iniciarVerificacoesPeriodicas() {
 }
 
 function verificarVencimentosMensalistas() {
-    if (!dados.config.notificacoesAtivas) return;
+    if (!dados.config?.notificacoesAtivas) return;
     
-    dados.mensalistas.forEach(m => {
+    (dados.mensalistas || []).forEach(m => {
         if (m.status === 'pago') return;
         
         const hoje = new Date();
-        hoje.setHours(0,0,0,0);
+        hoje.setHours(0, 0, 0, 0);
         const venc = new Date(m.dataVencimento || m.vencimento);
-        venc.setHours(0,0,0,0);
+        venc.setHours(0, 0, 0, 0);
         
         if (venc < hoje && m.status !== 'vencido') {
             m.status = 'vencido';
@@ -2772,59 +3026,64 @@ function atualizarResumoFinanceiroDespesas() {
     const mes = hoje.getMonth();
     const ano = hoje.getFullYear();
     
-    const despesasMes = dados.despesas.filter(d => {
+    const despesasMes = (dados.despesas || []).filter(d => {
+        if (!d.data) return false;
         const data = new Date(d.data);
         return data.getMonth() === mes && data.getFullYear() === ano;
     });
     
-    const total = despesasMes.reduce((s, d) => s + d.valor, 0);
-    const orcamento = dados.config.orcamentoDespesas || 1500;
+    const total = despesasMes.reduce((s, d) => s + (d.valor || 0), 0);
+    const orcamento = dados.config?.orcamentoDespesas || 1500;
     const percentual = (total / orcamento) * 100;
     
-    let html = `<div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+    let html = `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
         <div><span style="color:#aaa;">Orçamento:</span> R$ ${orcamento.toFixed(2)}</div>
         <div><span style="color:#aaa;">Gasto:</span> R$ ${total.toFixed(2)}</div>
     </div>
     <div class="progresso-despesa">
         <div class="progresso-bar" style="width:${Math.min(percentual, 100)}%; background:${percentual > 100 ? '#ff3366' : '#ff6699'};"></div>
     </div>
-    <div style="text-align:center;margin-top:10px;color:${percentual > 100 ? '#ff3366' : '#aaa'};">
+    <div style="text-align:center; margin-top:10px; color:${percentual > 100 ? '#ff3366' : '#aaa'};">
         ${percentual.toFixed(1)}% utilizado
     </div>`;
     
-    document.getElementById('resumoFinanceiroDespesas').innerHTML = html;
+    const resumoFinanceiro = document.getElementById('resumoFinanceiroDespesas');
+    if (resumoFinanceiro) resumoFinanceiro.innerHTML = html;
 }
 
 function gerarRelatorioPagamentosDetalhado() {
-    const dataInicio = document.getElementById('dataInicioPagamentos').value;
-    const dataFim = document.getElementById('dataFimPagamentos').value;
-    const filtroBarbeiro = document.getElementById('filtroBarbeiroPagamentos').value;
+    const dataInicio = document.getElementById('dataInicioPagamentos')?.value;
+    const dataFim = document.getElementById('dataFimPagamentos')?.value;
+    const filtroBarbeiro = document.getElementById('filtroBarbeiroPagamentos')?.value || 'todos';
     
-    let servicos = [...dados.Gabriel, ...dados.Wagner].filter(s => 
-        s.data >= dataInicio && s.data <= dataFim &&
+    if (!dataInicio || !dataFim) return;
+    
+    let servicos = [...(dados.Wagner || []), ...(dados.Gabriel || [])].filter(s => 
+        s.data && s.data >= dataInicio && s.data <= dataFim &&
         (filtroBarbeiro === 'todos' || s.barbeiro === filtroBarbeiro)
     );
     
-    const total = servicos.reduce((s, v) => s + v.valor, 0);
-    const pago = servicos.filter(s => s.pago).reduce((s, v) => s + v.valor, 0);
+    const total = servicos.reduce((s, v) => s + (v.valor || 0), 0);
+    const pago = servicos.filter(s => s.pago).reduce((s, v) => s + (v.valor || 0), 0);
     
-    const html = `<div style="background:rgba(255,170,0,0.1);padding:20px;border-radius:15px;">
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;text-align:center;">
-            <div><div style="color:#aaa;">TOTAL</div><div style="font-size:24px;color:#25D366;">R$ ${total.toFixed(2)}</div></div>
+    const html = `<div style="background:rgba(51,102,255,0.1); padding:20px; border-radius:15px;">
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; text-align:center;">
+            <div><div style="color:#aaa;">TOTAL</div><div style="font-size:24px; color:#25D366;">R$ ${total.toFixed(2)}</div></div>
             <div><div style="color:#aaa;">SERVIÇOS</div><div style="font-size:24px;">${servicos.length}</div></div>
-            <div><div style="color:#aaa;">RECEBIDO</div><div style="font-size:20px;color:#25D366;">R$ ${pago.toFixed(2)}</div></div>
-            <div><div style="color:#aaa;">FIADO</div><div style="font-size:20px;color:#FF9500;">R$ ${(total - pago).toFixed(2)}</div></div>
+            <div><div style="color:#aaa;">RECEBIDO</div><div style="font-size:20px; color:#25D366;">R$ ${pago.toFixed(2)}</div></div>
+            <div><div style="color:#aaa;">FIADO</div><div style="font-size:20px; color:#FF9500;">R$ ${(total - pago).toFixed(2)}</div></div>
         </div>
     </div>`;
     
-    document.getElementById('relatorioPagamentosDetalhado').innerHTML = html;
+    const relatorio = document.getElementById('relatorioPagamentosDetalhado');
+    if (relatorio) relatorio.innerHTML = html;
 }
 
 function enviarRelatorioWhatsApp(tipo) {
-    const numero = dados.config.whatsapp || '11974065186';
+    const numero = dados.config?.whatsapp || '11974065186';
     
     if (!numero || numero.replace(/\D/g, '').length < 10) {
-        alert('❌ Configure o WhatsApp!');
+        alert('❌ Configure o WhatsApp nas configurações!');
         abrirModalConfiguracoes();
         return;
     }
@@ -2835,22 +3094,34 @@ function enviarRelatorioWhatsApp(tipo) {
     if (tipo === 'resumo') {
         const mes = hoje.getMonth();
         const ano = hoje.getFullYear();
-        const g = dados.Gabriel.filter(s => new Date(s.data).getMonth() === mes && new Date(s.data).getFullYear() === ano);
-        const w = dados.Wagner.filter(s => new Date(s.data).getMonth() === mes && new Date(s.data).getFullYear() === ano);
-        const tg = g.reduce((s, v) => s + v.valor, 0);
-        const tw = w.reduce((s, v) => s + v.valor, 0);
-        msg = `*📊 RESUMO ${hoje.toLocaleDateString('pt-BR', {month:'long',year:'numeric'}).toUpperCase()}*%0A%0A` +
-              `*GABRIEL:* ${g.length} serviços - R$ ${tg.toFixed(2)}%0A` +
-              `*WAGNER:* ${w.length} serviços - R$ ${tw.toFixed(2)}%0A` +
-              `*TOTAL:* R$ ${(tg+tw).toFixed(2)}%0A%0A` +
+        
+        const w = dados.Wagner ? dados.Wagner.filter(s => {
+            if (!s.data) return false;
+            const d = new Date(s.data);
+            return d.getMonth() === mes && d.getFullYear() === ano;
+        }) : [];
+        
+        const g = dados.Gabriel ? dados.Gabriel.filter(s => {
+            if (!s.data) return false;
+            const d = new Date(s.data);
+            return d.getMonth() === mes && d.getFullYear() === ano;
+        }) : [];
+        
+        const tw = w.reduce((s, v) => s + (v.valor || 0), 0);
+        const tg = g.reduce((s, v) => s + (v.valor || 0), 0);
+        
+        msg = `*📊 RESUMO ${hoje.toLocaleDateString('pt-BR', {month:'long', year:'numeric'}).toUpperCase()}*%0A%0A` +
+              `*WAGNER (PRINCIPAL):* ${w.length} serviços - R$ ${tw.toFixed(2)}%0A` +
+              `*GABRIEL (AUXILIAR):* ${g.length} serviços - R$ ${tg.toFixed(2)}%0A` +
+              `*TOTAL:* R$ ${(tw+tg).toFixed(2)}%0A%0A` +
               `*BarbaPRO Duo*`;
+        
+        window.open(`https://wa.me/55${numero.replace(/\D/g, '')}?text=${msg}`, '_blank');
     }
-    
-    window.open(`https://wa.me/55${numero.replace(/\D/g, '')}?text=${msg}`, '_blank');
 }
 
 function enviarLembretesMensalistas() {
-    const pendentes = dados.mensalistas.filter(m => m.status === 'pendente' || m.status === 'vencido');
+    const pendentes = (dados.mensalistas || []).filter(m => m.status === 'pendente' || m.status === 'vencido');
     alert(`📢 ${pendentes.length} mensalista(s) pendente(s)`);
 }
 
@@ -2863,6 +3134,16 @@ function exportarDadosServicos() {
 }
 
 // ========== INICIAR ==========
+function inicializarDashboard() {
+    carregarDadosDoServidor();
+    configurarDatasDashboard();
+    configurarEventListenersDashboard();
+    inicializarGraficos();
+    iniciarVerificacoesPeriodicas();
+    conectarWebSocket();
+    console.log('✅ Dashboard inicializado!');
+}
+
 // Limpar localStorage de uma vez por todas
 try {
     localStorage.removeItem('barbapro_duo');

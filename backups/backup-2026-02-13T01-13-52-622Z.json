@@ -1,0 +1,16 @@
+{
+  "Gabriel": [],
+  "Wagner": [],
+  "despesas": [],
+  "mensalistas": [],
+  "config": {
+    "pin": "1234",
+    "whatsapp": "11974065186",
+    "corte": 28,
+    "barba": 15,
+    "combo": 40,
+    "orcamentoDespesas": 1500,
+    "notificacoesAtivas": true,
+    "diasAlerta": 3
+  }
+}
