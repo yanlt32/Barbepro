@@ -1878,9 +1878,9 @@ let dados = {
     config: { 
         pin: '1234', 
         whatsapp: '11974065186', 
-        corte: 28, 
-        barba: 15, 
-        combo: 40,
+        corte: 30, 
+        barba: 20, 
+        combo: 50,
         orcamentoDespesas: 1500,
         notificacoesAtivas: true,
         diasAlerta: 3
@@ -1966,21 +1966,57 @@ function carregarDadosDoServidor() {
                     dados.config = {
                         pin: '1234',
                         whatsapp: '11974065186',
-                        corte: 28,
-                        barba: 15,
-                        combo: 40,
+                        corte: 30,
+                        barba: 20,
+                        combo: 50,
                         orcamentoDespesas: 1500,
                         notificacoesAtivas: true,
                         diasAlerta: 3
                     };
+                } else {
+                    // Garantir que os valores padrão sejam usados se não estiverem definidos
+                    if (!dados.config.corte) dados.config.corte = 30;
+                    if (!dados.config.barba) dados.config.barba = 20;
+                    if (!dados.config.combo) dados.config.combo = 50;
                 }
+                
+                // Atualizar os placeholders dos inputs de configuração com os valores atuais
+                atualizarPlaceholdersConfiguracoes();
                 
                 atualizarDashboardCompleto();
             }
         })
         .catch(error => {
             console.error('❌ Erro ao carregar:', error);
+            // Usar dados padrão em caso de erro
+            if (!dados.config) {
+                dados.config = {
+                    pin: '1234',
+                    whatsapp: '11974065186',
+                    corte: 30,
+                    barba: 20,
+                    combo: 50,
+                    orcamentoDespesas: 1500,
+                    notificacoesAtivas: true,
+                    diasAlerta: 3
+                };
+            }
+            // Atualizar os placeholders dos inputs de configuração com os valores atuais
+            atualizarPlaceholdersConfiguracoes();
+            atualizarDashboardCompleto();
         });
+}
+
+// ========== ATUALIZAR PLACEHOLDERS DAS CONFIGURAÇÕES ==========
+function atualizarPlaceholdersConfiguracoes() {
+    // Atualizar os placeholders dos inputs de configuração
+    const valCorte = document.getElementById('valCorte');
+    const valBarba = document.getElementById('valBarba');
+    const valCombo = document.getElementById('valCombo');
+    
+    if (valCorte) valCorte.placeholder = `Valor atual: R$ ${dados.config.corte.toFixed(2)}`;
+    if (valBarba) valBarba.placeholder = `Valor atual: R$ ${dados.config.barba.toFixed(2)}`;
+    if (valCombo) valCombo.placeholder = `Valor atual: R$ ${dados.config.combo.toFixed(2)}`;
 }
 
 // ========== SALVAR DADOS NO SERVIDOR ==========
@@ -2831,25 +2867,37 @@ function salvarConfiguracoes() {
     const notificacoesAtivas = document.getElementById('notificacoesAtivas')?.value === 'true';
     const diasAlerta = parseInt(document.getElementById('diasAlerta')?.value);
     
-    if (isNaN(corte) || isNaN(barba) || isNaN(combo) || isNaN(orcamentoDespesas) || isNaN(diasAlerta)) {
-        alert('❌ Valores inválidos!');
-        return;
-    }
+    // Verificar se os valores são válidos, se não usar os valores atuais
+    const novoCorte = !isNaN(corte) && corte > 0 ? corte : dados.config.corte;
+    const novaBarba = !isNaN(barba) && barba > 0 ? barba : dados.config.barba;
+    const novoCombo = !isNaN(combo) && combo > 0 ? combo : dados.config.combo;
+    const novoOrcamento = !isNaN(orcamentoDespesas) && orcamentoDespesas > 0 ? orcamentoDespesas : dados.config.orcamentoDespesas || 1500;
+    const novoDiasAlerta = !isNaN(diasAlerta) && diasAlerta > 0 ? diasAlerta : dados.config.diasAlerta || 3;
     
     if (!dados.config) dados.config = {};
     
     if (whatsapp) dados.config.whatsapp = whatsapp;
     if (novoPin) dados.config.pin = novoPin;
-    dados.config.corte = corte;
-    dados.config.barba = barba;
-    dados.config.combo = combo;
-    dados.config.orcamentoDespesas = orcamentoDespesas;
-    dados.config.notificacoesAtivas = notificacoesAtivas;
-    dados.config.diasAlerta = diasAlerta;
     
+    // Atualizar com os novos valores
+    dados.config.corte = novoCorte;
+    dados.config.barba = novaBarba;
+    dados.config.combo = novoCombo;
+    dados.config.orcamentoDespesas = novoOrcamento;
+    dados.config.notificacoesAtivas = notificacoesAtivas;
+    dados.config.diasAlerta = novoDiasAlerta;
+    
+    // Atualizar os placeholders dos inputs
+    atualizarPlaceholdersConfiguracoes();
+    
+    // Salvar no servidor
     salvarDadosNoServidor();
+    
+    // Fechar modal e mostrar mensagem de sucesso
     fecharModal('modalConfig');
-    alert('✅ Configurações salvas!');
+    alert(`✅ Configurações salvas com sucesso!\n\nNovos valores:\n• Corte: R$ ${novoCorte.toFixed(2)}\n• Barba: R$ ${novaBarba.toFixed(2)}\n• Combo: R$ ${novoCombo.toFixed(2)}`);
+    
+    console.log('Configurações atualizadas:', dados.config);
 }
 
 // ========== MODAIS ==========
@@ -2968,9 +3016,20 @@ function abrirModalConfiguracoes() {
     
     if (numWhats) numWhats.value = dados.config?.whatsapp || '';
     if (novoPin) novoPin.value = '';
-    if (valCorte) valCorte.value = dados.config?.corte || 28;
-    if (valBarba) valBarba.value = dados.config?.barba || 15;
-    if (valCombo) valCombo.value = dados.config?.combo || 40;
+    
+    // Mostrar os valores atuais das configurações (não preencher os campos, apenas os placeholders)
+    if (valCorte) {
+        valCorte.value = '';
+        valCorte.placeholder = `Valor atual: R$ ${(dados.config?.corte || 30).toFixed(2)}`;
+    }
+    if (valBarba) {
+        valBarba.value = '';
+        valBarba.placeholder = `Valor atual: R$ ${(dados.config?.barba || 20).toFixed(2)}`;
+    }
+    if (valCombo) {
+        valCombo.value = '';
+        valCombo.placeholder = `Valor atual: R$ ${(dados.config?.combo || 50).toFixed(2)}`;
+    }
     if (orcamentoDespesas) orcamentoDespesas.value = dados.config?.orcamentoDespesas || 1500;
     if (notificacoesAtivas) notificacoesAtivas.value = dados.config?.notificacoesAtivas ? 'true' : 'false';
     if (diasAlerta) diasAlerta.value = dados.config?.diasAlerta || 3;
@@ -3141,7 +3200,7 @@ function inicializarDashboard() {
     inicializarGraficos();
     iniciarVerificacoesPeriodicas();
     conectarWebSocket();
-    console.log('✅ Dashboard inicializado!');
+    console.log('✅ Dashboard inicializado com valores: Corte R$30, Barba R$20, Combo R$50');
 }
 
 // Limpar localStorage de uma vez por todas

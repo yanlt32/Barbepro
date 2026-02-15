@@ -781,17 +781,17 @@ select:focus {
       <div class="servicos-grid">
         <div class="servico-btn corte" onclick="abrirModalPagamento('corte')">
           <div class="servico-nome">CORTE</div>
-          <div class="servico-valor">R$ <span id="precoCorte">28</span></div>
+          <div class="servico-valor">R$ <span id="precoCorte">30</span></div>
           <div class="servico-desc">Corte de cabelo</div>
         </div>
         <div class="servico-btn barba" onclick="abrirModalPagamento('barba')">
           <div class="servico-nome">BARBA</div>
-          <div class="servico-valor">R$ <span id="precoBarba">15</span></div>
+          <div class="servico-valor">R$ <span id="precoBarba">20</span></div>
           <div class="servico-desc">Aparar barba</div>
         </div>
         <div class="servico-btn barba-cabelo" onclick="abrirModalPagamento('barba-cabelo')">
           <div class="servico-nome">COMBO</div>
-          <div class="servico-valor">R$ <span id="precoBarbaCabelo">40</span></div>
+          <div class="servico-valor">R$ <span id="precoBarbaCabelo">50</span></div>
           <div class="servico-desc">Barba + Cabelo</div>
         </div>
         <div class="servico-btn outro" onclick="abrirModalOutro()">
@@ -979,14 +979,14 @@ select:focus {
       config: {
         pin: '1234',
         whatsapp: '11962094589',
-        corte: 28,
-        barba: 15,
-        combo: 40
+        corte: 30,
+        barba: 20,
+        combo: 50
       }
     };
 
     let servicoSelecionado = null;
-    let opcaoPagamentoSelecionada = null; // 'pago' ou 'fiado'
+    let opcaoPagamentoSelecionada = null;
     let metodoPagamentoSelecionado = null;
     let opcaoPagamentoCustomSelecionada = null;
     let metodoPagamentoCustomSelecionado = null;
@@ -997,17 +997,12 @@ select:focus {
 
     // ========== FUNÇÕES DE DATA CORRIGIDAS ==========
 
-    // Obter data atual no fuso horário de Brasília (UTC-3)
     function getDataAtualBrasilia() {
         const agora = new Date();
-        
-        // Converter para fuso horário de Brasília (UTC-3)
-        // Criar uma nova data no fuso horário local, mas forçando ser UTC-3
-        const offset = -3; // Brasília é UTC-3
+        const offset = -3;
         const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
         const dataBrasilia = new Date(utc + (3600000 * offset));
         
-        // Formatar como YYYY-MM-DD
         const ano = dataBrasilia.getFullYear();
         const mes = String(dataBrasilia.getMonth() + 1).padStart(2, '0');
         const dia = String(dataBrasilia.getDate()).padStart(2, '0');
@@ -1015,44 +1010,21 @@ select:focus {
         return `${ano}-${mes}-${dia}`;
     }
 
-    // Formatar data para exibição no padrão brasileiro
     function formatarDataBR(dataISO) {
         if (!dataISO) return '';
-        
-        // Se a data já estiver no formato brasileiro, retornar como está
         if (dataISO.includes('/')) {
             return dataISO;
         }
-        
-        // Extrair partes da data ISO (YYYY-MM-DD)
         const [ano, mes, dia] = dataISO.split('-');
         return `${dia}/${mes}/${ano}`;
     }
 
-    // Converter data brasileira para ISO (para comparações)
-    function converterDataBRparaISO(dataBR) {
-        if (!dataBR) return '';
-        
-        // Se já estiver em formato ISO, retornar como está
-        if (dataBR.includes('-') && dataBR.length === 10) {
-            return dataBR;
-        }
-        
-        // Converter de DD/MM/YYYY para YYYY-MM-DD
-        const [dia, mes, ano] = dataBR.split('/');
-        return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-    }
-
-    // Obter hora atual no fuso horário de Brasília
     function getHoraAtualBrasilia() {
         const agora = new Date();
-        
-        // Ajustar para fuso horário de Brasília
-        const offset = -3; // UTC-3
+        const offset = -3;
         const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
         const dataBrasilia = new Date(utc + (3600000 * offset));
         
-        // Formatar hora como HH:MM
         const hora = String(dataBrasilia.getHours()).padStart(2, '0');
         const minutos = String(dataBrasilia.getMinutes()).padStart(2, '0');
         
@@ -1066,39 +1038,46 @@ select:focus {
     });
 
     function inicializarSistema() {
-      // Carregar dados locais primeiro
       carregarDadosLocais();
-      
-      // Verificar e corrigir datas incorretas
+      garantirConfiguracoesAtualizadas();
       verificarDatasServicos();
       
-      // Configurar data atual no filtro com fuso horário correto
       const hoje = getDataAtualBrasilia();
       document.getElementById('dataFiltro').value = hoje;
       dataFiltroAtual = hoje;
       document.getElementById('dataHoje').textContent = formatarDataBR(hoje);
       
-      // Mostrar data atual no console para debug
       console.log('📅 Data atual (Brasília):', hoje);
-      console.log('📅 Data atual (UTC):', new Date().toISOString().split('T')[0]);
       console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
       
-      // Conectar ao servidor
       conectarWebSocket();
-      
-      // Atualizar interface
       atualizarInterface();
       
       console.log('✅ Sistema inicializado com sucesso!');
     }
 
-    // ========== SISTEMA ONLINE/OFFLINE ==========
+    function garantirConfiguracoesAtualizadas() {
+      if (!dados.config) {
+        dados.config = {
+          pin: '1234',
+          whatsapp: '11962094589',
+          corte: 30,
+          barba: 20,
+          combo: 50
+        };
+      } else {
+        dados.config.corte = 30;
+        dados.config.barba = 20;
+        dados.config.combo = 50;
+      }
+      
+      console.log('⚙️ Configurações atualizadas:', dados.config);
+    }
+
     function conectarWebSocket() {
       try {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}`;
-        
-        console.log('📡 Conectando ao servidor:', wsUrl);
         
         ws = new WebSocket(wsUrl);
         
@@ -1108,7 +1087,6 @@ select:focus {
           atualizarStatusConexao(true);
           mostrarFeedback('✅ Conectado ao servidor', 'success');
           
-          // Sincronizar dados ao conectar
           setTimeout(() => {
             sincronizarDados();
           }, 1000);
@@ -1120,32 +1098,14 @@ select:focus {
             console.log('📥 Mensagem do servidor:', data.type);
             
             switch(data.type) {
-              case 'conexao':
-                console.log(`📞 Conectado: ${data.message}`);
-                break;
-                
               case 'dados_iniciais':
-                console.log('📦 Dados iniciais recebidos do servidor');
-                processarDadosServidor(data.data);
-                break;
-                
               case 'sync_completo':
-                console.log('🔄 Sincronização completa recebida');
                 processarDadosServidor(data.data);
                 break;
-                
               case 'notificacao':
                 mostrarNotificacaoServico(data);
                 break;
-                
-              case 'mensalista_removido':
-                mostrarFeedback(`🗑️ Mensalista ${data.mensalista} removido`, 'info');
-                carregarDadosLocais();
-                atualizarInterface();
-                break;
-                
               case 'atualizar':
-                console.log('🔄 Atualização solicitada pelo servidor');
                 sincronizarDados();
                 break;
             }
@@ -1158,8 +1118,6 @@ select:focus {
           console.log('🔌 Desconectado do servidor');
           isOnline = false;
           atualizarStatusConexao(false);
-          
-          // Tentar reconectar em 5 segundos
           setTimeout(conectarWebSocket, 5000);
         };
         
@@ -1187,28 +1145,20 @@ select:focus {
       }
     }
 
-    // ========== FUNÇÕES DE DADOS ==========
     function carregarDadosLocais() {
       try {
         const dadosSalvos = localStorage.getItem('barbapro_duo');
         if (dadosSalvos) {
           const dadosParseados = JSON.parse(dadosSalvos);
           
-          // Carregar arrays
           if (Array.isArray(dadosParseados.Gabriel)) dados.Gabriel = dadosParseados.Gabriel;
           if (Array.isArray(dadosParseados.Wagner)) dados.Wagner = dadosParseados.Wagner;
           if (Array.isArray(dadosParseados.despesas)) dados.despesas = dadosParseados.despesas;
           if (Array.isArray(dadosParseados.mensalistas)) dados.mensalistas = dadosParseados.mensalistas;
           
-          // Carregar configurações
-          if (dadosParseados.config) {
-            dados.config = { ...dados.config, ...dadosParseados.config };
-          }
-          
           console.log('📂 Dados carregados do localStorage');
-          aplicarConfiguracoes();
         } else {
-          console.log('📝 Nenhum dado salvo encontrado, usando dados padrão');
+          console.log('📝 Nenhum dado salvo encontrado');
         }
       } catch (error) {
         console.error('❌ Erro ao carregar dados locais:', error);
@@ -1255,38 +1205,21 @@ select:focus {
 
     function processarDadosServidor(dadosServidor) {
       try {
-        // Mesclar dados do servidor com dados locais
-        // Para serviços, manter os mais recentes (por timestamp)
         if (Array.isArray(dadosServidor.Gabriel)) {
           dados.Gabriel = unificarServicos(dados.Gabriel, dadosServidor.Gabriel);
         }
-        
         if (Array.isArray(dadosServidor.Wagner)) {
           dados.Wagner = unificarServicos(dados.Wagner, dadosServidor.Wagner);
         }
-        
-        // Para mensalistas, manter os mais recentes (por id)
         if (Array.isArray(dadosServidor.mensalistas)) {
           dados.mensalistas = unificarMensalistas(dados.mensalistas, dadosServidor.mensalistas);
         }
-        
-        // Para despesas, manter as mais recentes (por id)
         if (Array.isArray(dadosServidor.despesas)) {
           dados.despesas = unificarDespesas(dados.despesas, dadosServidor.despesas);
         }
         
-        // Configurações (sobrescrever com as do servidor)
-        if (dadosServidor.config) {
-          dados.config = { ...dados.config, ...dadosServidor.config };
-          aplicarConfiguracoes();
-        }
-        
-        // Salvar localmente
         salvarDadosLocais();
-        
-        // Atualizar interface
         atualizarInterface();
-        
         mostrarFeedback('🔄 Dados sincronizados com sucesso!', 'success');
         
       } catch (error) {
@@ -1295,16 +1228,13 @@ select:focus {
     }
 
     function unificarServicos(locais, servidor) {
-      // Criar mapa por id/timestamp
       const mapa = new Map();
       
-      // Adicionar serviços do servidor
       servidor.forEach(servico => {
         const key = servico.id || `${servico.data}_${servico.hora}_${servico.cliente}`;
         mapa.set(key, servico);
       });
       
-      // Adicionar serviços locais (sobrescrevendo se mais recente)
       locais.forEach(servico => {
         const key = servico.id || `${servico.data}_${servico.hora}_${servico.cliente}`;
         const existente = mapa.get(key);
@@ -1323,7 +1253,6 @@ select:focus {
 
     function unificarMensalistas(locais, servidor) {
       const mapa = new Map();
-      
       servidor.forEach(m => mapa.set(m.id, m));
       locais.forEach(m => {
         const existente = mapa.get(m.id);
@@ -1331,13 +1260,11 @@ select:focus {
           mapa.set(m.id, m);
         }
       });
-      
       return Array.from(mapa.values()).sort((a, b) => b.id - a.id);
     }
 
     function unificarDespesas(locais, servidor) {
       const mapa = new Map();
-      
       servidor.forEach(d => mapa.set(d.id, d));
       locais.forEach(d => {
         const existente = mapa.get(d.id);
@@ -1345,26 +1272,26 @@ select:focus {
           mapa.set(d.id, d);
         }
       });
-      
       return Array.from(mapa.values()).sort((a, b) => b.id - a.id);
     }
 
     function aplicarConfiguracoes() {
-      document.getElementById('precoCorte').textContent = dados.config.corte.toFixed(2);
-      document.getElementById('precoBarba').textContent = dados.config.barba.toFixed(2);
-      document.getElementById('precoBarbaCabelo').textContent = dados.config.combo.toFixed(2);
+      const precoCorte = document.getElementById('precoCorte');
+      const precoBarba = document.getElementById('precoBarba');
+      const precoBarbaCabelo = document.getElementById('precoBarbaCabelo');
+      
+      if (precoCorte) precoCorte.textContent = dados.config.corte.toFixed(2);
+      if (precoBarba) precoBarba.textContent = dados.config.barba.toFixed(2);
+      if (precoBarbaCabelo) precoBarbaCabelo.textContent = dados.config.combo.toFixed(2);
     }
 
-    // ========== FUNÇÃO PARA VERIFICAR E CORRIGIR DATAS ==========
     function verificarDatasServicos() {
       console.log('🔍 Verificando datas dos serviços...');
       
       const hojeCorreto = getDataAtualBrasilia();
       let servicosCorrigidos = 0;
       
-      // Verificar serviços de Gabriel
       dados.Gabriel.forEach(servico => {
-        // Se a data do serviço for maior que hoje (futuro), corrigir
         if (servico.data > hojeCorreto) {
           console.log(`⚠️ Serviço de Gabriel com data futura: ${servico.data} -> Corrigindo para ${hojeCorreto}`);
           servico.data = hojeCorreto;
@@ -1372,9 +1299,7 @@ select:focus {
         }
       });
       
-      // Verificar serviços de Wagner
       dados.Wagner.forEach(servico => {
-        // Se a data do serviço for maior que hoje (futuro), corrigir
         if (servico.data > hojeCorreto) {
           console.log(`⚠️ Serviço de Wagner com data futura: ${servico.data} -> Corrigindo para ${hojeCorreto}`);
           servico.data = hojeCorreto;
@@ -1391,14 +1316,12 @@ select:focus {
       return servicosCorrigidos;
     }
 
-    // ========== SINCORNIZAÇÃO ==========
     async function sincronizarDados() {
       const btnSync = document.getElementById('btnSync');
       const icon = document.getElementById('syncStatusIcon');
       const text = document.getElementById('syncStatusText');
       const details = document.getElementById('syncStatusDetails');
       
-      // Mostrar modal
       document.getElementById('modalSincronizacao').style.display = 'flex';
       icon.textContent = '🔄';
       text.textContent = 'Sincronizando...';
@@ -1406,7 +1329,6 @@ select:focus {
       btnSync.classList.add('syncing');
       
       try {
-        // 1. Baixar dados do servidor
         details.textContent = 'Baixando dados do servidor...';
         const response = await fetch('/api/data');
         
@@ -1415,11 +1337,8 @@ select:focus {
           
           if (result.success) {
             details.textContent = 'Processando dados...';
-            
-            // 2. Processar e mesclar dados
             processarDadosServidor(result.data);
             
-            // 3. Enviar dados locais para o servidor
             details.textContent = 'Enviando dados para o servidor...';
             const saveResponse = await fetch('/api/save', {
               method: 'POST',
@@ -1432,7 +1351,6 @@ select:focus {
               text.textContent = 'Sincronização completa!';
               details.textContent = 'Todos os dados estão atualizados';
               
-              // Fechar modal automaticamente após 2 segundos
               setTimeout(() => {
                 fecharModal('modalSincronizacao');
               }, 2000);
@@ -1452,7 +1370,6 @@ select:focus {
         text.textContent = 'Erro na sincronização';
         details.textContent = 'Usando dados locais. Tente novamente mais tarde.';
         
-        // Fechar modal automaticamente após 3 segundos
         setTimeout(() => {
           fecharModal('modalSincronizacao');
         }, 3000);
@@ -1461,12 +1378,12 @@ select:focus {
       }
     }
 
-    // ========== FUNÇÕES DE INTERFACE ==========
     function atualizarInterface() {
       atualizarListaServicos();
       atualizarResumoDiario();
       document.getElementById('usuarioAtual').textContent = usuarioAtual;
       document.getElementById('nomeUsuario').textContent = usuarioAtual;
+      aplicarConfiguracoes();
     }
 
     function toggleResultados() {
@@ -1491,7 +1408,6 @@ select:focus {
       const totalValor = servicosHoje.reduce((sum, s) => sum + s.valor, 0);
       const totalFiado = servicosHoje.filter(s => !s.pago).reduce((sum, s) => sum + s.valor, 0);
       
-      // Atualizar elementos
       document.getElementById('resumoServicosHoje').textContent = totalServicos;
       document.getElementById('resumoTotalHoje').textContent = `R$ ${totalValor.toFixed(2)}`;
       document.getElementById('resumoFiadoHoje').textContent = `R$ ${totalFiado.toFixed(2)}`;
@@ -1501,18 +1417,14 @@ select:focus {
       usuarioAtual = usuarioAtual === 'Gabriel' ? 'Wagner' : 'Gabriel';
       console.log('🔄 Trocando usuário para:', usuarioAtual);
       atualizarInterface();
-      
-      // Mostrar notificação
       mostrarFeedback(`👤 Usuário alterado para ${usuarioAtual}`);
     }
 
-    // ========== FUNÇÕES DE SERVIÇOS ==========
     function abrirModalPagamento(tipo) {
       servicoSelecionado = tipo;
       opcaoPagamentoSelecionada = null;
       metodoPagamentoSelecionado = null;
       
-      // Resetar seleções
       document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
@@ -1520,10 +1432,8 @@ select:focus {
         btn.classList.remove('selecionado');
       });
       
-      // Ocultar métodos de pagamento
       document.getElementById('metodosPagamentoContainer').style.display = 'none';
       
-      // Definir nome e valor do serviço
       let nome, valor;
       switch(tipo) {
         case 'corte':
@@ -1547,7 +1457,6 @@ select:focus {
       document.getElementById('servicoSelecionadoValor').textContent = `R$ ${valor.toFixed(2)}`;
       document.getElementById('nomeClientePagamento').value = '';
       
-      // Abrir modal
       document.getElementById('modalPagamento').style.display = 'flex';
     }
 
@@ -1555,22 +1464,18 @@ select:focus {
       opcaoPagamentoSelecionada = opcao;
       metodoPagamentoSelecionado = null;
       
-      // Atualizar visualmente os botões de opção
       document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
       event.currentTarget.classList.add('selecionado');
       
-      // Mostrar/ocultar métodos de pagamento
       const metodosContainer = document.getElementById('metodosPagamentoContainer');
       if (opcao === 'pago') {
         metodosContainer.style.display = 'block';
-        // Resetar seleção de métodos
         document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
           btn.classList.remove('selecionado');
         });
       } else {
-        // Para fiado, ocultar métodos de pagamento
         metodosContainer.style.display = 'none';
       }
       
@@ -1582,7 +1487,6 @@ select:focus {
       
       metodoPagamentoSelecionado = metodo;
       
-      // Atualizar visualmente
       document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
@@ -1595,22 +1499,18 @@ select:focus {
       opcaoPagamentoCustomSelecionada = opcao;
       metodoPagamentoCustomSelecionado = null;
       
-      // Atualizar visualmente os botões de opção
       document.querySelectorAll('#modalOutro .opcao-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
       event.currentTarget.classList.add('selecionado');
       
-      // Mostrar/ocultar métodos de pagamento
       const metodosContainer = document.getElementById('metodosPagamentoContainerCustom');
       if (opcao === 'pago') {
         metodosContainer.style.display = 'block';
-        // Resetar seleção de métodos
         document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
           btn.classList.remove('selecionado');
         });
       } else {
-        // Para fiado, ocultar métodos de pagamento
         metodosContainer.style.display = 'none';
       }
       
@@ -1622,7 +1522,6 @@ select:focus {
       
       metodoPagamentoCustomSelecionado = metodo;
       
-      // Atualizar visualmente
       document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
@@ -1632,19 +1531,16 @@ select:focus {
     }
 
     async function confirmarServico() {
-      // Validar seleção
       if (!opcaoPagamentoSelecionada) {
         alert('⚠️ Selecione PAGO ou FIADO!');
         return;
       }
       
-      // Se for PAGO, validar método de pagamento
       if (opcaoPagamentoSelecionada === 'pago' && !metodoPagamentoSelecionado) {
         alert('⚠️ Selecione uma forma de pagamento!');
         return;
       }
       
-      // Obter valor e nome do serviço
       let valor, nome;
       switch(servicoSelecionado) {
         case 'corte':
@@ -1664,10 +1560,8 @@ select:focus {
           nome = 'Serviço';
       }
       
-      // Obter nome do cliente
       const nomeCliente = document.getElementById('nomeClientePagamento').value.trim() || 'Cliente';
       
-      // Criar objeto do serviço com data/hora no fuso correto
       const servico = {
         id: Date.now(),
         hora: getHoraAtualBrasilia(),
@@ -1679,21 +1573,15 @@ select:focus {
         metodoPagamento: opcaoPagamentoSelecionada === 'pago' ? metodoPagamentoSelecionado : null,
         barbeiro: usuarioAtual,
         timestamp: new Date().getTime(),
-        timezone: 'America/Sao_Paulo' // Adicionar informação do fuso horário
+        timezone: 'America/Sao_Paulo'
       };
       
       console.log('➕ Adicionando serviço:', servico);
       
-      // Adicionar ao array do usuário atual
       dados[usuarioAtual].unshift(servico);
-      
-      // Salvar dados localmente
       salvarDadosLocais();
+      await salvarDadosServidor();
       
-      // Tentar salvar no servidor
-      const salvoNoServidor = await salvarDadosServidor();
-      
-      // Enviar notificação via WebSocket se online
       if (isOnline && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
           type: 'novo_servico',
@@ -1707,18 +1595,13 @@ select:focus {
         }));
       }
       
-      // Fechar modal
       fecharModal('modalPagamento');
-      
-      // Atualizar interface
       atualizarInterface();
       
-      // Resetar variáveis
       servicoSelecionado = null;
       opcaoPagamentoSelecionada = null;
       metodoPagamentoSelecionado = null;
       
-      // Feedback visual
       const status = opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO';
       mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>${nome} - R$ ${valor.toFixed(2)}`, 'success');
       
@@ -1726,13 +1609,11 @@ select:focus {
     }
 
     function abrirModalOutro() {
-      // Resetar campos
       document.getElementById('valorCustom').value = '';
       document.getElementById('nomeCliente').value = '';
       opcaoPagamentoCustomSelecionada = null;
       metodoPagamentoCustomSelecionado = null;
       
-      // Resetar seleções
       document.querySelectorAll('#modalOutro .opcao-pagamento-btn').forEach(btn => {
         btn.classList.remove('selecionado');
       });
@@ -1740,15 +1621,11 @@ select:focus {
         btn.classList.remove('selecionado');
       });
       
-      // Ocultar métodos de pagamento
       document.getElementById('metodosPagamentoContainerCustom').style.display = 'none';
-      
-      // Abrir modal
       document.getElementById('modalOutro').style.display = 'flex';
     }
 
     async function salvarServicoCustom() {
-      // Validar valor
       const valorInput = document.getElementById('valorCustom').value;
       const valor = parseFloat(valorInput);
       
@@ -1757,22 +1634,18 @@ select:focus {
         return;
       }
       
-      // Validar opção de pagamento
       if (!opcaoPagamentoCustomSelecionada) {
         alert('⚠️ Selecione PAGO ou FIADO!');
         return;
       }
       
-      // Se for PAGO, validar método de pagamento
       if (opcaoPagamentoCustomSelecionada === 'pago' && !metodoPagamentoCustomSelecionado) {
         alert('⚠️ Selecione uma forma de pagamento!');
         return;
       }
       
-      // Obter dados do formulário
       const nomeCliente = document.getElementById('nomeCliente').value.trim() || 'Cliente';
       
-      // Criar objeto do serviço com data/hora no fuso correto
       const servico = {
         id: Date.now(),
         hora: getHoraAtualBrasilia(),
@@ -1789,45 +1662,32 @@ select:focus {
       
       console.log('➕ Adicionando serviço customizado:', servico);
       
-      // Adicionar ao array do usuário atual
       dados[usuarioAtual].unshift(servico);
-      
-      // Salvar dados localmente
       salvarDadosLocais();
-      
-      // Tentar salvar no servidor
       await salvarDadosServidor();
       
-      // Fechar modal
       fecharModal('modalOutro');
-      
-      // Atualizar interface
       atualizarInterface();
       
-      // Resetar variáveis
       opcaoPagamentoCustomSelecionada = null;
       metodoPagamentoCustomSelecionado = null;
       
-      // Feedback visual
       const status = opcaoPagamentoCustomSelecionada === 'pago' ? 'PAGO' : 'FIADO';
       mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>R$ ${valor.toFixed(2)}`, 'success');
       
       console.log('🎉 Serviço custom salvo:', servico);
     }
 
-    // ========== FUNÇÕES DE LISTA E FILTRO ==========
     function atualizarListaServicos() {
       const container = document.getElementById('listaServicos');
       const dataFiltro = dataFiltroAtual || getDataAtualBrasilia();
       
-      // Filtrar serviços pela data
       const servicosFiltrados = dados[usuarioAtual].filter(servico => {
         return servico.data === dataFiltro;
       });
       
       console.log(`📋 Mostrando ${servicosFiltrados.length} serviços para ${dataFiltro}`);
       
-      // Ordenar por hora (mais recente primeiro)
       servicosFiltrados.sort((a, b) => {
         if (a.timestamp && b.timestamp) {
           return b.timestamp - a.timestamp;
@@ -1835,7 +1695,6 @@ select:focus {
         return 0;
       });
       
-      // Se não houver serviços
       if (servicosFiltrados.length === 0) {
         container.innerHTML = `
           <div style="text-align:center; padding:40px 20px;">
@@ -1851,7 +1710,6 @@ select:focus {
         return;
       }
       
-      // Gerar HTML da tabela simplificada
       let html = `
         <div style="overflow-x: auto;">
           <table>
@@ -1868,12 +1726,10 @@ select:focus {
             <tbody>
       `;
       
-      // Adicionar cada serviço
       servicosFiltrados.forEach((servico, index) => {
         const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
         const statusTexto = servico.pago ? 'PAGO' : 'FIADO';
         
-        // Ícone do método de pagamento
         let metodoIcon = '💰';
         if (servico.pago) {
           switch(servico.metodoPagamento) {
@@ -1945,7 +1801,6 @@ select:focus {
       if (index >= 0 && index < servicosFiltrados.length) {
         const servicoParaApagar = servicosFiltrados[index];
         
-        // Encontrar e remover da lista completa
         const indiceCompleto = dados[usuarioAtual].findIndex(s => 
           s.id === servicoParaApagar.id || 
           (s.data === servicoParaApagar.data && 
@@ -1957,10 +1812,7 @@ select:focus {
           const servicoRemovido = dados[usuarioAtual].splice(indiceCompleto, 1)[0];
           console.log('🗑️ Serviço removido:', servicoRemovido);
           
-          // Salvar localmente
           salvarDadosLocais();
-          
-          // Tentar salvar no servidor
           await salvarDadosServidor();
           
           atualizarListaServicos();
@@ -1970,7 +1822,6 @@ select:focus {
       }
     }
 
-    // ========== FUNÇÕES DE WHATSAPP ==========
     function abrirModalEnviarWhatsApp() {
       const hoje = getDataAtualBrasilia();
       const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
@@ -2014,7 +1865,6 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
       mostrarFeedback('📱 Mensagem pronta para envio no WhatsApp!', 'success');
     }
 
-    // ========== FUNÇÕES DE DASHBOARD ==========
     function irParaDashboard() {
       document.getElementById('modalSenhaDashboard').style.display = 'flex';
       document.getElementById('pinDashboard').value = '';
@@ -2029,7 +1879,6 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
         mostrarFeedback('✅ Senha correta! Redirecionando...', 'success');
         fecharModal('modalSenhaDashboard');
         
-        // Redirecionar para dashboard
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 500);
@@ -2040,13 +1889,11 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
       }
     }
 
-    // ========== FUNÇÕES AUXILIARES ==========
     function fecharModal(id) {
       document.getElementById(id).style.display = 'none';
     }
 
     function mostrarFeedback(mensagem, tipo = 'info') {
-      // Criar elemento de feedback
       const feedback = document.createElement('div');
       feedback.style.cssText = `
         position: fixed;
@@ -2081,7 +1928,6 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
       
       document.body.appendChild(feedback);
       
-      // Remover após 3 segundos
       setTimeout(() => {
         feedback.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => {
@@ -2093,7 +1939,6 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
     }
 
     function mostrarNotificacaoServico(data) {
-      // Solicitar permissão para notificações
       if ("Notification" in window && Notification.permission === "default") {
         Notification.requestPermission();
       }
@@ -2106,7 +1951,6 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
         });
       }
       
-      // Criar notificação na interface
       if (data.barbeiro !== usuarioAtual) {
         const notification = document.createElement('div');
         notification.style.cssText = `
@@ -2137,7 +1981,6 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
         
         document.body.appendChild(notification);
         
-        // Remover notificação após 5 segundos
         setTimeout(() => {
           notification.style.animation = 'slideOutRight 0.3s ease';
           setTimeout(() => {
@@ -2149,7 +1992,6 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
       }
     }
 
-    // ========== FUNÇÃO DE DEBUG PARA VERIFICAR DATAS ==========
     function debugDatas() {
       console.log('🔍 DEBUG - DATAS NO SISTEMA');
       console.log('📅 Data atual (sistema):', new Date());
@@ -2158,7 +2000,6 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
       console.log('📅 Data atual (Brasília):', getDataAtualBrasilia());
       console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
       
-      // Verificar serviços com datas futuras
       const hojeCorreto = getDataAtualBrasilia();
       const servicosFuturos = [];
       
@@ -2179,28 +2020,24 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
     }
 
     // ========== EVENT LISTENERS ==========
-    // Fechar modais ao clicar fora
     document.addEventListener('click', function(event) {
       if (event.target.classList.contains('modal')) {
         event.target.style.display = 'none';
       }
     });
 
-    // Enter para confirmar senha do dashboard
     document.getElementById('pinDashboard')?.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         verificarSenhaDashboard();
       }
     });
 
-    // Enter para confirmar serviços customizados
     document.getElementById('valorCustom')?.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         salvarServicoCustom();
       }
     });
 
-    // Atualizar quando a página ganha foco
     document.addEventListener('visibilitychange', function() {
       if (!document.hidden) {
         console.log('🔄 Página em foco, atualizando dados...');
@@ -2209,25 +2046,22 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
       }
     });
 
-    // Salvar dados antes de fechar a página
     window.addEventListener('beforeunload', function() {
       salvarDadosLocais();
     });
 
-    // Sincronização automática a cada 5 minutos se online
     setInterval(() => {
       if (isOnline) {
         console.log('🔄 Sincronização automática iniciada');
         salvarDadosServidor();
       }
-    }, 5 * 60 * 1000); // 5 minutos
+    }, 5 * 60 * 1000);
 
     console.log('💈 BarbaPRO Duo - Sistema de Registro carregado com sucesso!');
+    console.log('💰 Valores atualizados: Corte R$30 | Barba R$20 | Combo R$50');
     
-    // Expor função de debug para console
     window.debugDatas = debugDatas;
     
-    // Teste inicial de datas
     console.log('🧪 Teste de datas:');
     console.log('   Data UTC:', new Date().toISOString().split('T')[0]);
     console.log('   Data Brasil:', getDataAtualBrasilia());
