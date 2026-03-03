@@ -1027,1025 +1027,1045 @@ select:focus {
   </div>
 
 <script>
-    // ========== VARIÁVEIS GLOBAIS ==========
-    let usuarioAtual = 'Gabriel';
-    let dados = {
-      Gabriel: [],
-      Wagner: [],
-      despesas: [],
-      mensalistas: [],
-      config: {
-        pin: '1234',
-        whatsapp: '11962094589',
-        corte: 30,
-        barba: 20,
-        combo: 40  // ALTERADO DE 50 PARA 40
+// ========== VARIÁVEIS GLOBAIS ==========
+let usuarioAtual = 'Gabriel';
+let dados = {
+  Gabriel: [],
+  Wagner: [],
+  despesas: [],
+  mensalistas: [],
+  config: {
+    pin: '1234',
+    whatsapp: '11962094589',
+    corte: 30,
+    barba: 20,
+    combo: 40
+  }
+};
+
+let servicoSelecionado = null;
+let opcaoPagamentoSelecionada = null;
+let metodoPagamentoSelecionado = null;
+let opcaoPagamentoCustomSelecionada = null;
+let metodoPagamentoCustomSelecionado = null;
+let dataFiltroAtual = null;
+let ws = null;
+let isOnline = false;
+let syncTimeout = null;
+
+// ========== FUNÇÕES DE DATA ==========
+function getDataAtualBrasilia() {
+    const agora = new Date();
+    const offset = -3;
+    const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
+    const dataBrasilia = new Date(utc + (3600000 * offset));
+    
+    const ano = dataBrasilia.getFullYear();
+    const mes = String(dataBrasilia.getMonth() + 1).padStart(2, '0');
+    const dia = String(dataBrasilia.getDate()).padStart(2, '0');
+    
+    return `${ano}-${mes}-${dia}`;
+}
+
+function formatarDataBR(dataISO) {
+    if (!dataISO) return '';
+    if (dataISO.includes('/')) {
+        return dataISO;
+    }
+    const [ano, mes, dia] = dataISO.split('-');
+    return `${dia}/${mes}/${ano}`;
+}
+
+function getHoraAtualBrasilia() {
+    const agora = new Date();
+    const offset = -3;
+    const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
+    const dataBrasilia = new Date(utc + (3600000 * offset));
+    
+    const hora = String(dataBrasilia.getHours()).padStart(2, '0');
+    const minutos = String(dataBrasilia.getMinutes()).padStart(2, '0');
+    
+    return `${hora}:${minutos}`;
+}
+
+// ========== FUNÇÕES DE RESUMO SEMANAL ==========
+function getDataInicioSemana() {
+    const hoje = new Date();
+    const offset = -3;
+    const utc = hoje.getTime() + (hoje.getTimezoneOffset() * 60000);
+    const dataBrasilia = new Date(utc + (3600000 * offset));
+    
+    const diaSemana = dataBrasilia.getDay();
+    
+    let diff;
+    if (diaSemana === 0) {
+        diff = 6;
+    } else {
+        diff = diaSemana - 1;
+    }
+    
+    const segunda = new Date(dataBrasilia);
+    segunda.setDate(dataBrasilia.getDate() - diff);
+    segunda.setHours(0, 0, 0, 0);
+    
+    const ano = segunda.getFullYear();
+    const mes = String(segunda.getMonth() + 1).padStart(2, '0');
+    const dia = String(segunda.getDate()).padStart(2, '0');
+    
+    return `${ano}-${mes}-${dia}`;
+}
+
+function getDataFimSemana() {
+    const inicio = getDataInicioSemana();
+    const data = new Date(inicio + 'T12:00:00-03:00');
+    data.setDate(data.getDate() + 5);
+    
+    const ano = data.getFullYear();
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getDate()).padStart(2, '0');
+    
+    return `${ano}-${mes}-${dia}`;
+}
+
+function getResumoSemanal() {
+    const inicioSemana = getDataInicioSemana();
+    const fimSemana = getDataFimSemana();
+    
+    const servicosSemana = dados[usuarioAtual].filter(s => 
+        s.data >= inicioSemana && s.data <= fimSemana
+    );
+    
+    const diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const resumoDias = [];
+    
+    for (let i = 0; i < 6; i++) {
+        const dataDia = new Date(inicioSemana + 'T12:00:00-03:00');
+        dataDia.setDate(dataDia.getDate() + i);
+        
+        const ano = dataDia.getFullYear();
+        const mes = String(dataDia.getMonth() + 1).padStart(2, '0');
+        const dia = String(dataDia.getDate()).padStart(2, '0');
+        const dataStr = `${ano}-${mes}-${dia}`;
+        
+        const servicosDia = servicosSemana.filter(s => s.data === dataStr);
+        const totalDia = servicosDia.reduce((sum, s) => sum + s.valor, 0);
+        const pagoDia = servicosDia.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
+        
+        resumoDias.push({
+            dia: diasSemana[i],
+            data: dataStr,
+            quantidade: servicosDia.length,
+            total: totalDia,
+            pago: pagoDia,
+            fiado: totalDia - pagoDia
+        });
+    }
+    
+    const totalServicos = servicosSemana.length;
+    const totalValor = servicosSemana.reduce((sum, s) => sum + s.valor, 0);
+    const totalPago = servicosSemana.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
+    const totalFiado = totalValor - totalPago;
+    
+    return {
+        inicio: inicioSemana,
+        fim: fimSemana,
+        dias: resumoDias,
+        totalServicos,
+        totalValor,
+        totalPago,
+        totalFiado
+    };
+}
+
+function abrirModalResumoSemanal() {
+    const resumo = getResumoSemanal();
+    
+    document.getElementById('semanaPeriodo').textContent = 
+        `${formatarDataBR(resumo.inicio)} a ${formatarDataBR(resumo.fim)}`;
+    
+    document.getElementById('semanaServicos').textContent = resumo.totalServicos;
+    document.getElementById('semanaTotal').textContent = `R$ ${resumo.totalValor.toFixed(2)}`;
+    document.getElementById('semanaPago').textContent = `R$ ${resumo.totalPago.toFixed(2)}`;
+    document.getElementById('semanaFiado').textContent = `R$ ${resumo.totalFiado.toFixed(2)}`;
+    
+    let html = '';
+    resumo.dias.forEach(d => {
+        html += `
+            <tr>
+                <td>${d.dia}<br><small style="color: #666;">${formatarDataBR(d.data)}</small></td>
+                <td>${d.quantidade}</td>
+                <td>R$ ${d.total.toFixed(2)}</td>
+                <td>R$ ${d.pago.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+    
+    document.getElementById('tabelaResumoSemanal').innerHTML = html;
+    document.getElementById('modalResumoSemanal').style.display = 'flex';
+}
+
+function enviarResumoSemanalWhatsApp() {
+    const resumo = getResumoSemanal();
+    const telefone = dados.config.whatsapp;
+    
+    let mensagem = `*📊 MEU RESUMO DA SEMANA - ${usuarioAtual.toUpperCase()}*\n\n`;
+    mensagem += `📅 Período: ${formatarDataBR(resumo.inicio)} a ${formatarDataBR(resumo.fim)}\n\n`;
+    mensagem += `📈 *RESUMO GERAL*\n`;
+    mensagem += `• Total de serviços: ${resumo.totalServicos}\n`;
+    mensagem += `• Valor total: R$ ${resumo.totalValor.toFixed(2)}\n`;
+    mensagem += `• Valor recebido: R$ ${resumo.totalPago.toFixed(2)}\n`;
+    mensagem += `• Valor fiado: R$ ${resumo.totalFiado.toFixed(2)}\n\n`;
+    
+    mensagem += `📆 *DETALHAMENTO POR DIA*\n`;
+    resumo.dias.forEach(d => {
+        if (d.quantidade > 0) {
+            mensagem += `${d.dia} (${formatarDataBR(d.data)}):\n`;
+            mensagem += `  • ${d.quantidade} serviços - Total: R$ ${d.total.toFixed(2)}\n`;
+            mensagem += `  • Recebido: R$ ${d.pago.toFixed(2)} | Fiado: R$ ${d.fiado.toFixed(2)}\n\n`;
+        } else {
+            mensagem += `${d.dia} (${formatarDataBR(d.data)}): Sem serviços\n\n`;
+        }
+    });
+    
+    mensagem += `📱 *Sistema BarbaPRO Duo*`;
+    
+    const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+    window.open(url, '_blank');
+    fecharModal('modalResumoSemanal');
+    mostrarFeedback('📱 Resumo da semana enviado!', 'success');
+}
+
+// ========== INICIALIZAÇÃO ==========
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 BarbaPRO - Sistema inicializando...');
+  inicializarSistema();
+});
+
+function inicializarSistema() {
+  carregarDadosLocais();
+  garantirConfiguracoesAtualizadas();
+  verificarDatasServicos();
+  
+  const hoje = getDataAtualBrasilia();
+  document.getElementById('dataFiltro').value = hoje;
+  dataFiltroAtual = hoje;
+  document.getElementById('dataHoje').textContent = formatarDataBR(hoje);
+  
+  console.log('📅 Data atual (Brasília):', hoje);
+  console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
+  
+  conectarWebSocket();
+  atualizarInterface();
+  
+  console.log('✅ Sistema inicializado com sucesso!');
+}
+
+function garantirConfiguracoesAtualizadas() {
+  if (!dados.config) {
+    dados.config = {
+      pin: '1234',
+      whatsapp: '11962094589',
+      corte: 30,
+      barba: 20,
+      combo: 40
+    };
+  } else {
+    dados.config.corte = 30;
+    dados.config.barba = 20;
+    dados.config.combo = 40;
+  }
+  
+  console.log('⚙️ Configurações atualizadas:', dados.config);
+}
+
+// ========== WEBSOCKET CORRIGIDO ==========
+function conectarWebSocket() {
+  try {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}`;
+    
+    ws = new WebSocket(wsUrl);
+    
+    ws.onopen = function() {
+      console.log('✅ Conectado ao servidor!');
+      isOnline = true;
+      atualizarStatusConexao(true);
+      mostrarFeedback('✅ Conectado ao servidor', 'success');
+      
+      setTimeout(() => {
+        sincronizarDados();
+      }, 1000);
+    };
+    
+    ws.onmessage = function(event) {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('📥 Mensagem do servidor:', data.type);
+        
+        switch(data.type) {
+          case 'dados_iniciais':
+          case 'sync_completo':
+            processarDadosServidor(data.data);
+            break;
+          case 'notificacao':
+            mostrarNotificacaoServico(data);
+            break;
+          case 'atualizar':
+            console.log('🔄 Recebido comando para atualizar');
+            sincronizarDados();
+            break;
+          case 'servico_removido':
+            console.log('🗑️ Serviço removido por outro dispositivo');
+            sincronizarDados();
+            mostrarFeedback('🔄 Dados atualizados de outro dispositivo', 'info');
+            break;
+        }
+      } catch (error) {
+        console.error('❌ Erro ao processar mensagem:', error);
       }
     };
-
-    let servicoSelecionado = null;
-    let opcaoPagamentoSelecionada = null;
-    let metodoPagamentoSelecionado = null;
-    let opcaoPagamentoCustomSelecionada = null;
-    let metodoPagamentoCustomSelecionado = null;
-    let dataFiltroAtual = null;
-    let ws = null;
-    let isOnline = false;
-    let syncTimeout = null;
-
-    // ========== FUNÇÕES DE DATA CORRIGIDAS ==========
-
-    function getDataAtualBrasilia() {
-        const agora = new Date();
-        const offset = -3;
-        const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
-        const dataBrasilia = new Date(utc + (3600000 * offset));
-        
-        const ano = dataBrasilia.getFullYear();
-        const mes = String(dataBrasilia.getMonth() + 1).padStart(2, '0');
-        const dia = String(dataBrasilia.getDate()).padStart(2, '0');
-        
-        return `${ano}-${mes}-${dia}`;
-    }
-
-    function formatarDataBR(dataISO) {
-        if (!dataISO) return '';
-        if (dataISO.includes('/')) {
-            return dataISO;
-        }
-        const [ano, mes, dia] = dataISO.split('-');
-        return `${dia}/${mes}/${ano}`;
-    }
-
-    function getHoraAtualBrasilia() {
-        const agora = new Date();
-        const offset = -3;
-        const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
-        const dataBrasilia = new Date(utc + (3600000 * offset));
-        
-        const hora = String(dataBrasilia.getHours()).padStart(2, '0');
-        const minutos = String(dataBrasilia.getMinutes()).padStart(2, '0');
-        
-        return `${hora}:${minutos}`;
-    }
-
-    // ========== FUNÇÕES DE RESUMO SEMANAL ==========
     
-    function getDataInicioSemana() {
-        const hoje = new Date();
-        const offset = -3;
-        const utc = hoje.getTime() + (hoje.getTimezoneOffset() * 60000);
-        const dataBrasilia = new Date(utc + (3600000 * offset));
-        
-        const diaSemana = dataBrasilia.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
-        
-        // Se for domingo (0), ajusta para segunda da semana anterior
-        // Se for segunda a sábado, ajusta para a segunda da semana atual
-        let diff;
-        if (diaSemana === 0) { // Domingo
-            diff = 6; // Volta 6 dias para chegar na segunda
-        } else { // Segunda a sábado
-            diff = diaSemana - 1; // Volta (diaSemana - 1) dias para chegar na segunda
-        }
-        
-        const segunda = new Date(dataBrasilia);
-        segunda.setDate(dataBrasilia.getDate() - diff);
-        segunda.setHours(0, 0, 0, 0);
-        
-        const ano = segunda.getFullYear();
-        const mes = String(segunda.getMonth() + 1).padStart(2, '0');
-        const dia = String(segunda.getDate()).padStart(2, '0');
-        
-        return `${ano}-${mes}-${dia}`;
-    }
+    ws.onclose = function() {
+      console.log('🔌 Desconectado do servidor');
+      isOnline = false;
+      atualizarStatusConexao(false);
+      setTimeout(conectarWebSocket, 5000);
+    };
+    
+    ws.onerror = function(error) {
+      console.error('❌ Erro WebSocket:', error);
+      isOnline = false;
+      atualizarStatusConexao(false);
+    };
+    
+  } catch (error) {
+    console.error('❌ Erro ao conectar:', error);
+    isOnline = false;
+    atualizarStatusConexao(false);
+  }
+}
 
-    function getDataFimSemana() {
-        const inicio = getDataInicioSemana();
-        const data = new Date(inicio + 'T12:00:00-03:00');
-        data.setDate(data.getDate() + 5); // +5 dias = sábado (segunda + 5 = sábado)
-        
-        const ano = data.getFullYear();
-        const mes = String(data.getMonth() + 1).padStart(2, '0');
-        const dia = String(data.getDate()).padStart(2, '0');
-        
-        return `${ano}-${mes}-${dia}`;
-    }
+function atualizarStatusConexao(online) {
+  const statusElement = document.getElementById('conexaoStatus');
+  if (online) {
+    statusElement.textContent = 'ONLINE';
+    statusElement.className = 'conexao-status conexao-online';
+  } else {
+    statusElement.textContent = 'OFFLINE';
+    statusElement.className = 'conexao-status conexao-offline';
+  }
+}
 
-    function getResumoSemanal() {
-        const inicioSemana = getDataInicioSemana();
-        const fimSemana = getDataFimSemana();
-        
-        const servicosSemana = dados[usuarioAtual].filter(s => 
-            s.data >= inicioSemana && s.data <= fimSemana
-        );
-        
-        // Agrupar por dia
-        const diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-        const resumoDias = [];
-        
-        for (let i = 0; i < 6; i++) {
-            const dataDia = new Date(inicioSemana + 'T12:00:00-03:00');
-            dataDia.setDate(dataDia.getDate() + i);
-            
-            const ano = dataDia.getFullYear();
-            const mes = String(dataDia.getMonth() + 1).padStart(2, '0');
-            const dia = String(dataDia.getDate()).padStart(2, '0');
-            const dataStr = `${ano}-${mes}-${dia}`;
-            
-            const servicosDia = servicosSemana.filter(s => s.data === dataStr);
-            const totalDia = servicosDia.reduce((sum, s) => sum + s.valor, 0);
-            const pagoDia = servicosDia.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
-            
-            resumoDias.push({
-                dia: diasSemana[i],
-                data: dataStr,
-                quantidade: servicosDia.length,
-                total: totalDia,
-                pago: pagoDia,
-                fiado: totalDia - pagoDia
-            });
-        }
-        
-        const totalServicos = servicosSemana.length;
-        const totalValor = servicosSemana.reduce((sum, s) => sum + s.valor, 0);
-        const totalPago = servicosSemana.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
-        const totalFiado = totalValor - totalPago;
-        
-        return {
-            inicio: inicioSemana,
-            fim: fimSemana,
-            dias: resumoDias,
-            totalServicos,
-            totalValor,
-            totalPago,
-            totalFiado
-        };
+function carregarDadosLocais() {
+  try {
+    const dadosSalvos = localStorage.getItem('barbapro_duo');
+    if (dadosSalvos) {
+      const dadosParseados = JSON.parse(dadosSalvos);
+      
+      if (Array.isArray(dadosParseados.Gabriel)) dados.Gabriel = dadosParseados.Gabriel;
+      if (Array.isArray(dadosParseados.Wagner)) dados.Wagner = dadosParseados.Wagner;
+      if (Array.isArray(dadosParseados.despesas)) dados.despesas = dadosParseados.despesas;
+      if (Array.isArray(dadosParseados.mensalistas)) dados.mensalistas = dadosParseados.mensalistas;
+      
+      if (dadosParseados.config) {
+        dados.config = { ...dados.config, ...dadosParseados.config };
+        dados.config.combo = 40;
+      }
+      
+      console.log('📂 Dados carregados do localStorage');
+    } else {
+      console.log('📝 Nenhum dado salvo encontrado');
     }
+  } catch (error) {
+    console.error('❌ Erro ao carregar dados locais:', error);
+  }
+}
 
-    function abrirModalResumoSemanal() {
-        const resumo = getResumoSemanal();
-        
-        document.getElementById('semanaPeriodo').textContent = 
-            `${formatarDataBR(resumo.inicio)} a ${formatarDataBR(resumo.fim)}`;
-        
-        document.getElementById('semanaServicos').textContent = resumo.totalServicos;
-        document.getElementById('semanaTotal').textContent = `R$ ${resumo.totalValor.toFixed(2)}`;
-        document.getElementById('semanaPago').textContent = `R$ ${resumo.totalPago.toFixed(2)}`;
-        document.getElementById('semanaFiado').textContent = `R$ ${resumo.totalFiado.toFixed(2)}`;
-        
-        let html = '';
-        resumo.dias.forEach(d => {
-            html += `
-                <tr>
-                    <td>${d.dia}<br><small style="color: #666;">${formatarDataBR(d.data)}</small></td>
-                    <td>${d.quantidade}</td>
-                    <td>R$ ${d.total.toFixed(2)}</td>
-                    <td>R$ ${d.pago.toFixed(2)}</td>
-                </tr>
-            `;
-        });
-        
-        document.getElementById('tabelaResumoSemanal').innerHTML = html;
-        document.getElementById('modalResumoSemanal').style.display = 'flex';
-    }
+function salvarDadosLocais() {
+  try {
+    localStorage.setItem('barbapro_duo', JSON.stringify(dados));
+    console.log('💾 Dados salvos localmente');
+    return true;
+  } catch (error) {
+    console.error('❌ Erro ao salvar dados locais:', error);
+    return false;
+  }
+}
 
-    function enviarResumoSemanalWhatsApp() {
-        const resumo = getResumoSemanal();
-        const telefone = dados.config.whatsapp;
-        
-        let mensagem = `*📊 MEU RESUMO DA SEMANA - ${usuarioAtual.toUpperCase()}*\n\n`;
-        mensagem += `📅 Período: ${formatarDataBR(resumo.inicio)} a ${formatarDataBR(resumo.fim)}\n\n`;
-        mensagem += `📈 *RESUMO GERAL*\n`;
-        mensagem += `• Total de serviços: ${resumo.totalServicos}\n`;
-        mensagem += `• Valor total: R$ ${resumo.totalValor.toFixed(2)}\n`;
-        mensagem += `• Valor recebido: R$ ${resumo.totalPago.toFixed(2)}\n`;
-        mensagem += `• Valor fiado: R$ ${resumo.totalFiado.toFixed(2)}\n\n`;
-        
-        mensagem += `📆 *DETALHAMENTO POR DIA*\n`;
-        resumo.dias.forEach(d => {
-            if (d.quantidade > 0) {
-                mensagem += `${d.dia} (${formatarDataBR(d.data)}):\n`;
-                mensagem += `  • ${d.quantidade} serviços - Total: R$ ${d.total.toFixed(2)}\n`;
-                mensagem += `  • Recebido: R$ ${d.pago.toFixed(2)} | Fiado: R$ ${d.fiado.toFixed(2)}\n\n`;
-            } else {
-                mensagem += `${d.dia} (${formatarDataBR(d.data)}): Sem serviços\n\n`;
-            }
-        });
-        
-        mensagem += `📱 *Sistema BarbaPRO Duo*`;
-        
-        const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
-        window.open(url, '_blank');
-        fecharModal('modalResumoSemanal');
-        mostrarFeedback('📱 Resumo da semana enviado!', 'success');
-    }
-
-    // ========== INICIALIZAÇÃO ==========
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('🚀 BarbaPRO - Sistema inicializando...');
-      inicializarSistema();
+async function salvarDadosServidor() {
+  if (!isOnline || !ws || ws.readyState !== WebSocket.OPEN) {
+    console.log('📴 Offline - salvando apenas localmente');
+    salvarDadosLocais();
+    return false;
+  }
+  
+  try {
+    const response = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: dados })
     });
-
-    function inicializarSistema() {
-      carregarDadosLocais();
-      garantirConfiguracoesAtualizadas();
-      verificarDatasServicos();
+    
+    if (response.ok) {
+      console.log('✅ Dados salvos no servidor');
       
-      const hoje = getDataAtualBrasilia();
-      document.getElementById('dataFiltro').value = hoje;
-      dataFiltroAtual = hoje;
-      document.getElementById('dataHoje').textContent = formatarDataBR(hoje);
-      
-      console.log('📅 Data atual (Brasília):', hoje);
-      console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
-      
-      conectarWebSocket();
-      atualizarInterface();
-      
-      console.log('✅ Sistema inicializado com sucesso!');
-    }
-
-    function garantirConfiguracoesAtualizadas() {
-      if (!dados.config) {
-        dados.config = {
-          pin: '1234',
-          whatsapp: '11962094589',
-          corte: 30,
-          barba: 20,
-          combo: 40  // ALTERADO DE 50 PARA 40
-        };
-      } else {
-        dados.config.corte = 30;
-        dados.config.barba = 20;
-        dados.config.combo = 40;  // ALTERADO DE 50 PARA 40
+      // Notificar outros dispositivos
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'update_data',
+          data: dados
+        }));
       }
       
-      console.log('⚙️ Configurações atualizadas:', dados.config);
+      return true;
+    } else {
+      throw new Error('Falha ao salvar no servidor');
     }
+  } catch (error) {
+    console.log('❌ Erro ao salvar no servidor:', error.message);
+    salvarDadosLocais();
+    return false;
+  }
+}
 
-    function conectarWebSocket() {
-      try {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}`;
-        
-        ws = new WebSocket(wsUrl);
-        
-        ws.onopen = function() {
-          console.log('✅ Conectado ao servidor!');
-          isOnline = true;
-          atualizarStatusConexao(true);
-          mostrarFeedback('✅ Conectado ao servidor', 'success');
-          
-          setTimeout(() => {
-            sincronizarDados();
-          }, 1000);
-        };
-        
-        ws.onmessage = function(event) {
-          try {
-            const data = JSON.parse(event.data);
-            console.log('📥 Mensagem do servidor:', data.type);
-            
-            switch(data.type) {
-              case 'dados_iniciais':
-              case 'sync_completo':
-                processarDadosServidor(data.data);
-                break;
-              case 'notificacao':
-                mostrarNotificacaoServico(data);
-                break;
-              case 'atualizar':
-                sincronizarDados();
-                break;
-            }
-          } catch (error) {
-            console.error('❌ Erro ao processar mensagem:', error);
-          }
-        };
-        
-        ws.onclose = function() {
-          console.log('🔌 Desconectado do servidor');
-          isOnline = false;
-          atualizarStatusConexao(false);
-          setTimeout(conectarWebSocket, 5000);
-        };
-        
-        ws.onerror = function(error) {
-          console.error('❌ Erro WebSocket:', error);
-          isOnline = false;
-          atualizarStatusConexao(false);
-        };
-        
-      } catch (error) {
-        console.error('❌ Erro ao conectar:', error);
-        isOnline = false;
-        atualizarStatusConexao(false);
-      }
+function processarDadosServidor(dadosServidor) {
+  try {
+    if (Array.isArray(dadosServidor.Gabriel)) {
+      dados.Gabriel = unificarServicos(dados.Gabriel, dadosServidor.Gabriel);
     }
-
-    function atualizarStatusConexao(online) {
-      const statusElement = document.getElementById('conexaoStatus');
-      if (online) {
-        statusElement.textContent = 'ONLINE';
-        statusElement.className = 'conexao-status conexao-online';
-      } else {
-        statusElement.textContent = 'OFFLINE';
-        statusElement.className = 'conexao-status conexao-offline';
-      }
+    if (Array.isArray(dadosServidor.Wagner)) {
+      dados.Wagner = unificarServicos(dados.Wagner, dadosServidor.Wagner);
     }
-
-    function carregarDadosLocais() {
-      try {
-        const dadosSalvos = localStorage.getItem('barbapro_duo');
-        if (dadosSalvos) {
-          const dadosParseados = JSON.parse(dadosSalvos);
-          
-          if (Array.isArray(dadosParseados.Gabriel)) dados.Gabriel = dadosParseados.Gabriel;
-          if (Array.isArray(dadosParseados.Wagner)) dados.Wagner = dadosParseados.Wagner;
-          if (Array.isArray(dadosParseados.despesas)) dados.despesas = dadosParseados.despesas;
-          if (Array.isArray(dadosParseados.mensalistas)) dados.mensalistas = dadosParseados.mensalistas;
-          
-          // Atualizar configurações se existirem
-          if (dadosParseados.config) {
-            dados.config = { ...dados.config, ...dadosParseados.config };
-            // Garantir que o combo seja 40
-            dados.config.combo = 40;
-          }
-          
-          console.log('📂 Dados carregados do localStorage');
-        } else {
-          console.log('📝 Nenhum dado salvo encontrado');
-        }
-      } catch (error) {
-        console.error('❌ Erro ao carregar dados locais:', error);
-      }
+    if (Array.isArray(dadosServidor.mensalistas)) {
+      dados.mensalistas = unificarMensalistas(dados.mensalistas, dadosServidor.mensalistas);
     }
-
-    function salvarDadosLocais() {
-      try {
-        localStorage.setItem('barbapro_duo', JSON.stringify(dados));
-        console.log('💾 Dados salvos localmente');
-        return true;
-      } catch (error) {
-        console.error('❌ Erro ao salvar dados locais:', error);
-        return false;
-      }
+    if (Array.isArray(dadosServidor.despesas)) {
+      dados.despesas = unificarDespesas(dados.despesas, dadosServidor.despesas);
     }
+    
+    salvarDadosLocais();
+    atualizarInterface();
+    mostrarFeedback('🔄 Dados sincronizados com sucesso!', 'success');
+    
+  } catch (error) {
+    console.error('❌ Erro ao processar dados do servidor:', error);
+  }
+}
 
-    async function salvarDadosServidor() {
-      if (!isOnline || !ws || ws.readyState !== WebSocket.OPEN) {
-        console.log('📴 Offline - salvando apenas localmente');
-        salvarDadosLocais();
-        return false;
-      }
+function unificarServicos(locais, servidor) {
+  const mapa = new Map();
+  
+  servidor.forEach(servico => {
+    const key = servico.id || `${servico.data}_${servico.hora}_${servico.cliente}`;
+    mapa.set(key, servico);
+  });
+  
+  locais.forEach(servico => {
+    const key = servico.id || `${servico.data}_${servico.hora}_${servico.cliente}`;
+    const existente = mapa.get(key);
+    
+    if (!existente || (servico.timestamp && existente.timestamp && servico.timestamp > existente.timestamp)) {
+      mapa.set(key, servico);
+    }
+  });
+  
+  return Array.from(mapa.values()).sort((a, b) => {
+    const timestampA = a.timestamp || 0;
+    const timestampB = b.timestamp || 0;
+    return timestampB - timestampA;
+  });
+}
+
+function unificarMensalistas(locais, servidor) {
+  const mapa = new Map();
+  servidor.forEach(m => mapa.set(m.id, m));
+  locais.forEach(m => {
+    const existente = mapa.get(m.id);
+    if (!existente || (m.ultimaAtualizacao && existente.ultimaAtualizacao && m.ultimaAtualizacao > existente.ultimaAtualizacao)) {
+      mapa.set(m.id, m);
+    }
+  });
+  return Array.from(mapa.values()).sort((a, b) => b.id - a.id);
+}
+
+function unificarDespesas(locais, servidor) {
+  const mapa = new Map();
+  servidor.forEach(d => mapa.set(d.id, d));
+  locais.forEach(d => {
+    const existente = mapa.get(d.id);
+    if (!existente || (d.dataCriacao && existente.dataCriacao && d.dataCriacao > existente.dataCriacao)) {
+      mapa.set(d.id, d);
+    }
+  });
+  return Array.from(mapa.values()).sort((a, b) => b.id - a.id);
+}
+
+function aplicarConfiguracoes() {
+  const precoCorte = document.getElementById('precoCorte');
+  const precoBarba = document.getElementById('precoBarba');
+  const precoBarbaCabelo = document.getElementById('precoBarbaCabelo');
+  
+  if (precoCorte) precoCorte.textContent = dados.config.corte.toFixed(2);
+  if (precoBarba) precoBarba.textContent = dados.config.barba.toFixed(2);
+  if (precoBarbaCabelo) precoBarbaCabelo.textContent = dados.config.combo.toFixed(2);
+}
+
+function verificarDatasServicos() {
+  console.log('🔍 Verificando datas dos serviços...');
+  
+  const hojeCorreto = getDataAtualBrasilia();
+  let servicosCorrigidos = 0;
+  
+  dados.Gabriel.forEach(servico => {
+    if (servico.data > hojeCorreto) {
+      console.log(`⚠️ Serviço de Gabriel com data futura: ${servico.data} -> Corrigindo para ${hojeCorreto}`);
+      servico.data = hojeCorreto;
+      servicosCorrigidos++;
+    }
+  });
+  
+  dados.Wagner.forEach(servico => {
+    if (servico.data > hojeCorreto) {
+      console.log(`⚠️ Serviço de Wagner com data futura: ${servico.data} -> Corrigindo para ${hojeCorreto}`);
+      servico.data = hojeCorreto;
+      servicosCorrigidos++;
+    }
+  });
+  
+  if (servicosCorrigidos > 0) {
+    console.log(`✅ ${servicosCorrigidos} serviços com data corrigida`);
+    salvarDadosLocais();
+    mostrarFeedback(`⚠️ ${servicosCorrigidos} serviços ajustados para data atual`, 'warning');
+  }
+  
+  return servicosCorrigidos;
+}
+
+async function sincronizarDados() {
+  const btnSync = document.getElementById('btnSync');
+  const icon = document.getElementById('syncStatusIcon');
+  const text = document.getElementById('syncStatusText');
+  const details = document.getElementById('syncStatusDetails');
+  
+  document.getElementById('modalSincronizacao').style.display = 'flex';
+  icon.textContent = '🔄';
+  text.textContent = 'Sincronizando...';
+  details.textContent = 'Conectando ao servidor...';
+  btnSync.classList.add('syncing');
+  
+  try {
+    details.textContent = 'Baixando dados do servidor...';
+    const response = await fetch('/api/data');
+    
+    if (response.ok) {
+      const result = await response.json();
       
-      try {
-        const response = await fetch('/api/save', {
+      if (result.success) {
+        details.textContent = 'Processando dados...';
+        processarDadosServidor(result.data);
+        
+        details.textContent = 'Enviando dados para o servidor...';
+        const saveResponse = await fetch('/api/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ data: dados })
         });
         
-        if (response.ok) {
-          console.log('✅ Dados salvos no servidor');
-          return true;
-        } else {
-          throw new Error('Falha ao salvar no servidor');
-        }
-      } catch (error) {
-        console.log('❌ Erro ao salvar no servidor:', error.message);
-        salvarDadosLocais();
-        return false;
-      }
-    }
-
-    function processarDadosServidor(dadosServidor) {
-      try {
-        if (Array.isArray(dadosServidor.Gabriel)) {
-          dados.Gabriel = unificarServicos(dados.Gabriel, dadosServidor.Gabriel);
-        }
-        if (Array.isArray(dadosServidor.Wagner)) {
-          dados.Wagner = unificarServicos(dados.Wagner, dadosServidor.Wagner);
-        }
-        if (Array.isArray(dadosServidor.mensalistas)) {
-          dados.mensalistas = unificarMensalistas(dados.mensalistas, dadosServidor.mensalistas);
-        }
-        if (Array.isArray(dadosServidor.despesas)) {
-          dados.despesas = unificarDespesas(dados.despesas, dadosServidor.despesas);
-        }
-        
-        salvarDadosLocais();
-        atualizarInterface();
-        mostrarFeedback('🔄 Dados sincronizados com sucesso!', 'success');
-        
-      } catch (error) {
-        console.error('❌ Erro ao processar dados do servidor:', error);
-      }
-    }
-
-    function unificarServicos(locais, servidor) {
-      const mapa = new Map();
-      
-      servidor.forEach(servico => {
-        const key = servico.id || `${servico.data}_${servico.hora}_${servico.cliente}`;
-        mapa.set(key, servico);
-      });
-      
-      locais.forEach(servico => {
-        const key = servico.id || `${servico.data}_${servico.hora}_${servico.cliente}`;
-        const existente = mapa.get(key);
-        
-        if (!existente || (servico.timestamp && existente.timestamp && servico.timestamp > existente.timestamp)) {
-          mapa.set(key, servico);
-        }
-      });
-      
-      return Array.from(mapa.values()).sort((a, b) => {
-        const timestampA = a.timestamp || 0;
-        const timestampB = b.timestamp || 0;
-        return timestampB - timestampA;
-      });
-    }
-
-    function unificarMensalistas(locais, servidor) {
-      const mapa = new Map();
-      servidor.forEach(m => mapa.set(m.id, m));
-      locais.forEach(m => {
-        const existente = mapa.get(m.id);
-        if (!existente || (m.ultimaAtualizacao && existente.ultimaAtualizacao && m.ultimaAtualizacao > existente.ultimaAtualizacao)) {
-          mapa.set(m.id, m);
-        }
-      });
-      return Array.from(mapa.values()).sort((a, b) => b.id - a.id);
-    }
-
-    function unificarDespesas(locais, servidor) {
-      const mapa = new Map();
-      servidor.forEach(d => mapa.set(d.id, d));
-      locais.forEach(d => {
-        const existente = mapa.get(d.id);
-        if (!existente || (d.dataCriacao && existente.dataCriacao && d.dataCriacao > existente.dataCriacao)) {
-          mapa.set(d.id, d);
-        }
-      });
-      return Array.from(mapa.values()).sort((a, b) => b.id - a.id);
-    }
-
-    function aplicarConfiguracoes() {
-      const precoCorte = document.getElementById('precoCorte');
-      const precoBarba = document.getElementById('precoBarba');
-      const precoBarbaCabelo = document.getElementById('precoBarbaCabelo');
-      
-      if (precoCorte) precoCorte.textContent = dados.config.corte.toFixed(2);
-      if (precoBarba) precoBarba.textContent = dados.config.barba.toFixed(2);
-      if (precoBarbaCabelo) precoBarbaCabelo.textContent = dados.config.combo.toFixed(2);
-    }
-
-    function verificarDatasServicos() {
-      console.log('🔍 Verificando datas dos serviços...');
-      
-      const hojeCorreto = getDataAtualBrasilia();
-      let servicosCorrigidos = 0;
-      
-      dados.Gabriel.forEach(servico => {
-        if (servico.data > hojeCorreto) {
-          console.log(`⚠️ Serviço de Gabriel com data futura: ${servico.data} -> Corrigindo para ${hojeCorreto}`);
-          servico.data = hojeCorreto;
-          servicosCorrigidos++;
-        }
-      });
-      
-      dados.Wagner.forEach(servico => {
-        if (servico.data > hojeCorreto) {
-          console.log(`⚠️ Serviço de Wagner com data futura: ${servico.data} -> Corrigindo para ${hojeCorreto}`);
-          servico.data = hojeCorreto;
-          servicosCorrigidos++;
-        }
-      });
-      
-      if (servicosCorrigidos > 0) {
-        console.log(`✅ ${servicosCorrigidos} serviços com data corrigida`);
-        salvarDadosLocais();
-        mostrarFeedback(`⚠️ ${servicosCorrigidos} serviços ajustados para data atual`, 'warning');
-      }
-      
-      return servicosCorrigidos;
-    }
-
-    async function sincronizarDados() {
-      const btnSync = document.getElementById('btnSync');
-      const icon = document.getElementById('syncStatusIcon');
-      const text = document.getElementById('syncStatusText');
-      const details = document.getElementById('syncStatusDetails');
-      
-      document.getElementById('modalSincronizacao').style.display = 'flex';
-      icon.textContent = '🔄';
-      text.textContent = 'Sincronizando...';
-      details.textContent = 'Conectando ao servidor...';
-      btnSync.classList.add('syncing');
-      
-      try {
-        details.textContent = 'Baixando dados do servidor...';
-        const response = await fetch('/api/data');
-        
-        if (response.ok) {
-          const result = await response.json();
+        if (saveResponse.ok) {
+          icon.textContent = '✅';
+          text.textContent = 'Sincronização completa!';
+          details.textContent = 'Todos os dados estão atualizados';
           
-          if (result.success) {
-            details.textContent = 'Processando dados...';
-            processarDadosServidor(result.data);
-            
-            details.textContent = 'Enviando dados para o servidor...';
-            const saveResponse = await fetch('/api/save', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ data: dados })
-            });
-            
-            if (saveResponse.ok) {
-              icon.textContent = '✅';
-              text.textContent = 'Sincronização completa!';
-              details.textContent = 'Todos os dados estão atualizados';
-              
-              setTimeout(() => {
-                fecharModal('modalSincronizacao');
-              }, 2000);
-              
-            } else {
-              throw new Error('Erro ao enviar dados para o servidor');
-            }
-          } else {
-            throw new Error('Dados inválidos do servidor');
-          }
+          setTimeout(() => {
+            fecharModal('modalSincronizacao');
+          }, 2000);
+          
         } else {
-          throw new Error('Erro ao conectar ao servidor');
+          throw new Error('Erro ao enviar dados para o servidor');
         }
-      } catch (error) {
-        console.error('❌ Erro na sincronização:', error);
-        icon.textContent = '❌';
-        text.textContent = 'Erro na sincronização';
-        details.textContent = 'Usando dados locais. Tente novamente mais tarde.';
-        
-        setTimeout(() => {
-          fecharModal('modalSincronizacao');
-        }, 3000);
-      } finally {
-        btnSync.classList.remove('syncing');
-      }
-    }
-
-    function atualizarInterface() {
-      atualizarListaServicos();
-      atualizarResumoDiario();
-      document.getElementById('usuarioAtual').textContent = usuarioAtual;
-      document.getElementById('nomeUsuario').textContent = usuarioAtual;
-      aplicarConfiguracoes();
-    }
-
-    function toggleResultados() {
-      const container = document.getElementById('resultadosContainer');
-      const btn = document.getElementById('btnToggleResultados');
-      
-      if (container.classList.contains('show')) {
-        container.classList.remove('show');
-        btn.textContent = '👁️ Ver meus resultados do dia';
       } else {
-        container.classList.add('show');
-        btn.textContent = '👁️ Ocultar resultados';
-        atualizarResumoDiario();
+        throw new Error('Dados inválidos do servidor');
       }
+    } else {
+      throw new Error('Erro ao conectar ao servidor');
     }
+  } catch (error) {
+    console.error('❌ Erro na sincronização:', error);
+    icon.textContent = '❌';
+    text.textContent = 'Erro na sincronização';
+    details.textContent = 'Usando dados locais. Tente novamente mais tarde.';
+    
+    setTimeout(() => {
+      fecharModal('modalSincronizacao');
+    }, 3000);
+  } finally {
+    btnSync.classList.remove('syncing');
+  }
+}
 
-    function atualizarResumoDiario() {
-      const hoje = getDataAtualBrasilia();
-      const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
-      
-      const totalServicos = servicosHoje.length;
-      const totalValor = servicosHoje.reduce((sum, s) => sum + s.valor, 0);
-      const totalFiado = servicosHoje.filter(s => !s.pago).reduce((sum, s) => sum + s.valor, 0);
-      
-      document.getElementById('resumoServicosHoje').textContent = totalServicos;
-      document.getElementById('resumoTotalHoje').textContent = `R$ ${totalValor.toFixed(2)}`;
-      document.getElementById('resumoFiadoHoje').textContent = `R$ ${totalFiado.toFixed(2)}`;
+function atualizarInterface() {
+  atualizarListaServicos();
+  atualizarResumoDiario();
+  document.getElementById('usuarioAtual').textContent = usuarioAtual;
+  document.getElementById('nomeUsuario').textContent = usuarioAtual;
+  aplicarConfiguracoes();
+}
+
+function toggleResultados() {
+  const container = document.getElementById('resultadosContainer');
+  const btn = document.getElementById('btnToggleResultados');
+  
+  if (container.classList.contains('show')) {
+    container.classList.remove('show');
+    btn.textContent = '👁️ Ver meus resultados do dia';
+  } else {
+    container.classList.add('show');
+    btn.textContent = '👁️ Ocultar resultados';
+    atualizarResumoDiario();
+  }
+}
+
+function atualizarResumoDiario() {
+  const hoje = getDataAtualBrasilia();
+  const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
+  
+  const totalServicos = servicosHoje.length;
+  const totalValor = servicosHoje.reduce((sum, s) => sum + s.valor, 0);
+  const totalFiado = servicosHoje.filter(s => !s.pago).reduce((sum, s) => sum + s.valor, 0);
+  
+  document.getElementById('resumoServicosHoje').textContent = totalServicos;
+  document.getElementById('resumoTotalHoje').textContent = `R$ ${totalValor.toFixed(2)}`;
+  document.getElementById('resumoFiadoHoje').textContent = `R$ ${totalFiado.toFixed(2)}`;
+}
+
+function trocarUsuario() {
+  usuarioAtual = usuarioAtual === 'Gabriel' ? 'Wagner' : 'Gabriel';
+  console.log('🔄 Trocando usuário para:', usuarioAtual);
+  atualizarInterface();
+  mostrarFeedback(`👤 Usuário alterado para ${usuarioAtual}`);
+}
+
+function abrirModalPagamento(tipo) {
+  servicoSelecionado = tipo;
+  opcaoPagamentoSelecionada = null;
+  metodoPagamentoSelecionado = null;
+  
+  document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => {
+    btn.classList.remove('selecionado');
+  });
+  document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
+    btn.classList.remove('selecionado');
+  });
+  
+  document.getElementById('metodosPagamentoContainer').style.display = 'none';
+  
+  let nome, valor;
+  switch(tipo) {
+    case 'corte':
+      nome = 'Corte';
+      valor = dados.config.corte;
+      break;
+    case 'barba':
+      nome = 'Barba';
+      valor = dados.config.barba;
+      break;
+    case 'barba-cabelo':
+      nome = 'Barba + Cabelo';
+      valor = dados.config.combo;
+      break;
+    default:
+      nome = 'Serviço';
+      valor = 0;
+  }
+  
+  document.getElementById('servicoSelecionadoNome').textContent = nome;
+  document.getElementById('servicoSelecionadoValor').textContent = `R$ ${valor.toFixed(2)}`;
+  document.getElementById('nomeClientePagamento').value = '';
+  
+  document.getElementById('modalPagamento').style.display = 'flex';
+}
+
+function selecionarOpcaoPagamento(opcao) {
+  opcaoPagamentoSelecionada = opcao;
+  metodoPagamentoSelecionado = null;
+  
+  document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => {
+    btn.classList.remove('selecionado');
+  });
+  event.currentTarget.classList.add('selecionado');
+  
+  const metodosContainer = document.getElementById('metodosPagamentoContainer');
+  if (opcao === 'pago') {
+    metodosContainer.style.display = 'block';
+    document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
+      btn.classList.remove('selecionado');
+    });
+  } else {
+    metodosContainer.style.display = 'none';
+  }
+  
+  console.log('✅ Opção selecionada:', opcao);
+}
+
+function selecionarMetodoPagamento(metodo) {
+  if (opcaoPagamentoSelecionada !== 'pago') return;
+  
+  metodoPagamentoSelecionado = metodo;
+  
+  document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
+    btn.classList.remove('selecionado');
+  });
+  event.currentTarget.classList.add('selecionado');
+  
+  console.log('✅ Método selecionado:', metodo);
+}
+
+function selecionarOpcaoPagamentoCustom(opcao) {
+  opcaoPagamentoCustomSelecionada = opcao;
+  metodoPagamentoCustomSelecionado = null;
+  
+  document.querySelectorAll('#modalOutro .opcao-pagamento-btn').forEach(btn => {
+    btn.classList.remove('selecionado');
+  });
+  event.currentTarget.classList.add('selecionado');
+  
+  const metodosContainer = document.getElementById('metodosPagamentoContainerCustom');
+  if (opcao === 'pago') {
+    metodosContainer.style.display = 'block';
+    document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
+      btn.classList.remove('selecionado');
+    });
+  } else {
+    metodosContainer.style.display = 'none';
+  }
+  
+  console.log('✅ Opção custom selecionada:', opcao);
+}
+
+function selecionarMetodoPagamentoCustom(metodo) {
+  if (opcaoPagamentoCustomSelecionada !== 'pago') return;
+  
+  metodoPagamentoCustomSelecionado = metodo;
+  
+  document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
+    btn.classList.remove('selecionado');
+  });
+  event.currentTarget.classList.add('selecionado');
+  
+  console.log('✅ Método custom selecionado:', metodo);
+}
+
+async function confirmarServico() {
+  if (!opcaoPagamentoSelecionada) {
+    alert('⚠️ Selecione PAGO ou FIADO!');
+    return;
+  }
+  
+  if (opcaoPagamentoSelecionada === 'pago' && !metodoPagamentoSelecionado) {
+    alert('⚠️ Selecione uma forma de pagamento!');
+    return;
+  }
+  
+  let valor, nome;
+  switch(servicoSelecionado) {
+    case 'corte':
+      valor = dados.config.corte;
+      nome = 'Corte';
+      break;
+    case 'barba':
+      valor = dados.config.barba;
+      nome = 'Barba';
+      break;
+    case 'barba-cabelo':
+      valor = dados.config.combo;
+      nome = 'Barba + Cabelo';
+      break;
+    default:
+      valor = 0;
+      nome = 'Serviço';
+  }
+  
+  const nomeCliente = document.getElementById('nomeClientePagamento').value.trim() || 'Cliente';
+  
+  const servico = {
+    id: Date.now(),
+    hora: getHoraAtualBrasilia(),
+    data: getDataAtualBrasilia(),
+    tipo: nome,
+    valor: valor,
+    cliente: nomeCliente,
+    pago: opcaoPagamentoSelecionada === 'pago',
+    metodoPagamento: opcaoPagamentoSelecionada === 'pago' ? metodoPagamentoSelecionado : null,
+    barbeiro: usuarioAtual,
+    timestamp: new Date().getTime(),
+    timezone: 'America/Sao_Paulo'
+  };
+  
+  console.log('➕ Adicionando serviço:', servico);
+  
+  dados[usuarioAtual].unshift(servico);
+  salvarDadosLocais();
+  await salvarDadosServidor();
+  
+  if (isOnline && ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: 'novo_servico',
+      barbeiro: usuarioAtual,
+      servico: nome,
+      cliente: nomeCliente,
+      valor: valor,
+      status: opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO',
+      data: servico.data,
+      hora: servico.hora
+    }));
+  }
+  
+  fecharModal('modalPagamento');
+  atualizarInterface();
+  
+  servicoSelecionado = null;
+  opcaoPagamentoSelecionada = null;
+  metodoPagamentoSelecionado = null;
+  
+  const status = opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO';
+  mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>${nome} - R$ ${valor.toFixed(2)}`, 'success');
+  
+  console.log('🎉 Serviço salvo:', servico);
+}
+
+function abrirModalOutro() {
+  document.getElementById('valorCustom').value = '';
+  document.getElementById('nomeCliente').value = '';
+  opcaoPagamentoCustomSelecionada = null;
+  metodoPagamentoCustomSelecionado = null;
+  
+  document.querySelectorAll('#modalOutro .opcao-pagamento-btn').forEach(btn => {
+    btn.classList.remove('selecionado');
+  });
+  document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
+    btn.classList.remove('selecionado');
+  });
+  
+  document.getElementById('metodosPagamentoContainerCustom').style.display = 'none';
+  document.getElementById('modalOutro').style.display = 'flex';
+}
+
+async function salvarServicoCustom() {
+  const valorInput = document.getElementById('valorCustom').value;
+  const valor = parseFloat(valorInput);
+  
+  if (!valorInput || valor <= 0 || isNaN(valor)) {
+    alert('⚠️ Insira um valor válido maior que zero!');
+    return;
+  }
+  
+  if (!opcaoPagamentoCustomSelecionada) {
+    alert('⚠️ Selecione PAGO ou FIADO!');
+    return;
+  }
+  
+  if (opcaoPagamentoCustomSelecionada === 'pago' && !metodoPagamentoCustomSelecionado) {
+    alert('⚠️ Selecione uma forma de pagamento!');
+    return;
+  }
+  
+  const nomeCliente = document.getElementById('nomeCliente').value.trim() || 'Cliente';
+  
+  const servico = {
+    id: Date.now(),
+    hora: getHoraAtualBrasilia(),
+    data: getDataAtualBrasilia(),
+    tipo: 'Outro',
+    valor: valor,
+    cliente: nomeCliente,
+    pago: opcaoPagamentoCustomSelecionada === 'pago',
+    metodoPagamento: opcaoPagamentoCustomSelecionada === 'pago' ? metodoPagamentoCustomSelecionado : null,
+    barbeiro: usuarioAtual,
+    timestamp: new Date().getTime(),
+    timezone: 'America/Sao_Paulo'
+  };
+  
+  console.log('➕ Adicionando serviço customizado:', servico);
+  
+  dados[usuarioAtual].unshift(servico);
+  salvarDadosLocais();
+  await salvarDadosServidor();
+  
+  fecharModal('modalOutro');
+  atualizarInterface();
+  
+  opcaoPagamentoCustomSelecionada = null;
+  metodoPagamentoCustomSelecionado = null;
+  
+  const status = opcaoPagamentoCustomSelecionada === 'pago' ? 'PAGO' : 'FIADO';
+  mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>R$ ${valor.toFixed(2)}`, 'success');
+  
+  console.log('🎉 Serviço custom salvo:', servico);
+}
+
+function atualizarListaServicos() {
+  const container = document.getElementById('listaServicos');
+  const dataFiltro = dataFiltroAtual || getDataAtualBrasilia();
+  
+  const servicosFiltrados = dados[usuarioAtual].filter(servico => {
+    return servico.data === dataFiltro;
+  });
+  
+  console.log(`📋 Mostrando ${servicosFiltrados.length} serviços para ${dataFiltro}`);
+  
+  servicosFiltrados.sort((a, b) => {
+    if (a.timestamp && b.timestamp) {
+      return b.timestamp - a.timestamp;
     }
-
-    function trocarUsuario() {
-      usuarioAtual = usuarioAtual === 'Gabriel' ? 'Wagner' : 'Gabriel';
-      console.log('🔄 Trocando usuário para:', usuarioAtual);
-      atualizarInterface();
-      mostrarFeedback(`👤 Usuário alterado para ${usuarioAtual}`);
-    }
-
-    function abrirModalPagamento(tipo) {
-      servicoSelecionado = tipo;
-      opcaoPagamentoSelecionada = null;
-      metodoPagamentoSelecionado = null;
-      
-      document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => {
-        btn.classList.remove('selecionado');
-      });
-      document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
-        btn.classList.remove('selecionado');
-      });
-      
-      document.getElementById('metodosPagamentoContainer').style.display = 'none';
-      
-      let nome, valor;
-      switch(tipo) {
-        case 'corte':
-          nome = 'Corte';
-          valor = dados.config.corte;
-          break;
-        case 'barba':
-          nome = 'Barba';
-          valor = dados.config.barba;
-          break;
-        case 'barba-cabelo':
-          nome = 'Barba + Cabelo';
-          valor = dados.config.combo;
-          break;
-        default:
-          nome = 'Serviço';
-          valor = 0;
+    return 0;
+  });
+  
+  if (servicosFiltrados.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:40px 20px;">
+        <div style="font-size:48px; margin-bottom:15px;">📝</div>
+        <div style="color:#666; font-size:16px;">
+          Nenhum serviço registrado para esta data
+        </div>
+        <div style="color:#888; font-size:14px; margin-top:10px;">
+          Data: ${formatarDataBR(dataFiltro)}
+        </div>
+      </div>
+    `;
+    return;
+  }
+  
+  let html = `
+    <div style="overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th>Serviço</th>
+            <th>Cliente</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  servicosFiltrados.forEach((servico, index) => {
+    const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
+    const statusTexto = servico.pago ? 'PAGO' : 'FIADO';
+    
+    let metodoIcon = '💰';
+    if (servico.pago) {
+      switch(servico.metodoPagamento) {
+        case 'dinheiro': metodoIcon = '💵'; break;
+        case 'pix': metodoIcon = '📱'; break;
+        case 'debito': metodoIcon = '💳'; break;
+        case 'credito': metodoIcon = '💳'; break;
       }
-      
-      document.getElementById('servicoSelecionadoNome').textContent = nome;
-      document.getElementById('servicoSelecionadoValor').textContent = `R$ ${valor.toFixed(2)}`;
-      document.getElementById('nomeClientePagamento').value = '';
-      
-      document.getElementById('modalPagamento').style.display = 'flex';
+    } else {
+      metodoIcon = '⏳';
     }
+    
+    html += `
+      <tr>
+        <td>${servico.hora}</td>
+        <td>${servico.tipo}</td>
+        <td>${servico.cliente}</td>
+        <td>R$ ${servico.valor.toFixed(2)}</td>
+        <td class="${statusClass}">
+          ${metodoIcon} ${statusTexto}
+        </td>
+        <td>
+          <button class="action-btn" onclick="apagarServico(${index})" title="Apagar serviço">
+            ×
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+  
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+}
 
-    function selecionarOpcaoPagamento(opcao) {
-      opcaoPagamentoSelecionada = opcao;
-      metodoPagamentoSelecionado = null;
-      
-      document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => {
-        btn.classList.remove('selecionado');
-      });
-      event.currentTarget.classList.add('selecionado');
-      
-      const metodosContainer = document.getElementById('metodosPagamentoContainer');
-      if (opcao === 'pago') {
-        metodosContainer.style.display = 'block';
-        document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
-          btn.classList.remove('selecionado');
-        });
-      } else {
-        metodosContainer.style.display = 'none';
-      }
-      
-      console.log('✅ Opção selecionada:', opcao);
-    }
+function filtrarServicos() {
+  const dataSelecionada = document.getElementById('dataFiltro').value;
+  
+  if (!dataSelecionada) {
+    alert('⚠️ Selecione uma data para filtrar!');
+    return;
+  }
+  
+  console.log('🔍 Filtrando serviços para:', dataSelecionada);
+  dataFiltroAtual = dataSelecionada;
+  atualizarListaServicos();
+}
 
-    function selecionarMetodoPagamento(metodo) {
-      if (opcaoPagamentoSelecionada !== 'pago') return;
-      
-      metodoPagamentoSelecionado = metodo;
-      
-      document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
-        btn.classList.remove('selecionado');
-      });
-      event.currentTarget.classList.add('selecionado');
-      
-      console.log('✅ Método selecionado:', metodo);
-    }
+function limparFiltro() {
+  const hoje = getDataAtualBrasilia();
+  document.getElementById('dataFiltro').value = hoje;
+  dataFiltroAtual = hoje;
+  console.log('🗓️ Filtro resetado para hoje (Brasília):', hoje);
+  atualizarListaServicos();
+}
 
-    function selecionarOpcaoPagamentoCustom(opcao) {
-      opcaoPagamentoCustomSelecionada = opcao;
-      metodoPagamentoCustomSelecionado = null;
+// ========== APAGAR SERVIÇO (VERSÃO CORRIGIDA COM SYNC) ==========
+async function apagarServico(index) {
+  if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação não pode ser desfeita.')) {
+    return;
+  }
+  
+  const dataFiltro = dataFiltroAtual || getDataAtualBrasilia();
+  const servicosFiltrados = dados[usuarioAtual].filter(s => s.data === dataFiltro);
+  
+  if (index >= 0 && index < servicosFiltrados.length) {
+    const servicoParaApagar = servicosFiltrados[index];
+    
+    const indiceCompleto = dados[usuarioAtual].findIndex(s => 
+      s.id === servicoParaApagar.id || 
+      (s.data === servicoParaApagar.data && 
+       s.hora === servicoParaApagar.hora && 
+       s.cliente === servicoParaApagar.cliente)
+    );
+    
+    if (indiceCompleto !== -1) {
+      const servicoRemovido = dados[usuarioAtual].splice(indiceCompleto, 1)[0];
+      console.log('🗑️ Serviço removido:', servicoRemovido);
       
-      document.querySelectorAll('#modalOutro .opcao-pagamento-btn').forEach(btn => {
-        btn.classList.remove('selecionado');
-      });
-      event.currentTarget.classList.add('selecionado');
-      
-      const metodosContainer = document.getElementById('metodosPagamentoContainerCustom');
-      if (opcao === 'pago') {
-        metodosContainer.style.display = 'block';
-        document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
-          btn.classList.remove('selecionado');
-        });
-      } else {
-        metodosContainer.style.display = 'none';
-      }
-      
-      console.log('✅ Opção custom selecionada:', opcao);
-    }
-
-    function selecionarMetodoPagamentoCustom(metodo) {
-      if (opcaoPagamentoCustomSelecionada !== 'pago') return;
-      
-      metodoPagamentoCustomSelecionado = metodo;
-      
-      document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
-        btn.classList.remove('selecionado');
-      });
-      event.currentTarget.classList.add('selecionado');
-      
-      console.log('✅ Método custom selecionado:', metodo);
-    }
-
-    async function confirmarServico() {
-      if (!opcaoPagamentoSelecionada) {
-        alert('⚠️ Selecione PAGO ou FIADO!');
-        return;
-      }
-      
-      if (opcaoPagamentoSelecionada === 'pago' && !metodoPagamentoSelecionado) {
-        alert('⚠️ Selecione uma forma de pagamento!');
-        return;
-      }
-      
-      let valor, nome;
-      switch(servicoSelecionado) {
-        case 'corte':
-          valor = dados.config.corte;
-          nome = 'Corte';
-          break;
-        case 'barba':
-          valor = dados.config.barba;
-          nome = 'Barba';
-          break;
-        case 'barba-cabelo':
-          valor = dados.config.combo;
-          nome = 'Barba + Cabelo';
-          break;
-        default:
-          valor = 0;
-          nome = 'Serviço';
-      }
-      
-      const nomeCliente = document.getElementById('nomeClientePagamento').value.trim() || 'Cliente';
-      
-      const servico = {
-        id: Date.now(),
-        hora: getHoraAtualBrasilia(),
-        data: getDataAtualBrasilia(),
-        tipo: nome,
-        valor: valor,
-        cliente: nomeCliente,
-        pago: opcaoPagamentoSelecionada === 'pago',
-        metodoPagamento: opcaoPagamentoSelecionada === 'pago' ? metodoPagamentoSelecionado : null,
-        barbeiro: usuarioAtual,
-        timestamp: new Date().getTime(),
-        timezone: 'America/Sao_Paulo'
-      };
-      
-      console.log('➕ Adicionando serviço:', servico);
-      
-      dados[usuarioAtual].unshift(servico);
       salvarDadosLocais();
       await salvarDadosServidor();
       
+      // Notificar via WebSocket
       if (isOnline && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
-          type: 'novo_servico',
+          type: 'servico_removido',
+          id: servicoParaApagar.id,
           barbeiro: usuarioAtual,
-          servico: nome,
-          cliente: nomeCliente,
-          valor: valor,
-          status: opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO',
-          data: servico.data,
-          hora: servico.hora
+          data: servicoParaApagar.data
         }));
       }
       
-      fecharModal('modalPagamento');
-      atualizarInterface();
-      
-      servicoSelecionado = null;
-      opcaoPagamentoSelecionada = null;
-      metodoPagamentoSelecionado = null;
-      
-      const status = opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO';
-      mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>${nome} - R$ ${valor.toFixed(2)}`, 'success');
-      
-      console.log('🎉 Serviço salvo:', servico);
-    }
-
-    function abrirModalOutro() {
-      document.getElementById('valorCustom').value = '';
-      document.getElementById('nomeCliente').value = '';
-      opcaoPagamentoCustomSelecionada = null;
-      metodoPagamentoCustomSelecionado = null;
-      
-      document.querySelectorAll('#modalOutro .opcao-pagamento-btn').forEach(btn => {
-        btn.classList.remove('selecionado');
-      });
-      document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => {
-        btn.classList.remove('selecionado');
-      });
-      
-      document.getElementById('metodosPagamentoContainerCustom').style.display = 'none';
-      document.getElementById('modalOutro').style.display = 'flex';
-    }
-
-    async function salvarServicoCustom() {
-      const valorInput = document.getElementById('valorCustom').value;
-      const valor = parseFloat(valorInput);
-      
-      if (!valorInput || valor <= 0 || isNaN(valor)) {
-        alert('⚠️ Insira um valor válido maior que zero!');
-        return;
-      }
-      
-      if (!opcaoPagamentoCustomSelecionada) {
-        alert('⚠️ Selecione PAGO ou FIADO!');
-        return;
-      }
-      
-      if (opcaoPagamentoCustomSelecionada === 'pago' && !metodoPagamentoCustomSelecionado) {
-        alert('⚠️ Selecione uma forma de pagamento!');
-        return;
-      }
-      
-      const nomeCliente = document.getElementById('nomeCliente').value.trim() || 'Cliente';
-      
-      const servico = {
-        id: Date.now(),
-        hora: getHoraAtualBrasilia(),
-        data: getDataAtualBrasilia(),
-        tipo: 'Outro',
-        valor: valor,
-        cliente: nomeCliente,
-        pago: opcaoPagamentoCustomSelecionada === 'pago',
-        metodoPagamento: opcaoPagamentoCustomSelecionada === 'pago' ? metodoPagamentoCustomSelecionado : null,
-        barbeiro: usuarioAtual,
-        timestamp: new Date().getTime(),
-        timezone: 'America/Sao_Paulo'
-      };
-      
-      console.log('➕ Adicionando serviço customizado:', servico);
-      
-      dados[usuarioAtual].unshift(servico);
-      salvarDadosLocais();
-      await salvarDadosServidor();
-      
-      fecharModal('modalOutro');
-      atualizarInterface();
-      
-      opcaoPagamentoCustomSelecionada = null;
-      metodoPagamentoCustomSelecionado = null;
-      
-      const status = opcaoPagamentoCustomSelecionada === 'pago' ? 'PAGO' : 'FIADO';
-      mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>R$ ${valor.toFixed(2)}`, 'success');
-      
-      console.log('🎉 Serviço custom salvo:', servico);
-    }
-
-    function atualizarListaServicos() {
-      const container = document.getElementById('listaServicos');
-      const dataFiltro = dataFiltroAtual || getDataAtualBrasilia();
-      
-      const servicosFiltrados = dados[usuarioAtual].filter(servico => {
-        return servico.data === dataFiltro;
-      });
-      
-      console.log(`📋 Mostrando ${servicosFiltrados.length} serviços para ${dataFiltro}`);
-      
-      servicosFiltrados.sort((a, b) => {
-        if (a.timestamp && b.timestamp) {
-          return b.timestamp - a.timestamp;
-        }
-        return 0;
-      });
-      
-      if (servicosFiltrados.length === 0) {
-        container.innerHTML = `
-          <div style="text-align:center; padding:40px 20px;">
-            <div style="font-size:48px; margin-bottom:15px;">📝</div>
-            <div style="color:#666; font-size:16px;">
-              Nenhum serviço registrado para esta data
-            </div>
-            <div style="color:#888; font-size:14px; margin-top:10px;">
-              Data: ${formatarDataBR(dataFiltro)}
-            </div>
-          </div>
-        `;
-        return;
-      }
-      
-      let html = `
-        <div style="overflow-x: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Hora</th>
-                <th>Serviço</th>
-                <th>Cliente</th>
-                <th>Valor</th>
-                <th>Status</th>
-                <th>Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      
-      servicosFiltrados.forEach((servico, index) => {
-        const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
-        const statusTexto = servico.pago ? 'PAGO' : 'FIADO';
-        
-        let metodoIcon = '💰';
-        if (servico.pago) {
-          switch(servico.metodoPagamento) {
-            case 'dinheiro': metodoIcon = '💵'; break;
-            case 'pix': metodoIcon = '📱'; break;
-            case 'debito': metodoIcon = '💳'; break;
-            case 'credito': metodoIcon = '💳'; break;
-          }
-        } else {
-          metodoIcon = '⏳';
-        }
-        
-        html += `
-          <tr>
-            <td>${servico.hora}</td>
-            <td>${servico.tipo}</td>
-            <td>${servico.cliente}</td>
-            <td>R$ ${servico.valor.toFixed(2)}</td>
-            <td class="${statusClass}">
-              ${metodoIcon} ${statusTexto}
-            </td>
-            <td>
-              <button class="action-btn" onclick="apagarServico(${index})" title="Apagar serviço">
-                ×
-              </button>
-            </td>
-          </tr>
-        `;
-      });
-      
-      html += `
-            </tbody>
-          </table>
-        </div>
-      `;
-      
-      container.innerHTML = html;
-    }
-
-    function filtrarServicos() {
-      const dataSelecionada = document.getElementById('dataFiltro').value;
-      
-      if (!dataSelecionada) {
-        alert('⚠️ Selecione uma data para filtrar!');
-        return;
-      }
-      
-      console.log('🔍 Filtrando serviços para:', dataSelecionada);
-      dataFiltroAtual = dataSelecionada;
       atualizarListaServicos();
+      atualizarResumoDiario();
+      mostrarFeedback('✅ Serviço removido e sincronizado!', 'success');
     }
+  }
+}
 
-    function limparFiltro() {
-      const hoje = getDataAtualBrasilia();
-      document.getElementById('dataFiltro').value = hoje;
-      dataFiltroAtual = hoje;
-      console.log('🗓️ Filtro resetado para hoje (Brasília):', hoje);
-      atualizarListaServicos();
-    }
-
-    async function apagarServico(index) {
-      if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação não pode ser desfeita.')) {
-        return;
-      }
-      
-      const dataFiltro = dataFiltroAtual || getDataAtualBrasilia();
-      const servicosFiltrados = dados[usuarioAtual].filter(s => s.data === dataFiltro);
-      
-      if (index >= 0 && index < servicosFiltrados.length) {
-        const servicoParaApagar = servicosFiltrados[index];
-        
-        const indiceCompleto = dados[usuarioAtual].findIndex(s => 
-          s.id === servicoParaApagar.id || 
-          (s.data === servicoParaApagar.data && 
-           s.hora === servicoParaApagar.hora && 
-           s.cliente === servicoParaApagar.cliente)
-        );
-        
-        if (indiceCompleto !== -1) {
-          const servicoRemovido = dados[usuarioAtual].splice(indiceCompleto, 1)[0];
-          console.log('🗑️ Serviço removido:', servicoRemovido);
-          
-          salvarDadosLocais();
-          await salvarDadosServidor();
-          
-          atualizarListaServicos();
-          atualizarResumoDiario();
-          mostrarFeedback('✅ Serviço removido com sucesso!', 'success');
-        }
-      }
-    }
-
-    function abrirModalEnviarWhatsApp() {
-      const hoje = getDataAtualBrasilia();
-      const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
-      const totalValor = servicosHoje.reduce((sum, s) => sum + s.valor, 0);
-      const totalPago = servicosHoje.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
-      const totalFiado = totalValor - totalPago;
-      
-      const mensagem = `*💈 MEU RESUMO DO DIA - ${usuarioAtual.toUpperCase()}*
+function abrirModalEnviarWhatsApp() {
+  const hoje = getDataAtualBrasilia();
+  const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
+  const totalValor = servicosHoje.reduce((sum, s) => sum + s.valor, 0);
+  const totalPago = servicosHoje.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
+  const totalFiado = totalValor - totalPago;
+  
+  const mensagem = `*💈 MEU RESUMO DO DIA - ${usuarioAtual.toUpperCase()}*
 
 📅 Data: ${formatarDataBR(hoje)}
 
@@ -2061,227 +2081,216 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
 ).join('\n')}
 
 📱 *Sistema BarbaPRO Duo*`;
-      
-      document.getElementById('mensagemWhatsApp').value = mensagem;
-      document.getElementById('modalEnviarWhatsApp').style.display = 'flex';
-    }
+  
+  document.getElementById('mensagemWhatsApp').value = mensagem;
+  document.getElementById('modalEnviarWhatsApp').style.display = 'flex';
+}
 
-    function enviarWhatsAppDireto() {
-      const mensagem = document.getElementById('mensagemWhatsApp').value;
-      const telefone = dados.config.whatsapp;
-      
-      if (!mensagem.trim()) {
-        alert('⚠️ A mensagem está vazia!');
-        return;
+function enviarWhatsAppDireto() {
+  const mensagem = document.getElementById('mensagemWhatsApp').value;
+  const telefone = dados.config.whatsapp;
+  
+  if (!mensagem.trim()) {
+    alert('⚠️ A mensagem está vazia!');
+    return;
+  }
+  
+  const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+  window.open(url, '_blank');
+  fecharModal('modalEnviarWhatsApp');
+  mostrarFeedback('📱 Mensagem pronta para envio no WhatsApp!', 'success');
+}
+
+function irParaDashboard() {
+  document.getElementById('modalSenhaDashboard').style.display = 'flex';
+  document.getElementById('pinDashboard').value = '';
+  document.getElementById('pinDashboard').focus();
+}
+
+function verificarSenhaDashboard() {
+  const senha = document.getElementById('pinDashboard').value;
+  
+  if (senha === dados.config.pin || senha === '9828') {
+    console.log('🔓 Senha correta, redirecionando...');
+    mostrarFeedback('✅ Senha correta! Redirecionando...', 'success');
+    fecharModal('modalSenhaDashboard');
+    
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 500);
+  } else {
+    alert('❌ Senha incorreta! Tente novamente.');
+    document.getElementById('pinDashboard').value = '';
+    document.getElementById('pinDashboard').focus();
+  }
+}
+
+function fecharModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+function mostrarFeedback(mensagem, tipo = 'info') {
+  const feedback = document.createElement('div');
+  feedback.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${tipo === 'success' ? 'rgba(37, 211, 102, 0.95)' : 
+                 tipo === 'warning' ? 'rgba(255, 149, 0, 0.95)' : 
+                 'rgba(255, 170, 0, 0.95)'};
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    z-index: 10000;
+    max-width: 300px;
+    animation: slideInRight 0.3s ease;
+    font-family: inherit;
+    border: 1px solid rgba(255,255,255,0.3);
+    backdrop-filter: blur(10px);
+  `;
+  
+  feedback.innerHTML = `<div style="font-weight: bold; font-size: 14px;">${mensagem}</div>`;
+  document.body.appendChild(feedback);
+  
+  setTimeout(() => {
+    feedback.style.animation = 'slideOutRight 0.3s ease';
+    setTimeout(() => {
+      if (feedback.parentNode) {
+        feedback.parentNode.removeChild(feedback);
       }
-      
-      const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
-      window.open(url, '_blank');
-      fecharModal('modalEnviarWhatsApp');
-      mostrarFeedback('📱 Mensagem pronta para envio no WhatsApp!', 'success');
-    }
+    }, 300);
+  }, 3000);
+}
 
-    function irParaDashboard() {
-      document.getElementById('modalSenhaDashboard').style.display = 'flex';
-      document.getElementById('pinDashboard').value = '';
-      document.getElementById('pinDashboard').focus();
-    }
-
-    function verificarSenhaDashboard() {
-      const senha = document.getElementById('pinDashboard').value;
-      
-      if (senha === dados.config.pin || senha === '9828') {
-        console.log('🔓 Senha correta, redirecionando...');
-        mostrarFeedback('✅ Senha correta! Redirecionando...', 'success');
-        fecharModal('modalSenhaDashboard');
-        
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 500);
-      } else {
-        alert('❌ Senha incorreta! Tente novamente.');
-        document.getElementById('pinDashboard').value = '';
-        document.getElementById('pinDashboard').focus();
-      }
-    }
-
-    function fecharModal(id) {
-      document.getElementById(id).style.display = 'none';
-    }
-
-    function mostrarFeedback(mensagem, tipo = 'info') {
-      const feedback = document.createElement('div');
-      feedback.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${tipo === 'success' ? 'rgba(37, 211, 102, 0.15)' : 
-                     tipo === 'warning' ? 'rgba(255, 149, 0, 0.15)' : 
-                     tipo === 'danger' ? 'rgba(255, 51, 102, 0.15)' : 
-                     'rgba(255, 170, 0, 0.15)'};
-        color: ${tipo === 'success' ? '#25D366' : 
-                tipo === 'warning' ? '#FF9500' : 
-                tipo === 'danger' ? '#ff3366' : '#ffaa00'};
-        padding: 15px 25px;
-        border-radius: 10px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        z-index: 10000;
-        max-width: 300px;
-        animation: slideInRight 0.3s ease;
-        font-family: inherit;
-        border: 1px solid ${tipo === 'success' ? 'rgba(37, 211, 102, 0.3)' : 
-                           tipo === 'warning' ? 'rgba(255, 149, 0, 0.3)' : 
-                           tipo === 'danger' ? 'rgba(255, 51, 102, 0.3)' : 
-                           'rgba(255, 170, 0, 0.3)'};
-        backdrop-filter: blur(10px);
-      `;
-      
-      feedback.innerHTML = `
-        <div style="font-weight: bold; font-size: 14px;">
-          ${mensagem}
-        </div>
-      `;
-      
-      document.body.appendChild(feedback);
-      
+function mostrarNotificacaoServico(data) {
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+  
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("💈 BarbaPRO - Novo Serviço", {
+      body: `${data.barbeiro} realizou ${data.servico} para ${data.cliente}\nValor: R$ ${data.valor}\n${data.timestamp}`,
+      icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💈</text></svg>",
+      tag: "barbapro-notification"
+    });
+  }
+  
+  if (data.barbeiro !== usuarioAtual) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: 0 8px 25px rgba(255, 170, 0, 0.3);
+      z-index: 10000;
+      max-width: 300px;
+      animation: slideInRight 0.3s ease;
+      border-left: 4px solid var(--success);
+      font-family: inherit;
+      backdrop-filter: blur(10px);
+    `;
+    
+    notification.innerHTML = `
+      <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">💈 Novo Serviço - ${data.barbeiro}</div>
+      <div style="font-size: 14px; line-height: 1.4;">
+        <strong>${data.servico}</strong> para ${data.cliente}<br>
+        <strong>Valor:</strong> R$ ${data.valor}<br>
+        <small style="opacity: 0.8;">${data.timestamp}</small>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.animation = 'slideOutRight 0.3s ease';
       setTimeout(() => {
-        feedback.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => {
-          if (feedback.parentNode) {
-            feedback.parentNode.removeChild(feedback);
-          }
-        }, 300);
-      }, 3000);
-    }
-
-    function mostrarNotificacaoServico(data) {
-      if ("Notification" in window && Notification.permission === "default") {
-        Notification.requestPermission();
-      }
-      
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("💈 BarbaPRO - Novo Serviço", {
-          body: `${data.barbeiro} realizou ${data.servico} para ${data.cliente}\nValor: R$ ${data.valor}\n${data.timestamp}`,
-          icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💈</text></svg>",
-          tag: "barbapro-notification"
-        });
-      }
-      
-      if (data.barbeiro !== usuarioAtual) {
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: linear-gradient(45deg, var(--primary), var(--primary-dark));
-          color: white;
-          padding: 15px 20px;
-          border-radius: 10px;
-          box-shadow: 0 8px 25px rgba(255, 170, 0, 0.3);
-          z-index: 10000;
-          max-width: 300px;
-          animation: slideInRight 0.3s ease;
-          border-left: 4px solid var(--success);
-          font-family: inherit;
-          backdrop-filter: blur(10px);
-        `;
-        
-        notification.innerHTML = `
-          <div style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">💈 Novo Serviço - ${data.barbeiro}</div>
-          <div style="font-size: 14px; line-height: 1.4;">
-            <strong>${data.servico}</strong> para ${data.cliente}<br>
-            <strong>Valor:</strong> R$ ${data.valor}<br>
-            <small style="opacity: 0.8;">${data.timestamp}</small>
-          </div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-          notification.style.animation = 'slideOutRight 0.3s ease';
-          setTimeout(() => {
-            if (notification.parentNode) {
-              notification.parentNode.removeChild(notification);
-            }
-          }, 300);
-        }, 5000);
-      }
-    }
-
-    function debugDatas() {
-      console.log('🔍 DEBUG - DATAS NO SISTEMA');
-      console.log('📅 Data atual (sistema):', new Date());
-      console.log('📅 Data atual (ISO UTC):', new Date().toISOString());
-      console.log('📅 Data atual (ISO split):', new Date().toISOString().split('T')[0]);
-      console.log('📅 Data atual (Brasília):', getDataAtualBrasilia());
-      console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
-      
-      const hojeCorreto = getDataAtualBrasilia();
-      const servicosFuturos = [];
-      
-      [...dados.Gabriel, ...dados.Wagner].forEach(servico => {
-        if (servico.data > hojeCorreto) {
-          servicosFuturos.push(servico);
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
         }
-      });
-      
-      if (servicosFuturos.length > 0) {
-        console.log(`⚠️ ${servicosFuturos.length} serviços com data futura:`);
-        servicosFuturos.forEach(s => {
-          console.log(`   ${s.data} - ${s.barbeiro} - ${s.tipo} - R$ ${s.valor}`);
-        });
-      } else {
-        console.log('✅ Nenhum serviço com data futura encontrado');
-      }
+      }, 300);
+    }, 5000);
+  }
+}
+
+function debugDatas() {
+  console.log('🔍 DEBUG - DATAS NO SISTEMA');
+  console.log('📅 Data atual (sistema):', new Date());
+  console.log('📅 Data atual (ISO UTC):', new Date().toISOString());
+  console.log('📅 Data atual (ISO split):', new Date().toISOString().split('T')[0]);
+  console.log('📅 Data atual (Brasília):', getDataAtualBrasilia());
+  console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
+  
+  const hojeCorreto = getDataAtualBrasilia();
+  const servicosFuturos = [];
+  
+  [...dados.Gabriel, ...dados.Wagner].forEach(servico => {
+    if (servico.data > hojeCorreto) {
+      servicosFuturos.push(servico);
     }
-
-    // ========== EVENT LISTENERS ==========
-    document.addEventListener('click', function(event) {
-      if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
-      }
+  });
+  
+  if (servicosFuturos.length > 0) {
+    console.log(`⚠️ ${servicosFuturos.length} serviços com data futura:`);
+    servicosFuturos.forEach(s => {
+      console.log(`   ${s.data} - ${s.barbeiro} - ${s.tipo} - R$ ${s.valor}`);
     });
+  } else {
+    console.log('✅ Nenhum serviço com data futura encontrado');
+  }
+}
 
-    document.getElementById('pinDashboard')?.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        verificarSenhaDashboard();
-      }
-    });
+// ========== EVENT LISTENERS ==========
+document.addEventListener('click', function(event) {
+  if (event.target.classList.contains('modal')) {
+    event.target.style.display = 'none';
+  }
+});
 
-    document.getElementById('valorCustom')?.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        salvarServicoCustom();
-      }
-    });
+document.getElementById('pinDashboard')?.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    verificarSenhaDashboard();
+  }
+});
 
-    document.addEventListener('visibilitychange', function() {
-      if (!document.hidden) {
-        console.log('🔄 Página em foco, atualizando dados...');
-        carregarDadosLocais();
-        atualizarInterface();
-      }
-    });
+document.getElementById('valorCustom')?.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    salvarServicoCustom();
+  }
+});
 
-    window.addEventListener('beforeunload', function() {
-      salvarDadosLocais();
-    });
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) {
+    console.log('🔄 Página em foco, atualizando dados...');
+    carregarDadosLocais();
+    atualizarInterface();
+  }
+});
 
-    setInterval(() => {
-      if (isOnline) {
-        console.log('🔄 Sincronização automática iniciada');
-        salvarDadosServidor();
-      }
-    }, 5 * 60 * 1000);
+window.addEventListener('beforeunload', function() {
+  salvarDadosLocais();
+});
 
-    console.log('💈 BarbaPRO Duo - Sistema de Registro carregado com sucesso!');
-    console.log('💰 Valores atualizados: Corte R$30 | Barba R$20 | Combo R$40');
-    
-    window.debugDatas = debugDatas;
-    
-    console.log('🧪 Teste de datas:');
-    console.log('   Data UTC:', new Date().toISOString().split('T')[0]);
-    console.log('   Data Brasil:', getDataAtualBrasilia());
-    console.log('   Hora Brasil:', getHoraAtualBrasilia());
+setInterval(() => {
+  if (isOnline) {
+    console.log('🔄 Sincronização automática iniciada');
+    salvarDadosServidor();
+  }
+}, 5 * 60 * 1000);
+
+console.log('💈 BarbaPRO Duo - Sistema de Registro carregado com sucesso!');
+console.log('💰 Valores atualizados: Corte R$30 | Barba R$20 | Combo R$40');
+
+window.debugDatas = debugDatas;
+
+console.log('🧪 Teste de datas:');
+console.log('   Data UTC:', new Date().toISOString().split('T')[0]);
+console.log('   Data Brasil:', getDataAtualBrasilia());
+console.log('   Hora Brasil:', getHoraAtualBrasilia());
   </script>
 </body>
 </html>

@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const WebSocket = require('ws');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,109 +16,90 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Arquivo para persistência de dados
 const DATA_FILE = path.join(__dirname, 'data.json');
 
-// ===================== FUNÇÃO PARA CRIAR DADOS NOVOS E LIMPOS =====================
+// ===================== CONFIGURAÇÃO DE EMAIL (COM A NOVA SENHA) =====================
+const SEU_EMAIL = 'larrisalolv7@gmail.com';
+const SUA_SENHA_APP = 'brgwqllprdbqbzlj'; // ✅ NOVA SENHA DE APP (sem espaços)
+const EMAIL_WAGNER = 'ladeiatortelli8@gmail.com';
+
+// Criar transporte
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: SEU_EMAIL,
+        pass: SUA_SENHA_APP
+    }
+});
+
+// Verificar conexão
+transporter.verify(function(error, success) {
+    if (error) {
+        console.log('❌ Erro na configuração de email:', error);
+    } else {
+        console.log('✅ Servidor de email pronto!');
+        console.log(`📧 Remetente: ${SEU_EMAIL}`);
+        console.log(`📬 Destinatário: ${EMAIL_WAGNER}`);
+    }
+});
+
+// ===================== FUNÇÃO PARA ENVIAR EMAIL =====================
+async function enviarEmailParaWagner(assunto, mensagem) {
+    try {
+        const mailOptions = {
+            from: `"BarbaPRO" <${SEU_EMAIL}>`,
+            to: EMAIL_WAGNER,
+            subject: assunto,
+            text: mensagem,
+            html: mensagem.replace(/\n/g, '<br>')
+        };
+        
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`✅ Email enviado! ID: ${info.messageId}`);
+        return { success: true, messageId: info.messageId };
+    } catch (error) {
+        console.error('❌ Erro ao enviar email:', error.message);
+        return { success: false, error: error.message };
+    }
+}
+
+// ===================== DADOS =====================
 function criarDadosNovos() {
-    const dadosNovos = {
+    return {
         Gabriel: [],
         Wagner: [],
         despesas: [],
         mensalistas: [],
         config: {
             pin: '1234',
-            whatsapp: '11974065186',
-            corte: 28,
-            barba: 15,
+            emailRemetente: SEU_EMAIL,
+            emailWagner: EMAIL_WAGNER,
+            corte: 30,
+            barba: 20,
             combo: 40,
-            orcamentoDespesas: 1500,
-            notificacoesAtivas: true,
-            diasAlerta: 3
+            notificacoesEmail: true
         }
     };
-    
-    try {
-        // Se o arquivo existir, DELETA ele primeiro
-        if (fs.existsSync(DATA_FILE)) {
-            fs.unlinkSync(DATA_FILE);
-            console.log('🗑️ Arquivo antigo deletado');
-        }
-        
-        // Cria arquivo NOVO com dados LIMPOS
-        fs.writeFileSync(DATA_FILE, JSON.stringify(dadosNovos, null, 2));
-        console.log('✅ Arquivo NOVO criado com dados ZERADOS');
-    } catch (error) {
-        console.error('❌ Erro ao criar arquivo:', error);
-    }
-    
-    return dadosNovos;
 }
 
-// ===================== CARREGAR DADOS =====================
 function loadData() {
     try {
-        // Verifica se o arquivo existe
         if (fs.existsSync(DATA_FILE)) {
             const conteudo = fs.readFileSync(DATA_FILE, 'utf8');
-            
-            // Se o arquivo estiver vazio, cria novo
-            if (!conteudo || conteudo.trim() === '') {
-                console.log('⚠️ Arquivo vazio, criando novo...');
-                return criarDadosNovos();
+            if (conteudo && conteudo.trim() !== '') {
+                return JSON.parse(conteudo);
             }
-            
-            // Tenta fazer o parse do JSON
-            try {
-                const data = JSON.parse(conteudo);
-                
-                // Verifica se a estrutura está correta
-                if (!data.Gabriel || !data.Wagner || !data.despesas || !data.mensalistas || !data.config) {
-                    console.log('⚠️ Estrutura corrompida, recriando...');
-                    return criarDadosNovos();
-                }
-                
-                console.log('✅ Dados carregados do servidor');
-                return data;
-            } catch (parseError) {
-                console.log('⚠️ Arquivo corrompido, recriando...');
-                return criarDadosNovos();
-            }
-        } else {
-            // Arquivo não existe, cria novo
-            console.log('📝 Arquivo não existe, criando novo...');
-            return criarDadosNovos();
         }
     } catch (error) {
         console.error('❌ Erro ao carregar dados:', error);
-        return criarDadosNovos();
     }
+    return criarDadosNovos();
 }
 
-// ===================== SALVAR DADOS =====================
 function saveData(data) {
     try {
-        // Garante que os arrays existem
-        if (!data.Gabriel) data.Gabriel = [];
-        if (!data.Wagner) data.Wagner = [];
-        if (!data.despesas) data.despesas = [];
-        if (!data.mensalistas) data.mensalistas = [];
-        if (!data.config) {
-            data.config = {
-                pin: '1234',
-                whatsapp: '11974065186',
-                corte: 28,
-                barba: 15,
-                combo: 40,
-                orcamentoDespesas: 1500,
-                notificacoesAtivas: true,
-                diasAlerta: 3
-            };
-        }
-        
-        // Salva o arquivo
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-        console.log('💾 Dados salvos no servidor');
+        console.log('💾 Dados salvos');
         return true;
     } catch (error) {
         console.error('❌ Erro ao salvar dados:', error);
@@ -125,180 +107,52 @@ function saveData(data) {
     }
 }
 
-// ===================== ROTA PARA RESETAR SISTEMA (NOVA) =====================
-app.get('/resetar-sistema', (req, res) => {
-    try {
-        const dadosNovos = criarDadosNovos();
-        
-        // Notificar todos os clientes
-        wss.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({
-                    type: 'sync_completo',
-                    data: dadosNovos
-                }));
-            }
-        });
-        
-        res.send(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>🔄 Sistema Resetado - BarbaPRO</title>
-                <style>
-                    body {
-                        font-family: 'Segoe UI', sans-serif;
-                        background: linear-gradient(135deg, #0a0a0a 0%, #16213e 100%);
-                        margin: 0;
-                        padding: 0;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        min-height: 100vh;
-                        color: #fff;
-                    }
-                    .container {
-                        background: rgba(255,255,255,0.05);
-                        border-radius: 20px;
-                        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                        padding: 40px;
-                        max-width: 600px;
-                        margin: 20px;
-                        text-align: center;
-                        border: 1px solid rgba(255,170,0,0.3);
-                    }
-                    h1 {
-                        color: #ffaa00;
-                        font-size: 2.5em;
-                        margin-bottom: 20px;
-                    }
-                    .emoji {
-                        font-size: 4em;
-                        margin-bottom: 20px;
-                    }
-                    .stats {
-                        background: rgba(255,255,255,0.03);
-                        border-radius: 10px;
-                        padding: 20px;
-                        margin: 20px 0;
-                        text-align: left;
-                    }
-                    .stats ul {
-                        list-style: none;
-                        padding: 0;
-                    }
-                    .stats li {
-                        padding: 10px;
-                        border-bottom: 1px solid rgba(255,255,255,0.1);
-                        display: flex;
-                        justify-content: space-between;
-                    }
-                    .btn {
-                        background: linear-gradient(135deg, #ffaa00, #ff7733);
-                        color: black;
-                        border: none;
-                        padding: 15px 30px;
-                        font-size: 1.2em;
-                        border-radius: 10px;
-                        cursor: pointer;
-                        margin: 10px;
-                        text-decoration: none;
-                        display: inline-block;
-                        font-weight: 600;
-                    }
-                    .btn:hover {
-                        transform: scale(1.05);
-                    }
-                    .success {
-                        background: rgba(37, 211, 102, 0.2);
-                        border: 1px solid #25D366;
-                        color: #25D366;
-                        padding: 15px;
-                        border-radius: 10px;
-                        margin: 20px 0;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="emoji">🔄✨</div>
-                    <h1>SISTEMA RESETADO!</h1>
-                    
-                    <div class="success">
-                        ✅ Todos os dados foram APAGADOS permanentemente!
-                    </div>
-                    
-                    <div class="stats">
-                        <h3 style="color:#ffaa00;">📊 Status Atual:</h3>
-                        <ul>
-                            <li><span>✂️ Gabriel:</span> <strong style="color:#fff;">0 serviços</strong></li>
-                            <li><span>✂️ Wagner:</span> <strong style="color:#fff;">0 serviços</strong></li>
-                            <li><span>💰 Despesas:</span> <strong style="color:#fff;">0</strong></li>
-                            <li><span>📅 Mensalistas:</span> <strong style="color:#fff;">0</strong></li>
-                        </ul>
-                    </div>
-                    
-                    <a href="/" class="btn">🏠 Ir para o Sistema</a>
-                    <a href="/dashboard" class="btn" style="background: linear-gradient(135deg, #3366ff, #6633ff);">📊 Dashboard</a>
-                </div>
-            </body>
-            </html>
-        `);
-        
-        console.log('🧹🧹🧹 SISTEMA RESETADO COM SUCESSO! 🧹🧹🧹');
-    } catch (error) {
-        res.status(500).send('Erro ao resetar: ' + error.message);
-    }
-});
-
-// ===================== ROTA PARA VERIFICAR DADOS =====================
-app.get('/verificar-dados', (req, res) => {
-    const data = loadData();
-    res.json({
-        Gabriel: data.Gabriel.length,
-        Wagner: data.Wagner.length,
-        despesas: data.despesas.length,
-        mensalistas: data.mensalistas.length,
-        arquivo: DATA_FILE,
-        status: 'Sistema 100% limpo'
-    });
-});
-
 // ===================== WEBSOCKET =====================
 wss.on('connection', function connection(ws) {
     console.log('📱 Novo dispositivo conectado');
     
     const dados = loadData();
-    ws.send(JSON.stringify({
-        type: 'dados_iniciais',
-        data: dados
-    }));
+    ws.send(JSON.stringify({ type: 'dados_iniciais', data: dados }));
     
-    ws.on('message', function message(data) {
+    ws.on('message', async function message(data) {
         try {
             const message = JSON.parse(data);
             
             if (message.type === 'sync_request') {
-                const dados = loadData();
-                ws.send(JSON.stringify({
-                    type: 'sync_completo',
-                    data: dados
-                }));
+                ws.send(JSON.stringify({ type: 'sync_completo', data: loadData() }));
             }
             
             if (message.type === 'update_data') {
                 if (saveData(message.data)) {
-                    wss.clients.forEach(function each(client) {
+                    wss.clients.forEach(client => {
                         if (client.readyState === WebSocket.OPEN) {
-                            client.send(JSON.stringify({
-                                type: 'sync_completo',
-                                data: message.data
-                            }));
+                            client.send(JSON.stringify({ type: 'sync_completo', data: message.data }));
                         }
                     });
                 }
+            }
+            
+            if (message.type === 'novo_servico') {
+                console.log('📧 Enviando email automático para Wagner...');
+                
+                const assunto = `💈 NOVO SERVIÇO - ${message.barbeiro}`;
+                const mensagem = `
+💈 BARBAPRO DUO - NOVO SERVIÇO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 BARBEIRO: ${message.barbeiro}
+✂️ SERVIÇO: ${message.servico}
+👤 CLIENTE: ${message.cliente || 'Cliente'}
+💰 VALOR: R$ ${message.valor}
+📊 STATUS: ${message.status === 'PAGO' ? '✅ PAGO' : '⏳ FIADO'}
+⏰ HORA: ${message.hora}
+📅 DATA: ${message.data}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 Sistema BarbaPRO Duo
+                `;
+                
+                await enviarEmailParaWagner(assunto, mensagem);
             }
             
         } catch (error) {
@@ -309,38 +163,85 @@ wss.on('connection', function connection(ws) {
 
 // ===================== ROTAS API =====================
 app.get('/api/data', (req, res) => {
-    try {
-        const data = loadData();
-        res.json({ success: true, data });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
+    res.json({ success: true, data: loadData() });
 });
 
 app.post('/api/save', (req, res) => {
-    try {
-        const { data } = req.body;
-        
-        if (!data) {
-            return res.status(400).json({ success: false, error: 'Dados não fornecidos' });
-        }
-        
-        if (saveData(data)) {
-            wss.clients.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify({
-                        type: 'sync_completo',
-                        data: data
-                    }));
-                }
-            });
-            res.json({ success: true, message: 'Dados salvos com sucesso' });
-        } else {
-            res.status(500).json({ success: false, error: 'Erro ao salvar dados' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+    const { data } = req.body;
+    if (saveData(data)) {
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({ type: 'sync_completo', data }));
+            }
+        });
+        res.json({ success: true });
+    } else {
+        res.status(500).json({ success: false });
     }
+});
+
+app.get('/api/total-combinado', (req, res) => {
+    const data = loadData();
+    const hoje = new Date().toISOString().split('T')[0];
+    
+    const wagnerHoje = data.Wagner?.filter(s => s.data === hoje) || [];
+    const gabrielHoje = data.Gabriel?.filter(s => s.data === hoje) || [];
+    
+    const totalWagner = wagnerHoje.reduce((sum, s) => sum + (s.valor || 0), 0);
+    const totalGabriel = gabrielHoje.reduce((sum, s) => sum + (s.valor || 0), 0);
+    
+    res.json({
+        success: true,
+        hoje: {
+            Wagner: { quantidade: wagnerHoje.length, total: totalWagner },
+            Gabriel: { quantidade: gabrielHoje.length, total: totalGabriel },
+            combinado: totalWagner + totalGabriel
+        }
+    });
+});
+
+// ===================== ROTA PARA TESTAR EMAIL =====================
+app.get('/testar-email', async (req, res) => {
+    const resultado = await enviarEmailParaWagner(
+        '🧪 TESTE DO SISTEMA',
+        `Olá Wagner! 👋\n\nEste é um email de teste do sistema BarbaPRO.\n\n✅ Se você recebeu, o sistema está funcionando perfeitamente!\n\n📅 Data: ${new Date().toLocaleString('pt-BR')}\n\n🚀 BarbaPRO Duo`
+    );
+    
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Teste Email</title>
+            <style>
+                body { background:#0a0a0a; color:white; font-family:Arial; padding:20px; }
+                .container { max-width:600px; margin:0 auto; }
+                h1 { color:#ffaa00; }
+                .success { background:rgba(37,211,102,0.2); border:1px solid #25D366; padding:15px; border-radius:10px; }
+                .error { background:rgba(255,51,102,0.2); border:1px solid #ff3366; padding:15px; border-radius:10px; }
+                pre { background:#1a1a1a; padding:10px; border-radius:5px; overflow:auto; }
+                a { color:#ffaa00; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📧 Teste de Email</h1>
+                
+                <div class="${resultado.success ? 'success' : 'error'}">
+                    <h3>${resultado.success ? '✅ SUCESSO!' : '❌ ERRO!'}</h3>
+                    <p>De: <strong>${SEU_EMAIL}</strong></p>
+                    <p>Para: <strong>${EMAIL_WAGNER}</strong></p>
+                    ${resultado.messageId ? `<p>ID: ${resultado.messageId}</p>` : ''}
+                    ${resultado.error ? `<p>Erro: ${resultado.error}</p>` : ''}
+                </div>
+                
+                <br>
+                <a href="/">← Voltar ao sistema</a>
+                <br><br>
+                <a href="/dashboard">📊 Ir para Dashboard</a>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
 // ===================== ROTAS PRINCIPAIS =====================
@@ -352,44 +253,23 @@ app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-app.get('/status', (req, res) => {
-    const data = loadData();
-    res.json({
-        status: 'online',
-        Gabriel: data.Gabriel?.length || 0,
-        Wagner: data.Wagner?.length || 0,
-        despesas: data.despesas?.length || 0,
-        mensalistas: data.mensalistas?.length || 0
-    });
-});
-
 // ===================== INICIAR SERVIDOR =====================
 server.listen(PORT, '0.0.0.0', () => {
-    // FORÇA a criação de dados NOVOS e LIMPOS
-    const dados = criarDadosNovos();
-    
     console.log(`
     ╔══════════════════════════════════════════════════════════╗
     ║                                                          ║
-    ║     ⚡ BARBAPRO DUO - SISTEMA 100% LIMPO! ⚡            ║
+    ║        🔥 BARBAPRO - EMAIL AUTOMÁTICO ATIVO! 🔥         ║
     ║                                                          ║
     ╠══════════════════════════════════════════════════════════╣
     ║                                                          ║
-    ║   🔗 PORTA: ${PORT}                                         ║
-    ║   ⏰ INÍCIO: ${new Date().toLocaleString('pt-BR')}           ║
+    ║   📧 ENVIANDO DE: ${SEU_EMAIL}            ║
+    ║   📬 PARA: ${EMAIL_WAGNER}                ║
+    ║   🔑 SENHA: NOVA SENHA DE APP                           ║
     ║                                                          ║
-    ║   📊 STATUS ATUAL:                                       ║
-    ║   ✅ Gabriel: ${dados.Gabriel.length} serviços                             ║
-    ║   ✅ Wagner: ${dados.Wagner.length} serviços                             ║
-    ║   ✅ Despesas: ${dados.despesas.length}                                 ║
-    ║   ✅ Mensalistas: ${dados.mensalistas.length}                             ║
+    ║   📊 STATUS: ✅ CONFIGURADO!                             ║
     ║                                                          ║
-    ╠══════════════════════════════════════════════════════════╣
-    ║                                                          ║
-    ║   🚀 ACESSO RÁPIDO:                                     ║
-    ║   🔴 RESETAR SISTEMA: http://localhost:${PORT}/resetar-sistema  ║
-    ║   📊 DASHBOARD:     http://localhost:${PORT}/dashboard        ║
-    ║   🔍 VERIFICAR:     http://localhost:${PORT}/verificar-dados  ║
+    ║   🚀 TESTAR: http://localhost:${PORT}/testar-email        ║
+    ║   📊 DASHBOARD: http://localhost:${PORT}/dashboard        ║
     ║                                                          ║
     ╚══════════════════════════════════════════════════════════╝
     `);

@@ -1870,6 +1870,7 @@
     <!-- ========== JAVASCRIPT ========== -->
     <script>
 // ========== VARIÁVEIS GLOBAIS ==========
+// ========== VARIÁVEIS GLOBAIS ==========
 let dados = { 
     Gabriel: [], 
     Wagner: [],
@@ -1894,6 +1895,7 @@ let editandoDespesaId = null;
 let filtroStatusAtual = 'todos';
 let barbeiroAtual = 'Wagner';
 let barbeiroAuxiliar = 'Gabriel';
+let ws = null;
 
 // ========== INICIALIZAÇÃO ==========
 document.addEventListener('DOMContentLoaded', function() {
@@ -1927,14 +1929,13 @@ function carregarDadosIniciais() {
     conectarWebSocket();
 }
 
-// ========== CARREGAR DADOS LOCAIS (SEGURANÇA) ==========
+// ========== CARREGAR DADOS LOCAIS ==========
 function carregarDadosLocais() {
     try {
         const dadosSalvos = localStorage.getItem('barbapro_duo');
         if (dadosSalvos) {
             const dadosParseados = JSON.parse(dadosSalvos);
             
-            // Mesclar com os dados existentes (não sobrescrever tudo)
             if (dadosParseados.Gabriel) dados.Gabriel = dadosParseados.Gabriel;
             if (dadosParseados.Wagner) dados.Wagner = dadosParseados.Wagner;
             if (dadosParseados.despesas) dados.despesas = dadosParseados.despesas;
@@ -1973,7 +1974,7 @@ function carregarDadosDoServidor() {
         })
         .then(result => {
             if (result.success && result.data) {
-                // Mesclar dados do servidor com os locais (não substituir)
+                // Mesclar dados do servidor com os locais
                 if (result.data.Gabriel) {
                     dados.Gabriel = unificarArrays(dados.Gabriel, result.data.Gabriel);
                 }
@@ -1990,13 +1991,8 @@ function carregarDadosDoServidor() {
                     dados.config = { ...dados.config, ...result.data.config };
                 }
                 
-                // Garantir valores padrão
                 garantirConfiguracoes();
-                
-                // Salvar localmente
                 salvarDadosLocais();
-                
-                // Atualizar interface
                 atualizarDashboardCompleto();
                 
                 console.log('✅ Dados sincronizados com servidor!');
@@ -2004,7 +2000,6 @@ function carregarDadosDoServidor() {
         })
         .catch(error => {
             console.error('❌ Erro ao carregar do servidor:', error);
-            // Garantir configurações mesmo sem servidor
             garantirConfiguracoes();
             atualizarDashboardCompleto();
         });
@@ -2024,7 +2019,6 @@ function garantirConfiguracoes() {
             diasAlerta: 3
         };
     } else {
-        // Garantir que todos os campos existam
         if (!dados.config.corte) dados.config.corte = 30;
         if (!dados.config.barba) dados.config.barba = 20;
         if (!dados.config.combo) dados.config.combo = 40;
@@ -2038,13 +2032,11 @@ function garantirConfiguracoes() {
 function unificarArrays(local, servidor) {
     const mapa = new Map();
     
-    // Adicionar servidor primeiro
     servidor.forEach(item => {
         const key = item.id || JSON.stringify(item);
         mapa.set(key, item);
     });
     
-    // Adicionar local (sobrescreve se tiver timestamp maior)
     local.forEach(item => {
         const key = item.id || JSON.stringify(item);
         const existente = mapa.get(key);
@@ -2057,27 +2049,37 @@ function unificarArrays(local, servidor) {
 }
 
 // ========== SALVAR DADOS NO SERVIDOR ==========
-function salvarDadosNoServidor() {
+async function salvarDadosNoServidor() {
     console.log('📤 Enviando dados para o servidor...');
     
-    // Primeiro salva localmente
     salvarDadosLocais();
     
-    // Depois tenta enviar ao servidor
-    fetch('/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: dados })
-    })
-    .then(response => response.json())
-    .then(result => {
+    try {
+        const response = await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: dados })
+        });
+        
+        const result = await response.json();
+        
         if (result.success) {
             console.log('✅ Dados salvos no servidor!');
+            
+            // Notificar via WebSocket para outros dispositivos
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'update_data',
+                    data: dados
+                }));
+            }
+            
+            return true;
         }
-    })
-    .catch(error => {
+    } catch (error) {
         console.error('❌ Erro ao salvar no servidor:', error);
-    });
+        return false;
+    }
 }
 
 // ========== CONFIGURAR DATAS ==========
@@ -2119,101 +2121,11 @@ function configurarDatasDashboard() {
     if (dataDespesa) dataDespesa.value = formatarData(hoje);
 }
 
-// ========== EVENT LISTENERS ==========
-function configurarEventListenersDashboard() {
-    // Botões principais
-    const btnVoltarRegistro = document.getElementById('btnVoltarRegistro');
-    const btnConfiguracoes = document.getElementById('btnConfiguracoes');
-    const btnEnviarResumo = document.getElementById('btnEnviarResumo');
-    
-    if (btnVoltarRegistro) btnVoltarRegistro.addEventListener('click', voltarParaRegistro);
-    if (btnConfiguracoes) btnConfiguracoes.addEventListener('click', abrirModalConfiguracoes);
-    if (btnEnviarResumo) btnEnviarResumo.addEventListener('click', () => abrirModalResumoCompleto());
-    
-    // Ações rápidas
-    const btnVerResumoCompleto = document.getElementById('btnVerResumoCompleto');
-    const btnRelatorioDetalhado = document.getElementById('btnRelatorioDetalhado');
-    const btnEnviarMensalistas = document.getElementById('btnEnviarMensalistas');
-    const btnGerenciarDespesas = document.getElementById('btnGerenciarDespesas');
-    
-    if (btnVerResumoCompleto) btnVerResumoCompleto.addEventListener('click', () => abrirModalResumoCompleto());
-    if (btnRelatorioDetalhado) btnRelatorioDetalhado.addEventListener('click', abrirModalPagamentos);
-    if (btnEnviarMensalistas) btnEnviarMensalistas.addEventListener('click', enviarLembretesMensalistas);
-    if (btnGerenciarDespesas) btnGerenciarDespesas.addEventListener('click', () => abrirModalDespesas());
-    
-    // Despesas
-    const btnNovaDespesa = document.getElementById('btnNovaDespesa');
-    const btnNovaDespesaRapida = document.getElementById('btnNovaDespesaRapida');
-    const btnFiltrarDespesas = document.getElementById('btnFiltrarDespesas');
-    const btnExportarDespesas = document.getElementById('btnExportarDespesas');
-    const btnAdicionarDespesa = document.getElementById('btnAdicionarDespesa');
-    const btnLimparFormDespesa = document.getElementById('btnLimparFormDespesa');
-    
-    if (btnNovaDespesa) btnNovaDespesa.addEventListener('click', () => abrirModalDespesas());
-    if (btnNovaDespesaRapida) btnNovaDespesaRapida.addEventListener('click', () => abrirModalDespesas());
-    if (btnFiltrarDespesas) btnFiltrarDespesas.addEventListener('click', atualizarListaDespesasRecentes);
-    if (btnExportarDespesas) btnExportarDespesas.addEventListener('click', exportarDadosDespesas);
-    if (btnAdicionarDespesa) btnAdicionarDespesa.addEventListener('click', adicionarOuAtualizarDespesa);
-    if (btnLimparFormDespesa) btnLimparFormDespesa.addEventListener('click', limparFormDespesa);
-    
-    // Mensalistas
-    const btnNovoMensalista = document.getElementById('btnNovoMensalista');
-    const btnFiltrarMensalistas = document.getElementById('btnFiltrarMensalistas');
-    const btnLimparFiltros = document.getElementById('btnLimparFiltros');
-    const btnAdicionarMensalista = document.getElementById('btnAdicionarMensalista');
-    const btnLimparFormMensalista = document.getElementById('btnLimparFormMensalista');
-    
-    if (btnNovoMensalista) btnNovoMensalista.addEventListener('click', abrirModalMensalistas);
-    if (btnFiltrarMensalistas) btnFiltrarMensalistas.addEventListener('click', () => filtrarMensalistasPorStatus('todos', true));
-    if (btnLimparFiltros) btnLimparFiltros.addEventListener('click', limparFiltrosMensalistas);
-    if (btnAdicionarMensalista) btnAdicionarMensalista.addEventListener('click', adicionarOuAtualizarMensalista);
-    if (btnLimparFormMensalista) btnLimparFormMensalista.addEventListener('click', limparFormMensalista);
-    
-    // Serviços
-    const btnFiltrarServicos = document.getElementById('btnFiltrarServicos');
-    const btnEnviarRelatorioServicos = document.getElementById('btnEnviarRelatorioServicos');
-    const btnExportarServicos = document.getElementById('btnExportarServicos');
-    
-    if (btnFiltrarServicos) btnFiltrarServicos.addEventListener('click', atualizarListaServicosRecentes);
-    if (btnEnviarRelatorioServicos) btnEnviarRelatorioServicos.addEventListener('click', () => enviarRelatorioWhatsApp('servicos'));
-    if (btnExportarServicos) btnExportarServicos.addEventListener('click', exportarDadosServicos);
-    
-    // Pagamentos
-    const btnEnviarPagamentos = document.getElementById('btnEnviarPagamentos');
-    const btnGerarRelatorio = document.getElementById('btnGerarRelatorio');
-    const btnEnviarRelatorioWhatsApp = document.getElementById('btnEnviarRelatorioWhatsApp');
-    const btnEnviarResumoCompleto = document.getElementById('btnEnviarResumoCompleto');
-    
-    if (btnEnviarPagamentos) btnEnviarPagamentos.addEventListener('click', () => abrirModalPagamentos());
-    if (btnGerarRelatorio) btnGerarRelatorio.addEventListener('click', gerarRelatorioPagamentosDetalhado);
-    if (btnEnviarRelatorioWhatsApp) btnEnviarRelatorioWhatsApp.addEventListener('click', () => enviarRelatorioWhatsApp('pagamentos'));
-    if (btnEnviarResumoCompleto) btnEnviarResumoCompleto.addEventListener('click', () => enviarRelatorioWhatsApp('resumo'));
-    
-    // Configurações
-    const btnSalvarConfiguracoes = document.getElementById('btnSalvarConfiguracoes');
-    if (btnSalvarConfiguracoes) btnSalvarConfiguracoes.addEventListener('click', salvarConfiguracoes);
-    
-    // Fechar modais
-    document.querySelectorAll('.close-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const modal = this.closest('.modal');
-            if (modal) modal.style.display = 'none';
-        });
-    });
-    
-    // Fechar modais ao clicar fora
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) this.style.display = 'none';
-        });
-    });
-}
-
-// ========== WEBSOCKET ==========
+// ========== WEBSOCKET (CORRIGIDO PARA SINCRONIZAÇÃO) ==========
 function conectarWebSocket() {
     try {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const ws = new WebSocket(`${protocol}//${window.location.host}`);
+        ws = new WebSocket(`${protocol}//${window.location.host}`);
         
         ws.onopen = () => {
             console.log('📡 WebSocket conectado');
@@ -2222,19 +2134,35 @@ function conectarWebSocket() {
         ws.onmessage = (event) => {
             try {
                 const message = JSON.parse(event.data);
+                console.log('📥 Mensagem WebSocket:', message.type);
+                
                 if (message.type === 'sync_completo' || message.type === 'dados_iniciais') {
-                    // Mesclar dados
                     if (message.data) {
+                        // Mesclar dados recebidos
                         if (message.data.Gabriel) {
                             dados.Gabriel = unificarArrays(dados.Gabriel, message.data.Gabriel);
                         }
                         if (message.data.Wagner) {
                             dados.Wagner = unificarArrays(dados.Wagner, message.data.Wagner);
                         }
+                        if (message.data.despesas) {
+                            dados.despesas = unificarArrays(dados.despesas, message.data.despesas);
+                        }
+                        if (message.data.mensalistas) {
+                            dados.mensalistas = unificarArrays(dados.mensalistas, message.data.mensalistas);
+                        }
+                        
                         salvarDadosLocais();
                         atualizarDashboardCompleto();
+                        mostrarFeedback('🔄 Dados atualizados de outro dispositivo!', 'success');
                     }
                 }
+                
+                if (message.type === 'atualizar') {
+                    console.log('🔄 Recebido comando para atualizar');
+                    carregarDadosDoServidor();
+                }
+                
             } catch (error) {
                 console.error('❌ Erro WebSocket:', error);
             }
@@ -2468,7 +2396,6 @@ function atualizarListaServicosRecentes() {
     
     let todosServicos = [...(dados.Wagner || []), ...(dados.Gabriel || [])];
     
-    // Aplicar filtros
     todosServicos = todosServicos.filter(s => 
         s.data && s.data >= dataInicio && s.data <= dataFim &&
         (filtroBarbeiro === 'todos' || s.barbeiro === filtroBarbeiro) &&
@@ -2477,7 +2404,6 @@ function atualizarListaServicosRecentes() {
          (filtroPagamento === 'fiado' && !s.pago))
     );
     
-    // Ordenar por data e hora
     todosServicos.sort((a, b) => {
         const dataA = new Date(a.data + 'T' + (a.hora || '00:00'));
         const dataB = new Date(b.data + 'T' + (b.hora || '00:00'));
@@ -2543,8 +2469,8 @@ function obterIconeMetodo(metodo) {
     return icones[metodo] || '💰';
 }
 
-// ========== EXCLUIR SERVIÇO ==========
-function excluirServico(servicoId, barbeiro) {
+// ========== EXCLUIR SERVIÇO (VERSÃO CORRIGIDA COM SYNC) ==========
+async function excluirServico(servicoId, barbeiro) {
     if (!confirm('⚠️ Excluir este serviço permanentemente?')) return;
     
     if (!dados[barbeiro]) {
@@ -2558,11 +2484,40 @@ function excluirServico(servicoId, barbeiro) {
         return;
     }
     
+    // Remover o serviço
     dados[barbeiro].splice(index, 1);
+    
+    // Salvar localmente
     salvarDadosLocais();
-    salvarDadosNoServidor();
+    
+    // Enviar para o servidor
+    try {
+        const response = await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: dados })
+        });
+        
+        if (response.ok) {
+            console.log('✅ Exclusão sincronizada com servidor!');
+            
+            // Notificar outros dispositivos via WebSocket
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'update_data',
+                    data: dados
+                }));
+            }
+            
+            mostrarFeedback('✅ Serviço excluído e sincronizado!', 'success');
+        }
+    } catch (error) {
+        console.error('❌ Erro ao sincronizar exclusão:', error);
+        mostrarFeedback('⚠️ Excluído localmente, mas falha ao sincronizar', 'warning');
+    }
+    
+    // Atualizar interface
     atualizarDashboardCompleto();
-    alert('✅ Serviço excluído!');
 }
 
 // ========== DESPESAS ==========
@@ -2612,7 +2567,7 @@ function atualizarListaDespesasRecentes() {
     if (listaDespesasRecentes) listaDespesasRecentes.innerHTML = html;
 }
 
-function removerDespesa(id) {
+async function removerDespesa(id) {
     if (!confirm('⚠️ Remover esta despesa?')) return;
     
     const index = (dados.despesas || []).findIndex(d => d.id === id);
@@ -2620,9 +2575,9 @@ function removerDespesa(id) {
     
     dados.despesas.splice(index, 1);
     salvarDadosLocais();
-    salvarDadosNoServidor();
+    await salvarDadosNoServidor();
     atualizarDashboardCompleto();
-    alert('✅ Despesa removida!');
+    mostrarFeedback('✅ Despesa removida!', 'success');
 }
 
 function adicionarOuAtualizarDespesa() {
@@ -2660,7 +2615,7 @@ function adicionarOuAtualizarDespesa() {
     limparFormDespesa();
     atualizarDashboardCompleto();
     fecharModal('modalDespesas');
-    alert('✅ Despesa registrada!');
+    mostrarFeedback('✅ Despesa registrada!', 'success');
 }
 
 function limparFormDespesa() {
@@ -2811,7 +2766,7 @@ function filtrarMensalistasPorStatus(status, usarFiltros = false) {
     if (listaMensalistas) listaMensalistas.innerHTML = html;
 }
 
-function removerMensalista(id) {
+async function removerMensalista(id) {
     if (!confirm('⚠️ Remover mensalista?')) return;
     
     const index = (dados.mensalistas || []).findIndex(m => m.id === id);
@@ -2819,9 +2774,9 @@ function removerMensalista(id) {
     
     dados.mensalistas.splice(index, 1);
     salvarDadosLocais();
-    salvarDadosNoServidor();
+    await salvarDadosNoServidor();
     atualizarDashboardCompleto();
-    alert('✅ Mensalista removido!');
+    mostrarFeedback('✅ Mensalista removido!', 'success');
 }
 
 function pagarMensalidade(id) {
@@ -2838,7 +2793,6 @@ function pagarMensalidade(id) {
     m.status = 'pago';
     m.dataUltimoPagamento = hoje;
     
-    // Próximo vencimento
     const vencAtual = new Date(m.dataVencimento || m.vencimento || hoje);
     const proxVenc = new Date(vencAtual.getFullYear(), vencAtual.getMonth() + 1, m.diaVencimento || vencAtual.getDate());
     m.dataVencimento = proxVenc.toISOString().split('T')[0];
@@ -2847,7 +2801,7 @@ function pagarMensalidade(id) {
     salvarDadosLocais();
     salvarDadosNoServidor();
     atualizarDashboardCompleto();
-    alert('✅ Pagamento registrado!');
+    mostrarFeedback('✅ Pagamento registrado!', 'success');
 }
 
 function adicionarOuAtualizarMensalista() {
@@ -2896,7 +2850,7 @@ function adicionarOuAtualizarMensalista() {
     limparFormMensalista();
     atualizarDashboardCompleto();
     fecharModal('modalMensalistas');
-    alert('✅ Mensalista cadastrado!');
+    mostrarFeedback('✅ Mensalista cadastrado!', 'success');
 }
 
 function limparFormMensalista() {
@@ -2957,6 +2911,95 @@ function salvarConfiguracoes() {
     salvarDadosNoServidor();
     fecharModal('modalConfig');
     alert('✅ Configurações salvas!');
+}
+
+// ========== EVENT LISTENERS ==========
+function configurarEventListenersDashboard() {
+    // Botões principais
+    const btnVoltarRegistro = document.getElementById('btnVoltarRegistro');
+    const btnConfiguracoes = document.getElementById('btnConfiguracoes');
+    const btnEnviarResumo = document.getElementById('btnEnviarResumo');
+    
+    if (btnVoltarRegistro) btnVoltarRegistro.addEventListener('click', voltarParaRegistro);
+    if (btnConfiguracoes) btnConfiguracoes.addEventListener('click', abrirModalConfiguracoes);
+    if (btnEnviarResumo) btnEnviarResumo.addEventListener('click', () => abrirModalResumoCompleto());
+    
+    // Ações rápidas
+    const btnVerResumoCompleto = document.getElementById('btnVerResumoCompleto');
+    const btnRelatorioDetalhado = document.getElementById('btnRelatorioDetalhado');
+    const btnEnviarMensalistas = document.getElementById('btnEnviarMensalistas');
+    const btnGerenciarDespesas = document.getElementById('btnGerenciarDespesas');
+    
+    if (btnVerResumoCompleto) btnVerResumoCompleto.addEventListener('click', () => abrirModalResumoCompleto());
+    if (btnRelatorioDetalhado) btnRelatorioDetalhado.addEventListener('click', abrirModalPagamentos);
+    if (btnEnviarMensalistas) btnEnviarMensalistas.addEventListener('click', enviarLembretesMensalistas);
+    if (btnGerenciarDespesas) btnGerenciarDespesas.addEventListener('click', () => abrirModalDespesas());
+    
+    // Despesas
+    const btnNovaDespesa = document.getElementById('btnNovaDespesa');
+    const btnNovaDespesaRapida = document.getElementById('btnNovaDespesaRapida');
+    const btnFiltrarDespesas = document.getElementById('btnFiltrarDespesas');
+    const btnExportarDespesas = document.getElementById('btnExportarDespesas');
+    const btnAdicionarDespesa = document.getElementById('btnAdicionarDespesa');
+    const btnLimparFormDespesa = document.getElementById('btnLimparFormDespesa');
+    
+    if (btnNovaDespesa) btnNovaDespesa.addEventListener('click', () => abrirModalDespesas());
+    if (btnNovaDespesaRapida) btnNovaDespesaRapida.addEventListener('click', () => abrirModalDespesas());
+    if (btnFiltrarDespesas) btnFiltrarDespesas.addEventListener('click', atualizarListaDespesasRecentes);
+    if (btnExportarDespesas) btnExportarDespesas.addEventListener('click', exportarDadosDespesas);
+    if (btnAdicionarDespesa) btnAdicionarDespesa.addEventListener('click', adicionarOuAtualizarDespesa);
+    if (btnLimparFormDespesa) btnLimparFormDespesa.addEventListener('click', limparFormDespesa);
+    
+    // Mensalistas
+    const btnNovoMensalista = document.getElementById('btnNovoMensalista');
+    const btnFiltrarMensalistas = document.getElementById('btnFiltrarMensalistas');
+    const btnLimparFiltros = document.getElementById('btnLimparFiltros');
+    const btnAdicionarMensalista = document.getElementById('btnAdicionarMensalista');
+    const btnLimparFormMensalista = document.getElementById('btnLimparFormMensalista');
+    
+    if (btnNovoMensalista) btnNovoMensalista.addEventListener('click', abrirModalMensalistas);
+    if (btnFiltrarMensalistas) btnFiltrarMensalistas.addEventListener('click', () => filtrarMensalistasPorStatus('todos', true));
+    if (btnLimparFiltros) btnLimparFiltros.addEventListener('click', limparFiltrosMensalistas);
+    if (btnAdicionarMensalista) btnAdicionarMensalista.addEventListener('click', adicionarOuAtualizarMensalista);
+    if (btnLimparFormMensalista) btnLimparFormMensalista.addEventListener('click', limparFormMensalista);
+    
+    // Serviços
+    const btnFiltrarServicos = document.getElementById('btnFiltrarServicos');
+    const btnEnviarRelatorioServicos = document.getElementById('btnEnviarRelatorioServicos');
+    const btnExportarServicos = document.getElementById('btnExportarServicos');
+    
+    if (btnFiltrarServicos) btnFiltrarServicos.addEventListener('click', atualizarListaServicosRecentes);
+    if (btnEnviarRelatorioServicos) btnEnviarRelatorioServicos.addEventListener('click', () => enviarRelatorioWhatsApp('servicos'));
+    if (btnExportarServicos) btnExportarServicos.addEventListener('click', exportarDadosServicos);
+    
+    // Pagamentos
+    const btnEnviarPagamentos = document.getElementById('btnEnviarPagamentos');
+    const btnGerarRelatorio = document.getElementById('btnGerarRelatorio');
+    const btnEnviarRelatorioWhatsApp = document.getElementById('btnEnviarRelatorioWhatsApp');
+    const btnEnviarResumoCompleto = document.getElementById('btnEnviarResumoCompleto');
+    
+    if (btnEnviarPagamentos) btnEnviarPagamentos.addEventListener('click', () => abrirModalPagamentos());
+    if (btnGerarRelatorio) btnGerarRelatorio.addEventListener('click', gerarRelatorioPagamentosDetalhado);
+    if (btnEnviarRelatorioWhatsApp) btnEnviarRelatorioWhatsApp.addEventListener('click', () => enviarRelatorioWhatsApp('pagamentos'));
+    if (btnEnviarResumoCompleto) btnEnviarResumoCompleto.addEventListener('click', () => enviarRelatorioWhatsApp('resumo'));
+    
+    // Configurações
+    const btnSalvarConfiguracoes = document.getElementById('btnSalvarConfiguracoes');
+    if (btnSalvarConfiguracoes) btnSalvarConfiguracoes.addEventListener('click', salvarConfiguracoes);
+    
+    // Fechar modais
+    document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            if (modal) modal.style.display = 'none';
+        });
+    });
+    
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+    });
 }
 
 // ========== MODAIS ==========
@@ -3120,10 +3163,10 @@ function voltarParaRegistro() {
 }
 
 function iniciarVerificacoesPeriodicas() {
-    setInterval(verificarVencimentosMensalistas, 300000); // 5 minutos
+    setInterval(verificarVencimentosMensalistas, 300000);
     setInterval(() => {
         carregarDadosDoServidor();
-    }, 60000); // 1 minuto
+    }, 60000);
 }
 
 function verificarVencimentosMensalistas() {
@@ -3253,6 +3296,39 @@ function exportarDadosDespesas() {
 
 function exportarDadosServicos() {
     alert('📤 Exportar serviços - Em breve');
+}
+
+// ========== FUNÇÃO PARA MOSTRAR FEEDBACK ==========
+function mostrarFeedback(mensagem, tipo = 'info') {
+    const feedback = document.createElement('div');
+    feedback.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${tipo === 'success' ? 'rgba(37, 211, 102, 0.95)' : 
+                     tipo === 'warning' ? 'rgba(255, 149, 0, 0.95)' : 
+                     'rgba(255, 170, 0, 0.95)'};
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideInRight 0.3s ease;
+        font-family: inherit;
+        border: 1px solid rgba(255,255,255,0.3);
+        backdrop-filter: blur(10px);
+    `;
+    
+    feedback.innerHTML = `<div style="font-weight: bold; font-size: 14px;">${mensagem}</div>`;
+    document.body.appendChild(feedback);
+    
+    setTimeout(() => {
+        feedback.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (feedback.parentNode) feedback.parentNode.removeChild(feedback);
+        }, 300);
+    }, 3000);
 }
 
 // ========== FIM ==========
