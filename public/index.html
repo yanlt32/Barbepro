@@ -744,9 +744,14 @@ select:focus {
       </button>
     </div>
 
-    <!-- Botão discreto para ver resultados -->
+    <!-- Botão discreto para ver resultados do dia -->
     <button class="resultados-btn" onclick="toggleResultados()" id="btnToggleResultados">
       👁️ Ver meus resultados do dia
+    </button>
+
+    <!-- Botão para ver resultados da semana -->
+    <button class="resultados-btn" onclick="abrirModalResumoSemanal()" style="margin-top: 5px; background: rgba(255,170,0,0.1); color: var(--primary);">
+      📊 Ver minha semana (segunda a sábado)
     </button>
 
     <!-- Container dos resultados (inicialmente escondido) -->
@@ -791,7 +796,7 @@ select:focus {
         </div>
         <div class="servico-btn barba-cabelo" onclick="abrirModalPagamento('barba-cabelo')">
           <div class="servico-nome">COMBO</div>
-          <div class="servico-valor">R$ <span id="precoBarbaCabelo">50</span></div>
+          <div class="servico-valor">R$ <span id="precoBarbaCabelo">40</span></div>
           <div class="servico-desc">Barba + Cabelo</div>
         </div>
         <div class="servico-btn outro" onclick="abrirModalOutro()">
@@ -968,6 +973,59 @@ select:focus {
       </div>
     </div>
   </div>
+
+  <!-- Modal Resumo Semanal -->
+  <div id="modalResumoSemanal" class="modal">
+    <div class="modal-content">
+      <h3 style="font-size:clamp(18px, 4.5vw, 20px); margin:18px 0 12px; color: var(--primary); font-weight:700;">📊 Resumo da Semana</h3>
+      <p style="margin-bottom: 15px; color: #ccc; text-align: center;">
+        Período: <span id="semanaPeriodo" style="color: #ffaa00;"></span>
+      </p>
+      
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0;">
+        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
+          <div style="font-size: 24px; color: var(--primary);" id="semanaServicos">0</div>
+          <div style="font-size: 12px; color: var(--gray);">SERVIÇOS</div>
+        </div>
+        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
+          <div style="font-size: 24px; color: var(--success);" id="semanaTotal">R$ 0,00</div>
+          <div style="font-size: 12px; color: var(--gray);">TOTAL</div>
+        </div>
+        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
+          <div style="font-size: 24px; color: var(--success);" id="semanaPago">R$ 0,00</div>
+          <div style="font-size: 12px; color: var(--gray);">PAGO</div>
+        </div>
+        <div style="text-align: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
+          <div style="font-size: 24px; color: var(--warning);" id="semanaFiado">R$ 0,00</div>
+          <div style="font-size: 12px; color: var(--gray);">FIADO</div>
+        </div>
+      </div>
+
+      <div style="max-height: 300px; overflow-y: auto; margin: 15px 0;">
+        <table style="font-size: 12px;">
+          <thead>
+            <tr>
+              <th>Dia</th>
+              <th>Serviços</th>
+              <th>Total</th>
+              <th>Pago</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaResumoSemanal">
+            <!-- Preenchido via JS -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div style="display: flex; gap: 15px; margin-top: 20px;">
+        <button class="btn btn-whatsapp" onclick="enviarResumoSemanalWhatsApp()" style="margin:0; flex:1; background:linear-gradient(45deg, #25D366, #128C7E);">
+          📱 ENVIAR SEMANA
+        </button>
+        <button class="btn secundario" onclick="fecharModal('modalResumoSemanal')" style="margin:0; flex:1;">FECHAR</button>
+      </div>
+    </div>
+  </div>
+
 <script>
     // ========== VARIÁVEIS GLOBAIS ==========
     let usuarioAtual = 'Gabriel';
@@ -981,7 +1039,7 @@ select:focus {
         whatsapp: '11962094589',
         corte: 30,
         barba: 20,
-        combo: 50
+        combo: 40  // ALTERADO DE 50 PARA 40
       }
     };
 
@@ -1031,6 +1089,157 @@ select:focus {
         return `${hora}:${minutos}`;
     }
 
+    // ========== FUNÇÕES DE RESUMO SEMANAL ==========
+    
+    function getDataInicioSemana() {
+        const hoje = new Date();
+        const offset = -3;
+        const utc = hoje.getTime() + (hoje.getTimezoneOffset() * 60000);
+        const dataBrasilia = new Date(utc + (3600000 * offset));
+        
+        const diaSemana = dataBrasilia.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+        
+        // Se for domingo (0), ajusta para segunda da semana anterior
+        // Se for segunda a sábado, ajusta para a segunda da semana atual
+        let diff;
+        if (diaSemana === 0) { // Domingo
+            diff = 6; // Volta 6 dias para chegar na segunda
+        } else { // Segunda a sábado
+            diff = diaSemana - 1; // Volta (diaSemana - 1) dias para chegar na segunda
+        }
+        
+        const segunda = new Date(dataBrasilia);
+        segunda.setDate(dataBrasilia.getDate() - diff);
+        segunda.setHours(0, 0, 0, 0);
+        
+        const ano = segunda.getFullYear();
+        const mes = String(segunda.getMonth() + 1).padStart(2, '0');
+        const dia = String(segunda.getDate()).padStart(2, '0');
+        
+        return `${ano}-${mes}-${dia}`;
+    }
+
+    function getDataFimSemana() {
+        const inicio = getDataInicioSemana();
+        const data = new Date(inicio + 'T12:00:00-03:00');
+        data.setDate(data.getDate() + 5); // +5 dias = sábado (segunda + 5 = sábado)
+        
+        const ano = data.getFullYear();
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const dia = String(data.getDate()).padStart(2, '0');
+        
+        return `${ano}-${mes}-${dia}`;
+    }
+
+    function getResumoSemanal() {
+        const inicioSemana = getDataInicioSemana();
+        const fimSemana = getDataFimSemana();
+        
+        const servicosSemana = dados[usuarioAtual].filter(s => 
+            s.data >= inicioSemana && s.data <= fimSemana
+        );
+        
+        // Agrupar por dia
+        const diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        const resumoDias = [];
+        
+        for (let i = 0; i < 6; i++) {
+            const dataDia = new Date(inicioSemana + 'T12:00:00-03:00');
+            dataDia.setDate(dataDia.getDate() + i);
+            
+            const ano = dataDia.getFullYear();
+            const mes = String(dataDia.getMonth() + 1).padStart(2, '0');
+            const dia = String(dataDia.getDate()).padStart(2, '0');
+            const dataStr = `${ano}-${mes}-${dia}`;
+            
+            const servicosDia = servicosSemana.filter(s => s.data === dataStr);
+            const totalDia = servicosDia.reduce((sum, s) => sum + s.valor, 0);
+            const pagoDia = servicosDia.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
+            
+            resumoDias.push({
+                dia: diasSemana[i],
+                data: dataStr,
+                quantidade: servicosDia.length,
+                total: totalDia,
+                pago: pagoDia,
+                fiado: totalDia - pagoDia
+            });
+        }
+        
+        const totalServicos = servicosSemana.length;
+        const totalValor = servicosSemana.reduce((sum, s) => sum + s.valor, 0);
+        const totalPago = servicosSemana.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
+        const totalFiado = totalValor - totalPago;
+        
+        return {
+            inicio: inicioSemana,
+            fim: fimSemana,
+            dias: resumoDias,
+            totalServicos,
+            totalValor,
+            totalPago,
+            totalFiado
+        };
+    }
+
+    function abrirModalResumoSemanal() {
+        const resumo = getResumoSemanal();
+        
+        document.getElementById('semanaPeriodo').textContent = 
+            `${formatarDataBR(resumo.inicio)} a ${formatarDataBR(resumo.fim)}`;
+        
+        document.getElementById('semanaServicos').textContent = resumo.totalServicos;
+        document.getElementById('semanaTotal').textContent = `R$ ${resumo.totalValor.toFixed(2)}`;
+        document.getElementById('semanaPago').textContent = `R$ ${resumo.totalPago.toFixed(2)}`;
+        document.getElementById('semanaFiado').textContent = `R$ ${resumo.totalFiado.toFixed(2)}`;
+        
+        let html = '';
+        resumo.dias.forEach(d => {
+            html += `
+                <tr>
+                    <td>${d.dia}<br><small style="color: #666;">${formatarDataBR(d.data)}</small></td>
+                    <td>${d.quantidade}</td>
+                    <td>R$ ${d.total.toFixed(2)}</td>
+                    <td>R$ ${d.pago.toFixed(2)}</td>
+                </tr>
+            `;
+        });
+        
+        document.getElementById('tabelaResumoSemanal').innerHTML = html;
+        document.getElementById('modalResumoSemanal').style.display = 'flex';
+    }
+
+    function enviarResumoSemanalWhatsApp() {
+        const resumo = getResumoSemanal();
+        const telefone = dados.config.whatsapp;
+        
+        let mensagem = `*📊 MEU RESUMO DA SEMANA - ${usuarioAtual.toUpperCase()}*\n\n`;
+        mensagem += `📅 Período: ${formatarDataBR(resumo.inicio)} a ${formatarDataBR(resumo.fim)}\n\n`;
+        mensagem += `📈 *RESUMO GERAL*\n`;
+        mensagem += `• Total de serviços: ${resumo.totalServicos}\n`;
+        mensagem += `• Valor total: R$ ${resumo.totalValor.toFixed(2)}\n`;
+        mensagem += `• Valor recebido: R$ ${resumo.totalPago.toFixed(2)}\n`;
+        mensagem += `• Valor fiado: R$ ${resumo.totalFiado.toFixed(2)}\n\n`;
+        
+        mensagem += `📆 *DETALHAMENTO POR DIA*\n`;
+        resumo.dias.forEach(d => {
+            if (d.quantidade > 0) {
+                mensagem += `${d.dia} (${formatarDataBR(d.data)}):\n`;
+                mensagem += `  • ${d.quantidade} serviços - Total: R$ ${d.total.toFixed(2)}\n`;
+                mensagem += `  • Recebido: R$ ${d.pago.toFixed(2)} | Fiado: R$ ${d.fiado.toFixed(2)}\n\n`;
+            } else {
+                mensagem += `${d.dia} (${formatarDataBR(d.data)}): Sem serviços\n\n`;
+            }
+        });
+        
+        mensagem += `📱 *Sistema BarbaPRO Duo*`;
+        
+        const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+        window.open(url, '_blank');
+        fecharModal('modalResumoSemanal');
+        mostrarFeedback('📱 Resumo da semana enviado!', 'success');
+    }
+
     // ========== INICIALIZAÇÃO ==========
     document.addEventListener('DOMContentLoaded', function() {
       console.log('🚀 BarbaPRO - Sistema inicializando...');
@@ -1063,12 +1272,12 @@ select:focus {
           whatsapp: '11962094589',
           corte: 30,
           barba: 20,
-          combo: 50
+          combo: 40  // ALTERADO DE 50 PARA 40
         };
       } else {
         dados.config.corte = 30;
         dados.config.barba = 20;
-        dados.config.combo = 50;
+        dados.config.combo = 40;  // ALTERADO DE 50 PARA 40
       }
       
       console.log('⚙️ Configurações atualizadas:', dados.config);
@@ -1155,6 +1364,13 @@ select:focus {
           if (Array.isArray(dadosParseados.Wagner)) dados.Wagner = dadosParseados.Wagner;
           if (Array.isArray(dadosParseados.despesas)) dados.despesas = dadosParseados.despesas;
           if (Array.isArray(dadosParseados.mensalistas)) dados.mensalistas = dadosParseados.mensalistas;
+          
+          // Atualizar configurações se existirem
+          if (dadosParseados.config) {
+            dados.config = { ...dados.config, ...dadosParseados.config };
+            // Garantir que o combo seja 40
+            dados.config.combo = 40;
+          }
           
           console.log('📂 Dados carregados do localStorage');
         } else {
@@ -2058,7 +2274,7 @@ ${servicosHoje.slice(0, 10).map((s, i) =>
     }, 5 * 60 * 1000);
 
     console.log('💈 BarbaPRO Duo - Sistema de Registro carregado com sucesso!');
-    console.log('💰 Valores atualizados: Corte R$30 | Barba R$20 | Combo R$50');
+    console.log('💰 Valores atualizados: Corte R$30 | Barba R$20 | Combo R$40');
     
     window.debugDatas = debugDatas;
     
