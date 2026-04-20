@@ -874,7 +874,11 @@ select:focus {
         </div>
       </div>
       
-      <input id="nomeClientePagamento" placeholder="Nome do cliente (opcional)" maxlength="30" />
+      <!-- CAMPO NOME DO CLIENTE - AGORA OBRIGATÓRIO -->
+      <input id="nomeClientePagamento" placeholder="Nome do cliente *" maxlength="30" style="border: 1px solid rgba(255,255,255,0.1);" />
+      <div id="erroNomeCliente" style="color: #ff3366; font-size: 12px; margin-top: 5px; display: none; text-align: center;">
+        ⚠️ Nome do cliente é obrigatório!
+      </div>
       
       <div style="display: flex; gap: 15px; margin-top: 20px;">
         <button class="btn corte" onclick="confirmarServico()" style="margin:0; flex:1;">CONFIRMAR</button>
@@ -888,7 +892,12 @@ select:focus {
     <div class="modal-content">
       <h3 style="font-size:clamp(18px, 4.5vw, 20px); margin:18px 0 12px; color: var(--primary); font-weight:700;">Novo Serviço Personalizado</h3>
       <input id="valorCustom" type="number" placeholder="Valor do serviço" min="1" step="0.01" />
-      <input id="nomeCliente" placeholder="Nome do cliente (opcional)" maxlength="30" />
+      
+      <!-- CAMPO NOME DO CLIENTE - AGORA OBRIGATÓRIO -->
+      <input id="nomeCliente" placeholder="Nome do cliente *" maxlength="30" style="border: 1px solid rgba(255,255,255,0.1);" />
+      <div id="erroNomeClienteCustom" style="color: #ff3366; font-size: 12px; margin-top: 5px; display: none; text-align: center;">
+        ⚠️ Nome do cliente é obrigatório!
+      </div>
       
       <!-- Opções de PAGO/FIADO para serviço personalizado -->
       <div class="opcao-pagamento-botoes">
@@ -1409,7 +1418,6 @@ async function salvarDadosServidor() {
     if (response.ok) {
       console.log('✅ Dados salvos no servidor');
       
-      // Notificar outros dispositivos
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
           type: 'update_data',
@@ -1681,6 +1689,7 @@ function abrirModalPagamento(tipo) {
   document.getElementById('servicoSelecionadoNome').textContent = nome;
   document.getElementById('servicoSelecionadoValor').textContent = `R$ ${valor.toFixed(2)}`;
   document.getElementById('nomeClientePagamento').value = '';
+  document.getElementById('erroNomeCliente').style.display = 'none';
   
   document.getElementById('modalPagamento').style.display = 'flex';
 }
@@ -1756,6 +1765,18 @@ function selecionarMetodoPagamentoCustom(metodo) {
 }
 
 async function confirmarServico() {
+  // VALIDAÇÃO DO NOME DO CLIENTE - OBRIGATÓRIO!
+  const nomeCliente = document.getElementById('nomeClientePagamento').value.trim();
+  
+  if (!nomeCliente) {
+    document.getElementById('erroNomeCliente').style.display = 'block';
+    document.getElementById('nomeClientePagamento').style.borderColor = '#ff3366';
+    setTimeout(() => {
+      document.getElementById('nomeClientePagamento').style.borderColor = 'rgba(255,255,255,0.1)';
+    }, 2000);
+    return;
+  }
+  
   if (!opcaoPagamentoSelecionada) {
     alert('⚠️ Selecione PAGO ou FIADO!');
     return;
@@ -1784,8 +1805,6 @@ async function confirmarServico() {
       valor = 0;
       nome = 'Serviço';
   }
-  
-  const nomeCliente = document.getElementById('nomeClientePagamento').value.trim() || 'Cliente';
   
   const servico = {
     id: Date.now(),
@@ -1828,7 +1847,7 @@ async function confirmarServico() {
   metodoPagamentoSelecionado = null;
   
   const status = opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO';
-  mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>${nome} - R$ ${valor.toFixed(2)}`, 'success');
+  mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>${nome} - ${nomeCliente} - R$ ${valor.toFixed(2)}`, 'success');
   
   console.log('🎉 Serviço salvo:', servico);
 }
@@ -1836,6 +1855,7 @@ async function confirmarServico() {
 function abrirModalOutro() {
   document.getElementById('valorCustom').value = '';
   document.getElementById('nomeCliente').value = '';
+  document.getElementById('erroNomeClienteCustom').style.display = 'none';
   opcaoPagamentoCustomSelecionada = null;
   metodoPagamentoCustomSelecionado = null;
   
@@ -1854,6 +1874,18 @@ async function salvarServicoCustom() {
   const valorInput = document.getElementById('valorCustom').value;
   const valor = parseFloat(valorInput);
   
+  // VALIDAÇÃO DO NOME DO CLIENTE - OBRIGATÓRIO!
+  const nomeCliente = document.getElementById('nomeCliente').value.trim();
+  
+  if (!nomeCliente) {
+    document.getElementById('erroNomeClienteCustom').style.display = 'block';
+    document.getElementById('nomeCliente').style.borderColor = '#ff3366';
+    setTimeout(() => {
+      document.getElementById('nomeCliente').style.borderColor = 'rgba(255,255,255,0.1)';
+    }, 2000);
+    return;
+  }
+  
   if (!valorInput || valor <= 0 || isNaN(valor)) {
     alert('⚠️ Insira um valor válido maior que zero!');
     return;
@@ -1868,8 +1900,6 @@ async function salvarServicoCustom() {
     alert('⚠️ Selecione uma forma de pagamento!');
     return;
   }
-  
-  const nomeCliente = document.getElementById('nomeCliente').value.trim() || 'Cliente';
   
   const servico = {
     id: Date.now(),
@@ -1898,7 +1928,7 @@ async function salvarServicoCustom() {
   metodoPagamentoCustomSelecionado = null;
   
   const status = opcaoPagamentoCustomSelecionada === 'pago' ? 'PAGO' : 'FIADO';
-  mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>R$ ${valor.toFixed(2)}`, 'success');
+  mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>${nomeCliente} - R$ ${valor.toFixed(2)}`, 'success');
   
   console.log('🎉 Serviço custom salvo:', servico);
 }
@@ -1971,7 +2001,7 @@ function atualizarListaServicos() {
       <tr>
         <td>${servico.hora}</td>
         <td>${servico.tipo}</td>
-        <td>${servico.cliente}</td>
+        <td><strong>${servico.cliente}</strong></td>
         <td>R$ ${servico.valor.toFixed(2)}</td>
         <td class="${statusClass}">
           ${metodoIcon} ${statusTexto}
@@ -2015,7 +2045,6 @@ function limparFiltro() {
   atualizarListaServicos();
 }
 
-// ========== APAGAR SERVIÇO (VERSÃO CORRIGIDA COM SYNC) ==========
 async function apagarServico(index) {
   if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação não pode ser desfeita.')) {
     return;
@@ -2041,7 +2070,6 @@ async function apagarServico(index) {
       salvarDadosLocais();
       await salvarDadosServidor();
       
-      // Notificar via WebSocket
       if (isOnline && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
           type: 'servico_removido',

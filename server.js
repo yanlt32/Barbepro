@@ -11,19 +11,29 @@ const wss = new WebSocket.Server({ server });
 
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// ========== MIDDLEWARE - COM AUMENTO DE LIMITE ==========
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-const DATA_FILE = path.join(__dirname, 'data.json');
+// ========== USAR O DISCO PERSISTENTE DO RENDER ==========
+// O Render monta o disco em /var/data
+const DATA_DIR = process.env.RENDER ? '/var/data' : __dirname;
+const DATA_FILE = path.join(DATA_DIR, 'data.json');
 
-// ===================== CONFIGURAÇÃO DE EMAIL (COM A NOVA SENHA) =====================
+// Garantir que o diretório existe
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+console.log(`📁 Diretório de dados: ${DATA_DIR}`);
+console.log(`📄 Arquivo de dados: ${DATA_FILE}`);
+
+// ========== CONFIGURAÇÃO DE EMAIL ==========
 const SEU_EMAIL = 'larrisalolv7@gmail.com';
-const SUA_SENHA_APP = 'brgwqllprdbqbzlj'; // ✅ NOVA SENHA DE APP (sem espaços)
+const SUA_SENHA_APP = 'brgwqllprdbqbzlj';
 const EMAIL_WAGNER = 'ladeiatortelli8@gmail.com';
 
-// Criar transporte
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -32,18 +42,14 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Verificar conexão
 transporter.verify(function(error, success) {
     if (error) {
-        console.log('❌ Erro na configuração de email:', error);
+        console.log('❌ Erro na configuração de email:', error.message);
     } else {
         console.log('✅ Servidor de email pronto!');
-        console.log(`📧 Remetente: ${SEU_EMAIL}`);
-        console.log(`📬 Destinatário: ${EMAIL_WAGNER}`);
     }
 });
 
-// ===================== FUNÇÃO PARA ENVIAR EMAIL =====================
 async function enviarEmailParaWagner(assunto, mensagem) {
     try {
         const mailOptions = {
@@ -63,7 +69,7 @@ async function enviarEmailParaWagner(assunto, mensagem) {
     }
 }
 
-// ===================== DADOS =====================
+// ========== DADOS COM PERSISTÊNCIA EM DISCO ==========
 function criarDadosNovos() {
     return {
         Gabriel: [],
@@ -72,8 +78,7 @@ function criarDadosNovos() {
         mensalistas: [],
         config: {
             pin: '1234',
-            emailRemetente: SEU_EMAIL,
-            emailWagner: EMAIL_WAGNER,
+            whatsapp: '5511974065186',
             corte: 30,
             barba: 20,
             combo: 40,
@@ -87,29 +92,33 @@ function loadData() {
         if (fs.existsSync(DATA_FILE)) {
             const conteudo = fs.readFileSync(DATA_FILE, 'utf8');
             if (conteudo && conteudo.trim() !== '') {
-                return JSON.parse(conteudo);
+                const dados = JSON.parse(conteudo);
+                console.log(`📂 Dados carregados do disco: ${dados.Wagner?.length || 0} Wagner, ${dados.Gabriel?.length || 0} Gabriel`);
+                return dados;
             }
         }
     } catch (error) {
-        console.error('❌ Erro ao carregar dados:', error);
+        console.error('❌ Erro ao carregar dados:', error.message);
     }
+    console.log('📂 Nenhum dado encontrado, criando novo arquivo');
     return criarDadosNovos();
 }
 
 function saveData(data) {
     try {
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-        console.log('💾 Dados salvos');
+        console.log(`💾 Dados salvos no disco - Wagner: ${data.Wagner?.length || 0}, Gabriel: ${data.Gabriel?.length || 0}`);
         return true;
     } catch (error) {
-        console.error('❌ Erro ao salvar dados:', error);
+        console.error('❌ Erro ao salvar dados:', error.message);
         return false;
     }
 }
 
-// ===================== WEBSOCKET =====================
+// ========== WEBSOCKET ==========
 wss.on('connection', function connection(ws) {
-    console.log('📱 Novo dispositivo conectado');
+    const clientCount = wss.clients.size;
+    console.log(`📱 Novo dispositivo conectado! Total: ${clientCount}`);
     
     const dados = loadData();
     ws.send(JSON.stringify({ type: 'dados_iniciais', data: dados }));
@@ -117,15 +126,17 @@ wss.on('connection', function connection(ws) {
     ws.on('message', async function message(data) {
         try {
             const message = JSON.parse(data);
+            console.log(`📥 Mensagem: ${message.type}`);
             
             if (message.type === 'sync_request') {
-                ws.send(JSON.stringify({ type: 'sync_completo', data: loadData() }));
+                const dadosAtuais = loadData();
+                ws.send(JSON.stringify({ type: 'sync_completo', data: dadosAtuais }));
             }
             
             if (message.type === 'update_data') {
                 if (saveData(message.data)) {
                     wss.clients.forEach(client => {
-                        if (client.readyState === WebSocket.OPEN) {
+                        if (client !== ws && client.readyState === WebSocket.OPEN) {
                             client.send(JSON.stringify({ type: 'sync_completo', data: message.data }));
                         }
                     });
@@ -133,7 +144,7 @@ wss.on('connection', function connection(ws) {
             }
             
             if (message.type === 'novo_servico') {
-                console.log('📧 Enviando email automático para Wagner...');
+                console.log(`✂️ NOVO SERVIÇO - ${message.barbeiro}: ${message.cliente} - R$ ${message.valor}`);
                 
                 const assunto = `💈 NOVO SERVIÇO - ${message.barbeiro}`;
                 const mensagem = `
@@ -142,7 +153,7 @@ wss.on('connection', function connection(ws) {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 👤 BARBEIRO: ${message.barbeiro}
 ✂️ SERVIÇO: ${message.servico}
-👤 CLIENTE: ${message.cliente || 'Cliente'}
+👤 CLIENTE: ${message.cliente}
 💰 VALOR: R$ ${message.valor}
 📊 STATUS: ${message.status === 'PAGO' ? '✅ PAGO' : '⏳ FIADO'}
 ⏰ HORA: ${message.hora}
@@ -156,18 +167,28 @@ wss.on('connection', function connection(ws) {
             }
             
         } catch (error) {
-            console.error('❌ Erro WebSocket:', error);
+            console.error('❌ Erro WebSocket:', error.message);
         }
+    });
+    
+    ws.on('close', () => {
+        console.log(`📱 Dispositivo desconectado! Restam: ${wss.clients.size}`);
     });
 });
 
-// ===================== ROTAS API =====================
+// ========== ROTAS API ==========
 app.get('/api/data', (req, res) => {
-    res.json({ success: true, data: loadData() });
+    const dados = loadData();
+    res.json({ success: true, data: dados });
 });
 
 app.post('/api/save', (req, res) => {
     const { data } = req.body;
+    
+    if (!data) {
+        return res.status(400).json({ success: false, error: 'Dados não fornecidos' });
+    }
+    
     if (saveData(data)) {
         wss.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
@@ -200,51 +221,49 @@ app.get('/api/total-combinado', (req, res) => {
     });
 });
 
-// ===================== ROTA PARA TESTAR EMAIL =====================
 app.get('/testar-email', async (req, res) => {
     const resultado = await enviarEmailParaWagner(
-        '🧪 TESTE DO SISTEMA',
-        `Olá Wagner! 👋\n\nEste é um email de teste do sistema BarbaPRO.\n\n✅ Se você recebeu, o sistema está funcionando perfeitamente!\n\n📅 Data: ${new Date().toLocaleString('pt-BR')}\n\n🚀 BarbaPRO Duo`
+        '🧪 TESTE DO SISTEMA BARBAPRO',
+        `Olá Wagner! 👋\n\nEste é um email de teste do sistema BarbaPRO.\n\n✅ Se você recebeu, o sistema está funcionando perfeitamente!\n\n📅 Data: ${new Date().toLocaleString('pt-BR')}`
     );
     
     res.send(`
         <!DOCTYPE html>
         <html>
-        <head>
-            <title>Teste Email</title>
-            <style>
-                body { background:#0a0a0a; color:white; font-family:Arial; padding:20px; }
-                .container { max-width:600px; margin:0 auto; }
-                h1 { color:#ffaa00; }
-                .success { background:rgba(37,211,102,0.2); border:1px solid #25D366; padding:15px; border-radius:10px; }
-                .error { background:rgba(255,51,102,0.2); border:1px solid #ff3366; padding:15px; border-radius:10px; }
-                pre { background:#1a1a1a; padding:10px; border-radius:5px; overflow:auto; }
-                a { color:#ffaa00; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>📧 Teste de Email</h1>
-                
-                <div class="${resultado.success ? 'success' : 'error'}">
-                    <h3>${resultado.success ? '✅ SUCESSO!' : '❌ ERRO!'}</h3>
-                    <p>De: <strong>${SEU_EMAIL}</strong></p>
-                    <p>Para: <strong>${EMAIL_WAGNER}</strong></p>
-                    ${resultado.messageId ? `<p>ID: ${resultado.messageId}</p>` : ''}
-                    ${resultado.error ? `<p>Erro: ${resultado.error}</p>` : ''}
-                </div>
-                
-                <br>
-                <a href="/">← Voltar ao sistema</a>
-                <br><br>
-                <a href="/dashboard">📊 Ir para Dashboard</a>
+        <head><title>Teste Email</title></head>
+        <body style="background:#0a0a0a; color:white; font-family:Arial; padding:20px; text-align:center;">
+            <h1 style="color:#ffaa00;">📧 Teste de Email</h1>
+            <div style="background:${resultado.success ? 'rgba(37,211,102,0.2)' : 'rgba(255,51,102,0.2)'}; padding:20px; border-radius:10px;">
+                <h3>${resultado.success ? '✅ SUCESSO!' : '❌ ERRO!'}</h3>
+                <p>De: ${SEU_EMAIL}</p>
+                <p>Para: ${EMAIL_WAGNER}</p>
+                ${resultado.error ? `<p>Erro: ${resultado.error}</p>` : ''}
             </div>
+            <br>
+            <a href="/" style="color:#ffaa00;">← Voltar</a>
         </body>
         </html>
     `);
 });
 
-// ===================== ROTAS PRINCIPAIS =====================
+app.get('/status', (req, res) => {
+    const dados = loadData();
+    res.json({
+        success: true,
+        status: 'online',
+        port: PORT,
+        clientesWebSocket: wss.clients.size,
+        disco: DATA_DIR,
+        dados: {
+            wagner: dados.Wagner?.length || 0,
+            gabriel: dados.Gabriel?.length || 0,
+            despesas: dados.despesas?.length || 0,
+            mensalistas: dados.mensalistas?.length || 0
+        }
+    });
+});
+
+// ========== ROTAS PRINCIPAIS ==========
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -253,24 +272,20 @@ app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// ===================== INICIAR SERVIDOR =====================
+// ========== INICIAR SERVIDOR ==========
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`
-    ╔══════════════════════════════════════════════════════════╗
-    ║                                                          ║
-    ║        🔥 BARBAPRO - EMAIL AUTOMÁTICO ATIVO! 🔥         ║
-    ║                                                          ║
-    ╠══════════════════════════════════════════════════════════╣
-    ║                                                          ║
-    ║   📧 ENVIANDO DE: ${SEU_EMAIL}            ║
-    ║   📬 PARA: ${EMAIL_WAGNER}                ║
-    ║   🔑 SENHA: NOVA SENHA DE APP                           ║
-    ║                                                          ║
-    ║   📊 STATUS: ✅ CONFIGURADO!                             ║
-    ║                                                          ║
-    ║   🚀 TESTAR: http://localhost:${PORT}/testar-email        ║
-    ║   📊 DASHBOARD: http://localhost:${PORT}/dashboard        ║
-    ║                                                          ║
-    ╚══════════════════════════════════════════════════════════╝
-    `);
+    console.log('');
+    console.log('╔════════════════════════════════════════════════════════════╗');
+    console.log('║         🔥 BARBAPRO DUO - SERVIDOR ATIVO! 🔥               ║');
+    console.log('╠════════════════════════════════════════════════════════════╣');
+    console.log(`║   📁 DISCO PERSISTENTE: ${DATA_DIR.padEnd(36)}║`);
+    console.log(`║   📄 ARQUIVO: ${DATA_FILE.padEnd(36)}║`);
+    console.log(`║   🌐 SERVIDOR: http://localhost:${PORT}                      ║`);
+    console.log(`║   📊 DASHBOARD: http://localhost:${PORT}/dashboard           ║`);
+    console.log('╠════════════════════════════════════════════════════════════╣');
+    console.log('║   ✅ LIMITE DE PAYLOAD: 50MB                               ║');
+    console.log('║   ✅ DISCO PERSISTENTE ATIVO                               ║');
+    console.log('║   ✅ WEBSOCKET ATIVO                                       ║');
+    console.log('╚════════════════════════════════════════════════════════════╝');
+    console.log('');
 });
