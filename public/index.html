@@ -1060,7 +1060,6 @@ let metodoPagamentoCustomSelecionado = null;
 let dataFiltroAtual = null;
 let ws = null;
 let isOnline = false;
-let syncTimeout = null;
 
 // ========== FUNÇÕES DE DATA ==========
 function getDataAtualBrasilia() {
@@ -1324,9 +1323,20 @@ function conectarWebSocket() {
             sincronizarDados();
             break;
           case 'servico_removido':
-            console.log('🗑️ Serviço removido por outro dispositivo');
-            sincronizarDados();
-            mostrarFeedback('🔄 Dados atualizados de outro dispositivo', 'info');
+            console.log('🗑️ Serviço removido por outro dispositivo:', data.id);
+            // Processar exclusão remota
+            if (data.barbeiro && dados[data.barbeiro]) {
+              const indexRemover = dados[data.barbeiro].findIndex(s => s.id === data.id);
+              if (indexRemover !== -1) {
+                dados[data.barbeiro].splice(indexRemover, 1);
+                salvarDadosLocais();
+                if (usuarioAtual === data.barbeiro) {
+                  atualizarListaServicos();
+                  atualizarResumoDiario();
+                }
+                mostrarFeedback(`🗑️ Serviço removido por ${data.barbeiro}`, 'info');
+              }
+            }
             break;
         }
       } catch (error) {
@@ -1981,7 +1991,7 @@ function atualizarListaServicos() {
         <tbody>
   `;
   
-  servicosFiltrados.forEach((servico, index) => {
+  servicosFiltrados.forEach((servico, idx) => {
     const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
     const statusTexto = servico.pago ? 'PAGO' : 'FIADO';
     
@@ -2007,7 +2017,7 @@ function atualizarListaServicos() {
           ${metodoIcon} ${statusTexto}
         </td>
         <td>
-          <button class="action-btn" onclick="apagarServico(${index})" title="Apagar serviço">
+          <button class="action-btn" onclick="apagarServico(${servico.id})" title="Apagar serviço">
             ×
           </button>
         </td>
@@ -2022,6 +2032,72 @@ function atualizarListaServicos() {
   `;
   
   container.innerHTML = html;
+}
+
+// ========== APAGAR SERVIÇO (VERSÃO CORRIGIDA COM SINCronização TOTAL) ==========
+async function apagarServico(servicoId) {
+  if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação não pode ser desfeita.')) {
+    return;
+  }
+  
+  // Encontrar o serviço pelo ID
+  const indiceCompleto = dados[usuarioAtual].findIndex(s => s.id === servicoId);
+  
+  if (indiceCompleto !== -1) {
+    const servicoRemovido = dados[usuarioAtual][indiceCompleto];
+    console.log('🗑️ Serviço removido localmente:', servicoRemovido);
+    
+    // Remover do array local
+    dados[usuarioAtual].splice(indiceCompleto, 1);
+    
+    // Salvar localmente
+    salvarDadosLocais();
+    
+    // Sincronizar com o servidor
+    if (isOnline) {
+      try {
+        // Enviar dados atualizados para o servidor
+        const response = await fetch('/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: dados })
+        });
+        
+        if (response.ok) {
+          console.log('✅ Exclusão sincronizada com o servidor');
+          
+          // Notificar outros dispositivos via WebSocket
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'servico_removido',
+              id: servicoId,
+              barbeiro: usuarioAtual,
+              data: servicoRemovido.data,
+              timestamp: Date.now()
+            }));
+          }
+          
+          mostrarFeedback('✅ Serviço removido e sincronizado!', 'success');
+        } else {
+          console.log('⚠️ Falha ao sincronizar exclusão');
+          mostrarFeedback('⚠️ Serviço removido apenas localmente', 'warning');
+        }
+      } catch (error) {
+        console.error('❌ Erro na sincronização:', error);
+        mostrarFeedback('⚠️ Serviço removido apenas localmente', 'warning');
+      }
+    } else {
+      console.log('📴 Offline - serviço removido apenas localmente');
+      mostrarFeedback('⚠️ Serviço removido localmente (offline)', 'warning');
+    }
+    
+    // Atualizar interface
+    atualizarListaServicos();
+    atualizarResumoDiario();
+  } else {
+    console.log('❌ Serviço não encontrado para remover');
+    mostrarFeedback('❌ Serviço não encontrado', 'danger');
+  }
 }
 
 function filtrarServicos() {
@@ -2043,47 +2119,6 @@ function limparFiltro() {
   dataFiltroAtual = hoje;
   console.log('🗓️ Filtro resetado para hoje (Brasília):', hoje);
   atualizarListaServicos();
-}
-
-async function apagarServico(index) {
-  if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação não pode ser desfeita.')) {
-    return;
-  }
-  
-  const dataFiltro = dataFiltroAtual || getDataAtualBrasilia();
-  const servicosFiltrados = dados[usuarioAtual].filter(s => s.data === dataFiltro);
-  
-  if (index >= 0 && index < servicosFiltrados.length) {
-    const servicoParaApagar = servicosFiltrados[index];
-    
-    const indiceCompleto = dados[usuarioAtual].findIndex(s => 
-      s.id === servicoParaApagar.id || 
-      (s.data === servicoParaApagar.data && 
-       s.hora === servicoParaApagar.hora && 
-       s.cliente === servicoParaApagar.cliente)
-    );
-    
-    if (indiceCompleto !== -1) {
-      const servicoRemovido = dados[usuarioAtual].splice(indiceCompleto, 1)[0];
-      console.log('🗑️ Serviço removido:', servicoRemovido);
-      
-      salvarDadosLocais();
-      await salvarDadosServidor();
-      
-      if (isOnline && ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: 'servico_removido',
-          id: servicoParaApagar.id,
-          barbeiro: usuarioAtual,
-          data: servicoParaApagar.data
-        }));
-      }
-      
-      atualizarListaServicos();
-      atualizarResumoDiario();
-      mostrarFeedback('✅ Serviço removido e sincronizado!', 'success');
-    }
-  }
 }
 
 function abrirModalEnviarWhatsApp() {
@@ -2198,7 +2233,7 @@ function mostrarNotificacaoServico(data) {
   
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification("💈 BarbaPRO - Novo Serviço", {
-      body: `${data.barbeiro} realizou ${data.servico} para ${data.cliente}\nValor: R$ ${data.valor}\n${data.timestamp}`,
+      body: `${data.barbeiro} realizou ${data.servico} para ${data.cliente}\nValor: R$ ${data.valor}`,
       icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💈</text></svg>",
       tag: "barbapro-notification"
     });
@@ -2228,7 +2263,7 @@ function mostrarNotificacaoServico(data) {
       <div style="font-size: 14px; line-height: 1.4;">
         <strong>${data.servico}</strong> para ${data.cliente}<br>
         <strong>Valor:</strong> R$ ${data.valor}<br>
-        <small style="opacity: 0.8;">${data.timestamp}</small>
+        <small style="opacity: 0.8;">${data.hora}</small>
       </div>
     `;
     
@@ -2242,33 +2277,6 @@ function mostrarNotificacaoServico(data) {
         }
       }, 300);
     }, 5000);
-  }
-}
-
-function debugDatas() {
-  console.log('🔍 DEBUG - DATAS NO SISTEMA');
-  console.log('📅 Data atual (sistema):', new Date());
-  console.log('📅 Data atual (ISO UTC):', new Date().toISOString());
-  console.log('📅 Data atual (ISO split):', new Date().toISOString().split('T')[0]);
-  console.log('📅 Data atual (Brasília):', getDataAtualBrasilia());
-  console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
-  
-  const hojeCorreto = getDataAtualBrasilia();
-  const servicosFuturos = [];
-  
-  [...dados.Gabriel, ...dados.Wagner].forEach(servico => {
-    if (servico.data > hojeCorreto) {
-      servicosFuturos.push(servico);
-    }
-  });
-  
-  if (servicosFuturos.length > 0) {
-    console.log(`⚠️ ${servicosFuturos.length} serviços com data futura:`);
-    servicosFuturos.forEach(s => {
-      console.log(`   ${s.data} - ${s.barbeiro} - ${s.tipo} - R$ ${s.valor}`);
-    });
-  } else {
-    console.log('✅ Nenhum serviço com data futura encontrado');
   }
 }
 
@@ -2312,13 +2320,6 @@ setInterval(() => {
 
 console.log('💈 BarbaPRO Duo - Sistema de Registro carregado com sucesso!');
 console.log('💰 Valores atualizados: Corte R$30 | Barba R$20 | Combo R$40');
-
-window.debugDatas = debugDatas;
-
-console.log('🧪 Teste de datas:');
-console.log('   Data UTC:', new Date().toISOString().split('T')[0]);
-console.log('   Data Brasil:', getDataAtualBrasilia());
-console.log('   Hora Brasil:', getHoraAtualBrasilia());
-  </script>
+</script>
 </body>
 </html>
