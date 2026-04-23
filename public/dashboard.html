@@ -1870,7 +1870,6 @@
     <!-- ========== JAVASCRIPT ========== -->
     <script>
 // ========== VARIÁVEIS GLOBAIS ==========
-// ========== VARIÁVEIS GLOBAIS ==========
 let dados = { 
     Gabriel: [], 
     Wagner: [],
@@ -1893,8 +1892,6 @@ let notificacaoAtiva = false;
 let editandoMensalistaId = null;
 let editandoDespesaId = null;
 let filtroStatusAtual = 'todos';
-let barbeiroAtual = 'Wagner';
-let barbeiroAuxiliar = 'Gabriel';
 let ws = null;
 
 // ========== INICIALIZAÇÃO ==========
@@ -1904,28 +1901,13 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function carregarDadosIniciais() {
-    // Primeiro tenta carregar do localStorage
     carregarDadosLocais();
-    
-    // Depois tenta carregar do servidor
     carregarDadosDoServidor();
-    
-    // Configurar datas
     configurarDatasDashboard();
-    
-    // Configurar eventos
     configurarEventListenersDashboard();
-    
-    // Inicializar gráficos
     inicializarGraficos();
-    
-    // Atualizar tudo
     atualizarDashboardCompleto();
-    
-    // Iniciar verificações
     iniciarVerificacoesPeriodicas();
-    
-    // Conectar WebSocket
     conectarWebSocket();
 }
 
@@ -1944,7 +1926,7 @@ function carregarDadosLocais() {
                 dados.config = { ...dados.config, ...dadosParseados.config };
             }
             
-            console.log('📂 Dados carregados do localStorage');
+            console.log('📂 Dados carregados do localStorage:', dados.Gabriel.length, 'serviços Gabriel,', dados.Wagner.length, 'serviços Wagner');
         }
     } catch (error) {
         console.error('❌ Erro ao carregar dados locais:', error);
@@ -1974,12 +1956,17 @@ function carregarDadosDoServidor() {
         })
         .then(result => {
             if (result.success && result.data) {
-                // Mesclar dados do servidor com os locais
+                let alterado = false;
+                
                 if (result.data.Gabriel) {
-                    dados.Gabriel = unificarArrays(dados.Gabriel, result.data.Gabriel);
+                    const novosGabriel = unificarArrays(dados.Gabriel, result.data.Gabriel);
+                    if (novosGabriel.length !== dados.Gabriel.length) alterado = true;
+                    dados.Gabriel = novosGabriel;
                 }
                 if (result.data.Wagner) {
-                    dados.Wagner = unificarArrays(dados.Wagner, result.data.Wagner);
+                    const novosWagner = unificarArrays(dados.Wagner, result.data.Wagner);
+                    if (novosWagner.length !== dados.Wagner.length) alterado = true;
+                    dados.Wagner = novosWagner;
                 }
                 if (result.data.despesas) {
                     dados.despesas = unificarArrays(dados.despesas, result.data.despesas);
@@ -1993,9 +1980,14 @@ function carregarDadosDoServidor() {
                 
                 garantirConfiguracoes();
                 salvarDadosLocais();
-                atualizarDashboardCompleto();
                 
-                console.log('✅ Dados sincronizados com servidor!');
+                if (alterado) {
+                    console.log('✅ Dados atualizados do servidor!');
+                    atualizarDashboardCompleto();
+                    mostrarFeedback('🔄 Dados sincronizados com o servidor!', 'success');
+                } else {
+                    console.log('✅ Dados já estão sincronizados');
+                }
             }
         })
         .catch(error => {
@@ -2028,24 +2020,33 @@ function garantirConfiguracoes() {
     }
 }
 
-// ========== UNIFICAR ARRAYS (SEM DUPLICAR) ==========
+// ========== UNIFICAR ARRAYS ==========
 function unificarArrays(local, servidor) {
     const mapa = new Map();
     
+    // Primeiro adiciona todos os itens do servidor
     servidor.forEach(item => {
-        const key = item.id || JSON.stringify(item);
-        mapa.set(key, item);
-    });
-    
-    local.forEach(item => {
-        const key = item.id || JSON.stringify(item);
-        const existente = mapa.get(key);
-        if (!existente || (item.timestamp && existente.timestamp && item.timestamp > existente.timestamp)) {
+        const key = item.id;
+        if (key) {
             mapa.set(key, item);
         }
     });
     
-    return Array.from(mapa.values());
+    // Depois adiciona itens locais que não existem no servidor
+    local.forEach(item => {
+        const key = item.id;
+        if (key && !mapa.has(key)) {
+            mapa.set(key, item);
+        } else if (key && mapa.has(key)) {
+            // Se existe nos dois, mantém o mais recente
+            const existente = mapa.get(key);
+            if (item.timestamp && existente.timestamp && item.timestamp > existente.timestamp) {
+                mapa.set(key, item);
+            }
+        }
+    });
+    
+    return Array.from(mapa.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
 // ========== SALVAR DADOS NO SERVIDOR ==========
@@ -2066,19 +2067,189 @@ async function salvarDadosNoServidor() {
         if (result.success) {
             console.log('✅ Dados salvos no servidor!');
             
-            // Notificar via WebSocket para outros dispositivos
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
-                    type: 'update_data',
+                    type: 'sync_completo',
                     data: dados
                 }));
             }
             
             return true;
+        } else {
+            throw new Error('Falha ao salvar');
         }
     } catch (error) {
         console.error('❌ Erro ao salvar no servidor:', error);
         return false;
+    }
+}
+
+// ========== FUNÇÃO PARA EXCLUIR SERVIÇO (CORRIGIDA) ==========
+async function excluirServico(servicoId, barbeiro) {
+    if (!confirm('⚠️ Excluir este serviço permanentemente?\n\nEsta ação será sincronizada com todos os dispositivos!')) {
+        return;
+    }
+    
+    if (!dados[barbeiro]) {
+        alert('❌ Barbeiro não encontrado!');
+        return;
+    }
+    
+    const index = dados[barbeiro].findIndex(s => s.id === servicoId);
+    if (index === -1) {
+        alert('❌ Serviço não encontrado!');
+        return;
+    }
+    
+    const servicoRemovido = dados[barbeiro][index];
+    console.log('🗑️ Removendo serviço:', servicoRemovido);
+    
+    // Remover o serviço localmente
+    dados[barbeiro].splice(index, 1);
+    salvarDadosLocais();
+    
+    // Enviar para o servidor
+    try {
+        const response = await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: dados })
+        });
+        
+        if (response.ok) {
+            console.log('✅ Exclusão salva no servidor!');
+            
+            // Notificar TODOS os dispositivos via WebSocket
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                // Enviar evento de exclusão específico
+                ws.send(JSON.stringify({
+                    type: 'servico_removido',
+                    id: servicoId,
+                    barbeiro: barbeiro,
+                    dataServico: servicoRemovido.data,
+                    timestamp: Date.now()
+                }));
+                
+                // Também enviar sync completo após 100ms para garantir
+                setTimeout(() => {
+                    ws.send(JSON.stringify({
+                        type: 'sync_completo',
+                        data: dados
+                    }));
+                }, 100);
+            }
+            
+            mostrarFeedback(`✅ Serviço excluído e sincronizado com todos os dispositivos!`, 'success');
+        } else {
+            throw new Error('Falha ao salvar no servidor');
+        }
+    } catch (error) {
+        console.error('❌ Erro ao sincronizar exclusão:', error);
+        mostrarFeedback('⚠️ Serviço excluído localmente. Tentando sincronizar...', 'warning');
+        
+        // Tentar novamente após 2 segundos
+        setTimeout(() => {
+            salvarDadosNoServidor();
+        }, 2000);
+    }
+    
+    // Atualizar interface
+    atualizarDashboardCompleto();
+}
+
+// ========== WEBSOCKET CORRIGIDO ==========
+function conectarWebSocket() {
+    try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(`${protocol}//${window.location.host}`);
+        
+        ws.onopen = () => {
+            console.log('📡 WebSocket conectado!');
+            mostrarFeedback('📡 Conectado ao servidor em tempo real', 'success');
+            
+            // Solicitar dados atuais ao conectar
+            setTimeout(() => {
+                carregarDadosDoServidor();
+            }, 500);
+        };
+        
+        ws.onmessage = (event) => {
+            try {
+                const message = JSON.parse(event.data);
+                console.log('📥 Mensagem WebSocket recebida:', message.type);
+                
+                // Sincronização completa de dados
+                if (message.type === 'sync_completo' || message.type === 'dados_iniciais') {
+                    if (message.data) {
+                        console.log('🔄 Recebendo sync completo do servidor');
+                        
+                        let alterado = false;
+                        
+                        if (message.data.Gabriel) {
+                            const novosGabriel = unificarArrays(dados.Gabriel, message.data.Gabriel);
+                            if (novosGabriel.length !== dados.Gabriel.length) alterado = true;
+                            dados.Gabriel = novosGabriel;
+                        }
+                        if (message.data.Wagner) {
+                            const novosWagner = unificarArrays(dados.Wagner, message.data.Wagner);
+                            if (novosWagner.length !== dados.Wagner.length) alterado = true;
+                            dados.Wagner = novosWagner;
+                        }
+                        if (message.data.despesas) {
+                            dados.despesas = unificarArrays(dados.despesas, message.data.despesas);
+                        }
+                        if (message.data.mensalistas) {
+                            dados.mensalistas = unificarArrays(dados.mensalistas, message.data.mensalistas);
+                        }
+                        
+                        if (alterado) {
+                            salvarDadosLocais();
+                            atualizarDashboardCompleto();
+                            mostrarFeedback('🔄 Dados atualizados de outro dispositivo!', 'success');
+                        }
+                    }
+                }
+                
+                // Processar exclusão remota de serviço
+                if (message.type === 'servico_removido') {
+                    console.log(`🗑️ Serviço removido remotamente: ID ${message.id} do barbeiro ${message.barbeiro}`);
+                    
+                    if (dados[message.barbeiro]) {
+                        const indexRemover = dados[message.barbeiro].findIndex(s => s.id === message.id);
+                        if (indexRemover !== -1) {
+                            const servicoRemovido = dados[message.barbeiro][indexRemover];
+                            dados[message.barbeiro].splice(indexRemover, 1);
+                            salvarDadosLocais();
+                            atualizarDashboardCompleto();
+                            mostrarFeedback(`🗑️ Serviço de ${message.barbeiro} foi removido por outro dispositivo`, 'info');
+                        }
+                    }
+                }
+                
+                // Comando para atualizar dados
+                if (message.type === 'atualizar') {
+                    console.log('🔄 Recebido comando para atualizar dados');
+                    carregarDadosDoServidor();
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro ao processar mensagem WebSocket:', error);
+            }
+        };
+        
+        ws.onclose = () => {
+            console.log('📡 WebSocket desconectado, reconectando em 5 segundos...');
+            mostrarFeedback('📡 Desconectado do servidor. Reconectando...', 'warning');
+            setTimeout(conectarWebSocket, 5000);
+        };
+        
+        ws.onerror = (error) => {
+            console.error('❌ Erro WebSocket:', error);
+        };
+        
+    } catch (error) {
+        console.error('❌ Erro ao conectar WebSocket:', error);
+        setTimeout(conectarWebSocket, 5000);
     }
 }
 
@@ -2096,93 +2267,37 @@ function configurarDatasDashboard() {
         return `${ano}-${mes}-${dia}`;
     };
     
-    const dataInicioServicos = document.getElementById('dataInicioServicos');
-    const dataFimServicos = document.getElementById('dataFimServicos');
-    const dataInicioDespesas = document.getElementById('dataInicioDespesas');
-    const dataFimDespesas = document.getElementById('dataFimDespesas');
-    const dataInicioPagamentos = document.getElementById('dataInicioPagamentos');
-    const dataFimPagamentos = document.getElementById('dataFimPagamentos');
-    const dataInicioMensalistas = document.getElementById('dataInicioMensalistas');
-    const dataFimMensalistas = document.getElementById('dataFimMensalistas');
-    const dataInicioMensalista = document.getElementById('dataInicioMensalista');
-    const diaVencimentoMensalista = document.getElementById('diaVencimentoMensalista');
-    const dataDespesa = document.getElementById('dataDespesa');
+    const elementos = {
+        dataInicioServicos: document.getElementById('dataInicioServicos'),
+        dataFimServicos: document.getElementById('dataFimServicos'),
+        dataInicioDespesas: document.getElementById('dataInicioDespesas'),
+        dataFimDespesas: document.getElementById('dataFimDespesas'),
+        dataInicioPagamentos: document.getElementById('dataInicioPagamentos'),
+        dataFimPagamentos: document.getElementById('dataFimPagamentos'),
+        dataInicioMensalistas: document.getElementById('dataInicioMensalistas'),
+        dataFimMensalistas: document.getElementById('dataFimMensalistas'),
+        dataInicioMensalista: document.getElementById('dataInicioMensalista'),
+        dataDespesa: document.getElementById('dataDespesa')
+    };
     
-    if (dataInicioServicos) dataInicioServicos.value = formatarData(umaSemanaAtras);
-    if (dataFimServicos) dataFimServicos.value = formatarData(hoje);
-    if (dataInicioDespesas) dataInicioDespesas.value = formatarData(umaSemanaAtras);
-    if (dataFimDespesas) dataFimDespesas.value = formatarData(hoje);
-    if (dataInicioPagamentos) dataInicioPagamentos.value = formatarData(primeiroDiaMes);
-    if (dataFimPagamentos) dataFimPagamentos.value = formatarData(hoje);
-    if (dataInicioMensalistas) dataInicioMensalistas.value = formatarData(primeiroDiaMes);
-    if (dataFimMensalistas) dataFimMensalistas.value = formatarData(hoje);
-    if (dataInicioMensalista) dataInicioMensalista.value = formatarData(hoje);
-    if (diaVencimentoMensalista) diaVencimentoMensalista.value = hoje.getDate();
-    if (dataDespesa) dataDespesa.value = formatarData(hoje);
+    if (elementos.dataInicioServicos) elementos.dataInicioServicos.value = formatarData(umaSemanaAtras);
+    if (elementos.dataFimServicos) elementos.dataFimServicos.value = formatarData(hoje);
+    if (elementos.dataInicioDespesas) elementos.dataInicioDespesas.value = formatarData(umaSemanaAtras);
+    if (elementos.dataFimDespesas) elementos.dataFimDespesas.value = formatarData(hoje);
+    if (elementos.dataInicioPagamentos) elementos.dataInicioPagamentos.value = formatarData(primeiroDiaMes);
+    if (elementos.dataFimPagamentos) elementos.dataFimPagamentos.value = formatarData(hoje);
+    if (elementos.dataInicioMensalistas) elementos.dataInicioMensalistas.value = formatarData(primeiroDiaMes);
+    if (elementos.dataFimMensalistas) elementos.dataFimMensalistas.value = formatarData(hoje);
+    if (elementos.dataInicioMensalista) elementos.dataInicioMensalista.value = formatarData(hoje);
+    if (elementos.dataDespesa) elementos.dataDespesa.value = formatarData(hoje);
+    
+    const diaVencimento = document.getElementById('diaVencimentoMensalista');
+    if (diaVencimento) diaVencimento.value = hoje.getDate();
 }
 
-// ========== WEBSOCKET (CORRIGIDO PARA SINCRONIZAÇÃO) ==========
-function conectarWebSocket() {
-    try {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        ws = new WebSocket(`${protocol}//${window.location.host}`);
-        
-        ws.onopen = () => {
-            console.log('📡 WebSocket conectado');
-        };
-        
-        ws.onmessage = (event) => {
-            try {
-                const message = JSON.parse(event.data);
-                console.log('📥 Mensagem WebSocket:', message.type);
-                
-                if (message.type === 'sync_completo' || message.type === 'dados_iniciais') {
-                    if (message.data) {
-                        // Mesclar dados recebidos
-                        if (message.data.Gabriel) {
-                            dados.Gabriel = unificarArrays(dados.Gabriel, message.data.Gabriel);
-                        }
-                        if (message.data.Wagner) {
-                            dados.Wagner = unificarArrays(dados.Wagner, message.data.Wagner);
-                        }
-                        if (message.data.despesas) {
-                            dados.despesas = unificarArrays(dados.despesas, message.data.despesas);
-                        }
-                        if (message.data.mensalistas) {
-                            dados.mensalistas = unificarArrays(dados.mensalistas, message.data.mensalistas);
-                        }
-                        
-                        salvarDadosLocais();
-                        atualizarDashboardCompleto();
-                        mostrarFeedback('🔄 Dados atualizados de outro dispositivo!', 'success');
-                    }
-                }
-                
-                if (message.type === 'atualizar') {
-                    console.log('🔄 Recebido comando para atualizar');
-                    carregarDadosDoServidor();
-                }
-                
-            } catch (error) {
-                console.error('❌ Erro WebSocket:', error);
-            }
-        };
-        
-        ws.onclose = () => {
-            console.log('📡 WebSocket desconectado, reconectando...');
-            setTimeout(conectarWebSocket, 5000);
-        };
-        
-        ws.onerror = (error) => {
-            console.error('❌ Erro WebSocket:', error);
-        };
-    } catch (error) {
-        console.error('❌ Erro ao conectar WebSocket:', error);
-    }
-}
-
-// ========== ATUALIZAR DASHBOARD ==========
+// ========== ATUALIZAR DASHBOARD COMPLETO ==========
 function atualizarDashboardCompleto() {
+    console.log('🔄 Atualizando dashboard completo...');
     atualizarEstatisticasBarbeiros();
     atualizarEstatisticasGerais();
     atualizarEstatisticasDespesas();
@@ -2385,7 +2500,7 @@ function atualizarGraficoPizza() {
     graficoPizza.update();
 }
 
-// ========== LISTA DE SERVIÇOS ==========
+// ========== LISTA DE SERVIÇOS RECENTES ==========
 function atualizarListaServicosRecentes() {
     const dataInicio = document.getElementById('dataInicioServicos')?.value;
     const dataFim = document.getElementById('dataFimServicos')?.value;
@@ -2436,7 +2551,7 @@ function atualizarListaServicosRecentes() {
                     <span class="badge" style="background:${s.barbeiro === 'Wagner' ? 'rgba(51,102,255,0.2)' : 'rgba(255,170,0,0.2)'}; color:${s.barbeiro === 'Wagner' ? '#3366ff' : '#ffaa00'}; padding:6px 12px; border-radius:20px; font-weight:600;">
                         ${s.barbeiro || 'N/A'}
                     </span>
-                </td>
+                 </td>
                 <td>${s.tipo || 'Corte'}</td>
                 <td>${s.cliente || 'Cliente'}</td>
                 <td style="font-weight:600; color:#ffaa00;">R$ ${(s.valor || 0).toFixed(2)}</td>
@@ -2469,55 +2584,17 @@ function obterIconeMetodo(metodo) {
     return icones[metodo] || '💰';
 }
 
-// ========== EXCLUIR SERVIÇO (VERSÃO CORRIGIDA COM SYNC) ==========
-async function excluirServico(servicoId, barbeiro) {
-    if (!confirm('⚠️ Excluir este serviço permanentemente?')) return;
-    
-    if (!dados[barbeiro]) {
-        alert('❌ Barbeiro não encontrado!');
-        return;
-    }
-    
-    const index = dados[barbeiro].findIndex(s => s.id === servicoId);
-    if (index === -1) {
-        alert('❌ Serviço não encontrado!');
-        return;
-    }
-    
-    // Remover o serviço
-    dados[barbeiro].splice(index, 1);
-    
-    // Salvar localmente
-    salvarDadosLocais();
-    
-    // Enviar para o servidor
+function formatarDataBR(data) {
+    if (!data) return '';
     try {
-        const response = await fetch('/api/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: dados })
-        });
-        
-        if (response.ok) {
-            console.log('✅ Exclusão sincronizada com servidor!');
-            
-            // Notificar outros dispositivos via WebSocket
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({
-                    type: 'update_data',
-                    data: dados
-                }));
-            }
-            
-            mostrarFeedback('✅ Serviço excluído e sincronizado!', 'success');
+        const partes = data.split('-');
+        if (partes.length === 3) {
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
         }
-    } catch (error) {
-        console.error('❌ Erro ao sincronizar exclusão:', error);
-        mostrarFeedback('⚠️ Excluído localmente, mas falha ao sincronizar', 'warning');
+        return data;
+    } catch (e) {
+        return data;
     }
-    
-    // Atualizar interface
-    atualizarDashboardCompleto();
 }
 
 // ========== DESPESAS ==========
@@ -2619,17 +2696,11 @@ function adicionarOuAtualizarDespesa() {
 }
 
 function limparFormDespesa() {
-    const descricao = document.getElementById('descricaoDespesa');
-    const valor = document.getElementById('valorDespesa');
-    const tags = document.getElementById('tagsDespesa');
-    const comprovante = document.getElementById('comprovanteDespesa');
-    const observacoes = document.getElementById('observacoesDespesa');
-    
-    if (descricao) descricao.value = '';
-    if (valor) valor.value = '';
-    if (tags) tags.value = '';
-    if (comprovante) comprovante.value = '';
-    if (observacoes) observacoes.value = '';
+    const campos = ['descricaoDespesa', 'valorDespesa', 'tagsDespesa', 'comprovanteDespesa', 'observacoesDespesa'];
+    campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
 }
 
 // ========== MENSALISTAS ==========
@@ -2648,19 +2719,21 @@ function atualizarResumoStatusMensalistas() {
         return venc.getTime() === hoje.getTime();
     }).length;
     
-    const counterTodos = document.getElementById('counterTodos');
-    const counterPagos = document.getElementById('counterPagos');
-    const counterPendentes = document.getElementById('counterPendentes');
-    const counterVencidos = document.getElementById('counterVencidos');
-    const counterHoje = document.getElementById('counterHoje');
+    const counters = {
+        counterTodos: document.getElementById('counterTodos'),
+        counterPagos: document.getElementById('counterPagos'),
+        counterPendentes: document.getElementById('counterPendentes'),
+        counterVencidos: document.getElementById('counterVencidos'),
+        counterHoje: document.getElementById('counterHoje')
+    };
+    
+    if (counters.counterTodos) counters.counterTodos.textContent = m.length;
+    if (counters.counterPagos) counters.counterPagos.textContent = pagos;
+    if (counters.counterPendentes) counters.counterPendentes.textContent = pendentes;
+    if (counters.counterVencidos) counters.counterVencidos.textContent = vencidos;
+    if (counters.counterHoje) counters.counterHoje.textContent = vencemHoje;
+    
     const resumoStatus = document.getElementById('resumoStatusMensalistas');
-    
-    if (counterTodos) counterTodos.textContent = m.length;
-    if (counterPagos) counterPagos.textContent = pagos;
-    if (counterPendentes) counterPendentes.textContent = pendentes;
-    if (counterVencidos) counterVencidos.textContent = vencidos;
-    if (counterHoje) counterHoje.textContent = vencemHoje;
-    
     if (resumoStatus) {
         resumoStatus.innerHTML = `
             <div class="status-card pago">
@@ -2683,7 +2756,7 @@ function atualizarResumoStatusMensalistas() {
     }
 }
 
-function filtrarMensalistasPorStatus(status, usarFiltros = false) {
+function filtrarMensalistasPorStatus(status) {
     filtroStatusAtual = status;
     
     let filtrados = [...(dados.mensalistas || [])];
@@ -2750,14 +2823,14 @@ function filtrarMensalistasPorStatus(status, usarFiltros = false) {
             </div>`;
         });
     } else {
+        let emptyMessage = 'Cadastre seu primeiro mensalista';
+        if (status === 'vencido') emptyMessage = '✅ Todos os mensalistas estão em dia!';
+        if (status === 'hoje') emptyMessage = '🎉 Ninguém vence hoje!';
+        
         html = `<div class="empty-state">
             <div class="empty-state-icon">👥</div>
             <div class="empty-state-title">Nenhum mensalista encontrado</div>
-            <div class="empty-state-subtitle">
-                ${status === 'vencido' ? '✅ Todos os mensalistas estão em dia!' : 
-                  status === 'hoje' ? '🎉 Ninguém vence hoje!' : 
-                  'Cadastre seu primeiro mensalista'}
-            </div>
+            <div class="empty-state-subtitle">${emptyMessage}</div>
             <button class="btn btn-success" onclick="abrirModalMensalistas()" style="margin-top:20px;">+ Novo Mensalista</button>
         </div>`;
     }
@@ -2854,19 +2927,16 @@ function adicionarOuAtualizarMensalista() {
 }
 
 function limparFormMensalista() {
-    const nome = document.getElementById('nomeMensalista');
-    const telefone = document.getElementById('telefoneMensalista');
-    const valor = document.getElementById('valorMensalista');
-    const observacoes = document.getElementById('observacoesMensalista');
+    const campos = ['nomeMensalista', 'telefoneMensalista', 'valorMensalista', 'observacoesMensalista'];
+    campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    
+    const hoje = new Date();
     const dataInicio = document.getElementById('dataInicioMensalista');
     const diaVencimento = document.getElementById('diaVencimentoMensalista');
     
-    if (nome) nome.value = '';
-    if (telefone) telefone.value = '';
-    if (valor) valor.value = '';
-    if (observacoes) observacoes.value = '';
-    
-    const hoje = new Date();
     if (dataInicio) dataInicio.value = hoje.toISOString().split('T')[0];
     if (diaVencimento) diaVencimento.value = hoje.getDate();
 }
@@ -2920,7 +2990,7 @@ function configurarEventListenersDashboard() {
     const btnConfiguracoes = document.getElementById('btnConfiguracoes');
     const btnEnviarResumo = document.getElementById('btnEnviarResumo');
     
-    if (btnVoltarRegistro) btnVoltarRegistro.addEventListener('click', voltarParaRegistro);
+    if (btnVoltarRegistro) btnVoltarRegistro.addEventListener('click', () => { window.location.href = '/'; });
     if (btnConfiguracoes) btnConfiguracoes.addEventListener('click', abrirModalConfiguracoes);
     if (btnEnviarResumo) btnEnviarResumo.addEventListener('click', () => abrirModalResumoCompleto());
     
@@ -2932,7 +3002,7 @@ function configurarEventListenersDashboard() {
     
     if (btnVerResumoCompleto) btnVerResumoCompleto.addEventListener('click', () => abrirModalResumoCompleto());
     if (btnRelatorioDetalhado) btnRelatorioDetalhado.addEventListener('click', abrirModalPagamentos);
-    if (btnEnviarMensalistas) btnEnviarMensalistas.addEventListener('click', enviarLembretesMensalistas);
+    if (btnEnviarMensalistas) btnEnviarMensalistas.addEventListener('click', () => alert(`📢 ${(dados.mensalistas || []).filter(m => m.status === 'pendente' || m.status === 'vencido').length} mensalista(s) pendente(s)`));
     if (btnGerenciarDespesas) btnGerenciarDespesas.addEventListener('click', () => abrirModalDespesas());
     
     // Despesas
@@ -2946,7 +3016,7 @@ function configurarEventListenersDashboard() {
     if (btnNovaDespesa) btnNovaDespesa.addEventListener('click', () => abrirModalDespesas());
     if (btnNovaDespesaRapida) btnNovaDespesaRapida.addEventListener('click', () => abrirModalDespesas());
     if (btnFiltrarDespesas) btnFiltrarDespesas.addEventListener('click', atualizarListaDespesasRecentes);
-    if (btnExportarDespesas) btnExportarDespesas.addEventListener('click', exportarDadosDespesas);
+    if (btnExportarDespesas) btnExportarDespesas.addEventListener('click', () => alert('📤 Exportar despesas - Em breve'));
     if (btnAdicionarDespesa) btnAdicionarDespesa.addEventListener('click', adicionarOuAtualizarDespesa);
     if (btnLimparFormDespesa) btnLimparFormDespesa.addEventListener('click', limparFormDespesa);
     
@@ -2958,7 +3028,7 @@ function configurarEventListenersDashboard() {
     const btnLimparFormMensalista = document.getElementById('btnLimparFormMensalista');
     
     if (btnNovoMensalista) btnNovoMensalista.addEventListener('click', abrirModalMensalistas);
-    if (btnFiltrarMensalistas) btnFiltrarMensalistas.addEventListener('click', () => filtrarMensalistasPorStatus('todos', true));
+    if (btnFiltrarMensalistas) btnFiltrarMensalistas.addEventListener('click', () => filtrarMensalistasPorStatus('todos'));
     if (btnLimparFiltros) btnLimparFiltros.addEventListener('click', limparFiltrosMensalistas);
     if (btnAdicionarMensalista) btnAdicionarMensalista.addEventListener('click', adicionarOuAtualizarMensalista);
     if (btnLimparFormMensalista) btnLimparFormMensalista.addEventListener('click', limparFormMensalista);
@@ -2970,7 +3040,7 @@ function configurarEventListenersDashboard() {
     
     if (btnFiltrarServicos) btnFiltrarServicos.addEventListener('click', atualizarListaServicosRecentes);
     if (btnEnviarRelatorioServicos) btnEnviarRelatorioServicos.addEventListener('click', () => enviarRelatorioWhatsApp('servicos'));
-    if (btnExportarServicos) btnExportarServicos.addEventListener('click', exportarDadosServicos);
+    if (btnExportarServicos) btnExportarServicos.addEventListener('click', () => alert('📤 Exportar serviços - Em breve'));
     
     // Pagamentos
     const btnEnviarPagamentos = document.getElementById('btnEnviarPagamentos');
@@ -3144,20 +3214,6 @@ function fecharModal(modalId) {
     if (modal) modal.style.display = 'none';
 }
 
-// ========== FUNÇÕES AUXILIARES ==========
-function formatarDataBR(data) {
-    if (!data) return '';
-    try {
-        const partes = data.split('-');
-        if (partes.length === 3) {
-            return `${partes[2]}/${partes[1]}/${partes[0]}`;
-        }
-        return data;
-    } catch (e) {
-        return data;
-    }
-}
-
 function voltarParaRegistro() {
     window.location.href = '/';
 }
@@ -3230,18 +3286,58 @@ function gerarRelatorioPagamentosDetalhado() {
     
     const total = servicos.reduce((s, v) => s + (v.valor || 0), 0);
     const pago = servicos.filter(s => s.pago).reduce((s, v) => s + (v.valor || 0), 0);
+    const fiado = total - pago;
     
-    const html = `<div style="background:rgba(51,102,255,0.1); padding:20px; border-radius:15px;">
-        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; text-align:center;">
-            <div><div style="color:#aaa;">TOTAL</div><div style="font-size:24px; color:#25D366;">R$ ${total.toFixed(2)}</div></div>
-            <div><div style="color:#aaa;">SERVIÇOS</div><div style="font-size:24px;">${servicos.length}</div></div>
-            <div><div style="color:#aaa;">RECEBIDO</div><div style="font-size:20px; color:#25D366;">R$ ${pago.toFixed(2)}</div></div>
-            <div><div style="color:#aaa;">FIADO</div><div style="font-size:20px; color:#FF9500;">R$ ${(total - pago).toFixed(2)}</div></div>
+    // Calcular por método de pagamento
+    const dinheiro = servicos.filter(s => s.metodoPagamento === 'dinheiro').reduce((s, v) => s + (v.valor || 0), 0);
+    const pix = servicos.filter(s => s.metodoPagamento === 'pix').reduce((s, v) => s + (v.valor || 0), 0);
+    const debito = servicos.filter(s => s.metodoPagamento === 'debito').reduce((s, v) => s + (v.valor || 0), 0);
+    const credito = servicos.filter(s => s.metodoPagamento === 'credito').reduce((s, v) => s + (v.valor || 0), 0);
+    
+    const html = `
+        <div style="background:rgba(51,102,255,0.1); padding:20px; border-radius:15px; margin-bottom:20px;">
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; text-align:center;">
+                <div><div style="color:#aaa;">TOTAL</div><div style="font-size:24px; color:#25D366;">R$ ${total.toFixed(2)}</div></div>
+                <div><div style="color:#aaa;">SERVIÇOS</div><div style="font-size:24px;">${servicos.length}</div></div>
+                <div><div style="color:#aaa;">RECEBIDO</div><div style="font-size:20px; color:#25D366;">R$ ${pago.toFixed(2)}</div></div>
+                <div><div style="color:#aaa;">FIADO</div><div style="font-size:20px; color:#FF9500;">R$ ${fiado.toFixed(2)}</div></div>
+            </div>
         </div>
-    </div>`;
+        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:15px;">
+            <div style="background:rgba(255,170,0,0.1); padding:15px; border-radius:12px;">
+                <h4 style="color:#ffaa00; margin-bottom:10px;">💵 FORMAS DE PAGAMENTO</h4>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span>💵 Dinheiro:</span>
+                    <span style="font-weight:700;">R$ ${dinheiro.toFixed(2)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span>📱 PIX:</span>
+                    <span style="font-weight:700;">R$ ${pix.toFixed(2)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span>💳 Débito:</span>
+                    <span style="font-weight:700;">R$ ${debito.toFixed(2)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>💳 Crédito:</span>
+                    <span style="font-weight:700;">R$ ${credito.toFixed(2)}</span>
+                </div>
+            </div>
+            <div style="background:rgba(37,211,102,0.1); padding:15px; border-radius:12px;">
+                <h4 style="color:#25D366; margin-bottom:10px;">📊 POR BARBEIRO</h4>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span>👨‍🦱 Gabriel:</span>
+                    <span style="font-weight:700;">R$ ${servicos.filter(s => s.barbeiro === 'Gabriel').reduce((a,b) => a + (b.valor||0), 0).toFixed(2)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>👨‍🦱 Wagner:</span>
+                    <span style="font-weight:700;">R$ ${servicos.filter(s => s.barbeiro === 'Wagner').reduce((a,b) => a + (b.valor||0), 0).toFixed(2)}</span>
+                </div>
+            </div>
+        </div>`;
     
-    const relatorio = document.getElementById('relatorioPagamentosDetalhado');
-    if (relatorio) relatorio.innerHTML = html;
+    const relatorioContainer = document.getElementById('relatorioPagamentosDetalhado');
+    if (relatorioContainer) relatorioContainer.innerHTML = html;
 }
 
 function enviarRelatorioWhatsApp(tipo) {
@@ -3282,20 +3378,31 @@ function enviarRelatorioWhatsApp(tipo) {
               `*BarbaPRO Duo*`;
         
         window.open(`https://wa.me/55${numero.replace(/\D/g, '')}?text=${msg}`, '_blank');
+    } else if (tipo === 'pagamentos') {
+        const dataInicio = document.getElementById('dataInicioPagamentos')?.value || new Date().toISOString().split('T')[0];
+        const dataFim = document.getElementById('dataFimPagamentos')?.value || new Date().toISOString().split('T')[0];
+        
+        let servicos = [...(dados.Wagner || []), ...(dados.Gabriel || [])].filter(s => 
+            s.data && s.data >= dataInicio && s.data <= dataFim
+        );
+        
+        const total = servicos.reduce((s, v) => s + (v.valor || 0), 0);
+        const pago = servicos.filter(s => s.pago).reduce((s, v) => s + (v.valor || 0), 0);
+        
+        msg = `*💰 RELATÓRIO DE PAGAMENTOS*%0A` +
+              `📅 Período: ${formatarDataBR(dataInicio)} a ${formatarDataBR(dataFim)}%0A%0A` +
+              `*Total:* R$ ${total.toFixed(2)}%0A` +
+              `*Recebido:* R$ ${pago.toFixed(2)}%0A` +
+              `*Fiado:* R$ ${(total-pago).toFixed(2)}%0A%0A` +
+              `*BarbaPRO Duo*`;
+        
+        window.open(`https://wa.me/55${numero.replace(/\D/g, '')}?text=${msg}`, '_blank');
+    } else if (tipo === 'servicos') {
+        msg = `*📝 RELATÓRIO DE SERVIÇOS*%0A%0A` +
+              `Consulte o dashboard para mais detalhes.%0A%0A` +
+              `*BarbaPRO Duo*`;
+        window.open(`https://wa.me/55${numero.replace(/\D/g, '')}?text=${msg}`, '_blank');
     }
-}
-
-function enviarLembretesMensalistas() {
-    const pendentes = (dados.mensalistas || []).filter(m => m.status === 'pendente' || m.status === 'vencido');
-    alert(`📢 ${pendentes.length} mensalista(s) pendente(s)`);
-}
-
-function exportarDadosDespesas() {
-    alert('📤 Exportar despesas - Em breve');
-}
-
-function exportarDadosServicos() {
-    alert('📤 Exportar serviços - Em breve');
 }
 
 // ========== FUNÇÃO PARA MOSTRAR FEEDBACK ==========
@@ -3313,14 +3420,15 @@ function mostrarFeedback(mensagem, tipo = 'info') {
         border-radius: 10px;
         box-shadow: 0 8px 25px rgba(0,0,0,0.3);
         z-index: 10000;
-        max-width: 300px;
+        max-width: 350px;
         animation: slideInRight 0.3s ease;
         font-family: inherit;
         border: 1px solid rgba(255,255,255,0.3);
         backdrop-filter: blur(10px);
+        font-size: 14px;
     `;
     
-    feedback.innerHTML = `<div style="font-weight: bold; font-size: 14px;">${mensagem}</div>`;
+    feedback.innerHTML = `<div style="font-weight: bold;">${mensagem}</div>`;
     document.body.appendChild(feedback);
     
     setTimeout(() => {
@@ -3331,8 +3439,22 @@ function mostrarFeedback(mensagem, tipo = 'info') {
     }, 3000);
 }
 
-// ========== FIM ==========
+// Estilos para animações
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
 console.log('✅ Dashboard carregado com valores: Corte R$30, Barba R$20, Combo R$40');
+console.log('✅ Sistema de sincronização de exclusão configurado!');
     </script>
 </body>
 </html>
