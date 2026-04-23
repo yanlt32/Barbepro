@@ -1323,18 +1323,19 @@ function conectarWebSocket() {
             sincronizarDados();
             break;
           case 'servico_removido':
-            console.log('🗑️ Serviço removido por outro dispositivo:', data.id);
+            console.log('🗑️ Serviço removido remotamente:', data.id, 'Barbeiro:', data.barbeiro);
             // Processar exclusão remota
             if (data.barbeiro && dados[data.barbeiro]) {
               const indexRemover = dados[data.barbeiro].findIndex(s => s.id === data.id);
               if (indexRemover !== -1) {
                 dados[data.barbeiro].splice(indexRemover, 1);
                 salvarDadosLocais();
+                // Atualizar a interface se for o usuário atual
                 if (usuarioAtual === data.barbeiro) {
                   atualizarListaServicos();
                   atualizarResumoDiario();
                 }
-                mostrarFeedback(`🗑️ Serviço removido por ${data.barbeiro}`, 'info');
+                mostrarFeedback(`🗑️ Serviço de ${data.barbeiro} foi removido`, 'info');
               }
             }
             break;
@@ -1391,7 +1392,7 @@ function carregarDadosLocais() {
         dados.config.combo = 40;
       }
       
-      console.log('📂 Dados carregados do localStorage');
+      console.log('📂 Dados carregados do localStorage - Gabriel:', dados.Gabriel.length, 'Wagner:', dados.Wagner.length);
     } else {
       console.log('📝 Nenhum dado salvo encontrado');
     }
@@ -1474,24 +1475,25 @@ function unificarServicos(locais, servidor) {
   const mapa = new Map();
   
   servidor.forEach(servico => {
-    const key = servico.id || `${servico.data}_${servico.hora}_${servico.cliente}`;
-    mapa.set(key, servico);
-  });
-  
-  locais.forEach(servico => {
-    const key = servico.id || `${servico.data}_${servico.hora}_${servico.cliente}`;
-    const existente = mapa.get(key);
-    
-    if (!existente || (servico.timestamp && existente.timestamp && servico.timestamp > existente.timestamp)) {
+    const key = servico.id;
+    if (key) {
       mapa.set(key, servico);
     }
   });
   
-  return Array.from(mapa.values()).sort((a, b) => {
-    const timestampA = a.timestamp || 0;
-    const timestampB = b.timestamp || 0;
-    return timestampB - timestampA;
+  locais.forEach(servico => {
+    const key = servico.id;
+    if (key && !mapa.has(key)) {
+      mapa.set(key, servico);
+    } else if (key && mapa.has(key)) {
+      const existente = mapa.get(key);
+      if (servico.timestamp && existente.timestamp && servico.timestamp > existente.timestamp) {
+        mapa.set(key, servico);
+      }
+    }
   });
+  
+  return Array.from(mapa.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
 function unificarMensalistas(locais, servidor) {
@@ -1668,12 +1670,13 @@ function abrirModalPagamento(tipo) {
   opcaoPagamentoSelecionada = null;
   metodoPagamentoSelecionado = null;
   
-  document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => {
-    btn.classList.remove('selecionado');
-  });
-  document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => {
-    btn.classList.remove('selecionado');
-  });
+  const modalPagamento = document.getElementById('modalPagamento');
+  if (modalPagamento) {
+    const opcaoBtns = modalPagamento.querySelectorAll('.opcao-pagamento-btn');
+    const metodoBtns = modalPagamento.querySelectorAll('.metodo-pagamento-btn');
+    opcaoBtns.forEach(btn => btn.classList.remove('selecionado'));
+    metodoBtns.forEach(btn => btn.classList.remove('selecionado'));
+  }
   
   document.getElementById('metodosPagamentoContainer').style.display = 'none';
   
@@ -1775,7 +1778,6 @@ function selecionarMetodoPagamentoCustom(metodo) {
 }
 
 async function confirmarServico() {
-  // VALIDAÇÃO DO NOME DO CLIENTE - OBRIGATÓRIO!
   const nomeCliente = document.getElementById('nomeClientePagamento').value.trim();
   
   if (!nomeCliente) {
@@ -1857,9 +1859,7 @@ async function confirmarServico() {
   metodoPagamentoSelecionado = null;
   
   const status = opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO';
-  mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>${nome} - ${nomeCliente} - R$ ${valor.toFixed(2)}`, 'success');
-  
-  console.log('🎉 Serviço salvo:', servico);
+  mostrarFeedback(`✅ Serviço ${status}: ${nome} - ${nomeCliente} - R$ ${valor.toFixed(2)}`, 'success');
 }
 
 function abrirModalOutro() {
@@ -1884,7 +1884,6 @@ async function salvarServicoCustom() {
   const valorInput = document.getElementById('valorCustom').value;
   const valor = parseFloat(valorInput);
   
-  // VALIDAÇÃO DO NOME DO CLIENTE - OBRIGATÓRIO!
   const nomeCliente = document.getElementById('nomeCliente').value.trim();
   
   if (!nomeCliente) {
@@ -1938,9 +1937,7 @@ async function salvarServicoCustom() {
   metodoPagamentoCustomSelecionado = null;
   
   const status = opcaoPagamentoCustomSelecionada === 'pago' ? 'PAGO' : 'FIADO';
-  mostrarFeedback(`✅ Serviço ${status} registrado com sucesso!<br>${nomeCliente} - R$ ${valor.toFixed(2)}`, 'success');
-  
-  console.log('🎉 Serviço custom salvo:', servico);
+  mostrarFeedback(`✅ Serviço ${status}: ${nomeCliente} - R$ ${valor.toFixed(2)}`, 'success');
 }
 
 function atualizarListaServicos() {
@@ -1951,7 +1948,7 @@ function atualizarListaServicos() {
     return servico.data === dataFiltro;
   });
   
-  console.log(`📋 Mostrando ${servicosFiltrados.length} serviços para ${dataFiltro}`);
+  console.log(`📋 Mostrando ${servicosFiltrados.length} serviços para ${dataFiltro} do usuário ${usuarioAtual}`);
   
   servicosFiltrados.sort((a, b) => {
     if (a.timestamp && b.timestamp) {
@@ -1977,21 +1974,21 @@ function atualizarListaServicos() {
   
   let html = `
     <div style="overflow-x: auto;">
-      <table>
+      <table style="width:100%; border-collapse:collapse;">
         <thead>
-          <tr>
-            <th>Hora</th>
-            <th>Serviço</th>
-            <th>Cliente</th>
-            <th>Valor</th>
-            <th>Status</th>
-            <th>Ação</th>
+          <tr style="background:rgba(255,170,0,0.1);">
+            <th style="padding:12px; border:1px solid rgba(255,170,0,0.3);">Hora</th>
+            <th style="padding:12px; border:1px solid rgba(255,170,0,0.3);">Serviço</th>
+            <th style="padding:12px; border:1px solid rgba(255,170,0,0.3);">Cliente</th>
+            <th style="padding:12px; border:1px solid rgba(255,170,0,0.3);">Valor</th>
+            <th style="padding:12px; border:1px solid rgba(255,170,0,0.3);">Status</th>
+            <th style="padding:12px; border:1px solid rgba(255,170,0,0.3);">Ação</th>
           </tr>
         </thead>
         <tbody>
   `;
   
-  servicosFiltrados.forEach((servico, idx) => {
+  servicosFiltrados.forEach((servico) => {
     const statusClass = servico.pago ? 'servico-pago' : 'servico-fiado';
     const statusTexto = servico.pago ? 'PAGO' : 'FIADO';
     
@@ -2002,6 +1999,7 @@ function atualizarListaServicos() {
         case 'pix': metodoIcon = '📱'; break;
         case 'debito': metodoIcon = '💳'; break;
         case 'credito': metodoIcon = '💳'; break;
+        default: metodoIcon = '💰';
       }
     } else {
       metodoIcon = '⏳';
@@ -2009,15 +2007,15 @@ function atualizarListaServicos() {
     
     html += `
       <tr>
-        <td>${servico.hora}</td>
-        <td>${servico.tipo}</td>
-        <td><strong>${servico.cliente}</strong></td>
-        <td>R$ ${servico.valor.toFixed(2)}</td>
-        <td class="${statusClass}">
+        <td style="padding:12px; border:1px solid rgba(255,170,0,0.3);">${servico.hora}</td>
+        <td style="padding:12px; border:1px solid rgba(255,170,0,0.3);">${servico.tipo}</td>
+        <td style="padding:12px; border:1px solid rgba(255,170,0,0.3);"><strong>${servico.cliente}</strong></td>
+        <td style="padding:12px; border:1px solid rgba(255,170,0,0.3);">R$ ${servico.valor.toFixed(2)}</td>
+        <td style="padding:12px; border:1px solid rgba(255,170,0,0.3);" class="${statusClass}">
           ${metodoIcon} ${statusTexto}
         </td>
-        <td>
-          <button class="action-btn" onclick="apagarServico(${servico.id})" title="Apagar serviço">
+        <td style="padding:12px; border:1px solid rgba(255,170,0,0.3);">
+          <button class="action-btn" onclick="apagarServico(${servico.id})" style="background:#ff3366; color:white; border:none; width:36px; height:36px; border-radius:8px; cursor:pointer; font-size:18px;">
             ×
           </button>
         </td>
@@ -2034,24 +2032,32 @@ function atualizarListaServicos() {
   container.innerHTML = html;
 }
 
-// ========== APAGAR SERVIÇO (VERSÃO CORRIGIDA COM SINCronização TOTAL) ==========
+// ========== APAGAR SERVIÇO CORRIGIDO ==========
 async function apagarServico(servicoId) {
-  if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação não pode ser desfeita.')) {
+  console.log('🗑️ Tentando apagar serviço ID:', servicoId);
+  console.log('📋 Serviços atuais do usuário:', dados[usuarioAtual].map(s => ({ id: s.id, cliente: s.cliente })));
+  
+  if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação não pode ser desfeita e será sincronizada com todos os dispositivos.')) {
     return;
   }
   
   // Encontrar o serviço pelo ID
-  const indiceCompleto = dados[usuarioAtual].findIndex(s => s.id === servicoId);
+  const indiceCompleto = dados[usuarioAtual].findIndex(s => s.id == servicoId);
   
   if (indiceCompleto !== -1) {
     const servicoRemovido = dados[usuarioAtual][indiceCompleto];
-    console.log('🗑️ Serviço removido localmente:', servicoRemovido);
+    console.log('🗑️ Serviço encontrado para remover:', servicoRemovido);
     
     // Remover do array local
     dados[usuarioAtual].splice(indiceCompleto, 1);
+    console.log('📋 Serviços após remoção local:', dados[usuarioAtual].length);
     
     // Salvar localmente
     salvarDadosLocais();
+    
+    // Atualizar a interface IMEDIATAMENTE
+    atualizarListaServicos();
+    atualizarResumoDiario();
     
     // Sincronizar com o servidor
     if (isOnline) {
@@ -2068,19 +2074,34 @@ async function apagarServico(servicoId) {
           
           // Notificar outros dispositivos via WebSocket
           if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
+            const mensagemWS = {
               type: 'servico_removido',
               id: servicoId,
               barbeiro: usuarioAtual,
               data: servicoRemovido.data,
               timestamp: Date.now()
-            }));
+            };
+            ws.send(JSON.stringify(mensagemWS));
+            console.log('📤 Mensagem WebSocket enviada:', mensagemWS);
+            
+            // Também enviar sync completo para garantir
+            setTimeout(() => {
+              ws.send(JSON.stringify({
+                type: 'sync_completo',
+                data: dados
+              }));
+            }, 100);
           }
           
-          mostrarFeedback('✅ Serviço removido e sincronizado!', 'success');
+          mostrarFeedback('✅ Serviço removido e sincronizado com todos os dispositivos!', 'success');
         } else {
           console.log('⚠️ Falha ao sincronizar exclusão');
-          mostrarFeedback('⚠️ Serviço removido apenas localmente', 'warning');
+          mostrarFeedback('⚠️ Serviço removido apenas localmente. Tentando sincronizar...', 'warning');
+          
+          // Tentar novamente após 2 segundos
+          setTimeout(() => {
+            salvarDadosServidor();
+          }, 2000);
         }
       } catch (error) {
         console.error('❌ Erro na sincronização:', error);
@@ -2091,11 +2112,8 @@ async function apagarServico(servicoId) {
       mostrarFeedback('⚠️ Serviço removido localmente (offline)', 'warning');
     }
     
-    // Atualizar interface
-    atualizarListaServicos();
-    atualizarResumoDiario();
   } else {
-    console.log('❌ Serviço não encontrado para remover');
+    console.log('❌ Serviço não encontrado para remover. IDs disponíveis:', dados[usuarioAtual].map(s => s.id));
     mostrarFeedback('❌ Serviço não encontrado', 'danger');
   }
 }
@@ -2189,7 +2207,10 @@ function verificarSenhaDashboard() {
 }
 
 function fecharModal(id) {
-  document.getElementById(id).style.display = 'none';
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.style.display = 'none';
+  }
 }
 
 function mostrarFeedback(mensagem, tipo = 'info') {
@@ -2206,14 +2227,15 @@ function mostrarFeedback(mensagem, tipo = 'info') {
     border-radius: 10px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     z-index: 10000;
-    max-width: 300px;
+    max-width: 350px;
     animation: slideInRight 0.3s ease;
     font-family: inherit;
     border: 1px solid rgba(255,255,255,0.3);
     backdrop-filter: blur(10px);
+    font-size: 14px;
   `;
   
-  feedback.innerHTML = `<div style="font-weight: bold; font-size: 14px;">${mensagem}</div>`;
+  feedback.innerHTML = `<div style="font-weight: bold;">${mensagem}</div>`;
   document.body.appendChild(feedback);
   
   setTimeout(() => {
@@ -2245,7 +2267,7 @@ function mostrarNotificacaoServico(data) {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+      background: linear-gradient(45deg, #ffaa00, #ff5500);
       color: white;
       padding: 15px 20px;
       border-radius: 10px;
@@ -2253,7 +2275,7 @@ function mostrarNotificacaoServico(data) {
       z-index: 10000;
       max-width: 300px;
       animation: slideInRight 0.3s ease;
-      border-left: 4px solid var(--success);
+      border-left: 4px solid #25D366;
       font-family: inherit;
       backdrop-filter: blur(10px);
     `;
@@ -2287,17 +2309,23 @@ document.addEventListener('click', function(event) {
   }
 });
 
-document.getElementById('pinDashboard')?.addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') {
-    verificarSenhaDashboard();
-  }
-});
+const pinDashboard = document.getElementById('pinDashboard');
+if (pinDashboard) {
+  pinDashboard.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      verificarSenhaDashboard();
+    }
+  });
+}
 
-document.getElementById('valorCustom')?.addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') {
-    salvarServicoCustom();
-  }
-});
+const valorCustom = document.getElementById('valorCustom');
+if (valorCustom) {
+  valorCustom.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      salvarServicoCustom();
+    }
+  });
+}
 
 document.addEventListener('visibilitychange', function() {
   if (!document.hidden) {
