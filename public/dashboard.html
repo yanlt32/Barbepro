@@ -1872,27 +1872,29 @@
 // ========== VARIÁVEIS GLOBAIS ==========
 let usuarioAtual = 'Gabriel';
 let dados = {
-  Gabriel: [],
-  Wagner: [],
-  despesas: [],
-  mensalistas: [],
-  config: {
-    pin: '1234',
-    whatsapp: '11962094589',
-    corte: 30,
-    barba: 20,
-    combo: 40
-  }
+    Gabriel: [],
+    Wagner: [],
+    despesas: [],
+    mensalistas: [],
+    config: {
+        pin: '1234',
+        whatsapp: '11962094589',
+        corte: 30,
+        barba: 20,
+        combo: 40,
+        orcamentoDespesas: 1500,
+        notificacoesAtivas: true,
+        diasAlerta: 3
+    }
 };
 
 let servicoSelecionado = null;
 let opcaoPagamentoSelecionada = null;
 let metodoPagamentoSelecionado = null;
-let opcaoPagamentoCustomSelecionada = null;
-let metodoPagamentoCustomSelecionado = null;
 let dataFiltroAtual = null;
 let ws = null;
 let isOnline = false;
+let graficoPizza = null;
 
 // ========== FUNÇÕES DE DATA ==========
 function getDataAtualBrasilia() {
@@ -1909,8 +1911,9 @@ function getDataAtualBrasilia() {
 function formatarDataBR(dataISO) {
     if (!dataISO) return '';
     if (dataISO.includes('/')) return dataISO;
-    const [ano, mes, dia] = dataISO.split('-');
-    return `${dia}/${mes}/${ano}`;
+    const partes = dataISO.split('-');
+    if (partes.length !== 3) return dataISO;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
 function getHoraAtualBrasilia() {
@@ -1921,123 +1924,84 @@ function getHoraAtualBrasilia() {
     return `${String(dataBrasilia.getHours()).padStart(2, '0')}:${String(dataBrasilia.getMinutes()).padStart(2, '0')}`;
 }
 
-// ========== FUNÇÕES DE RESUMO SEMANAL ==========
-function getDataInicioSemana() {
-    const hoje = new Date();
-    const offset = -3;
-    const utc = hoje.getTime() + (hoje.getTimezoneOffset() * 60000);
-    const dataBrasilia = new Date(utc + (3600000 * offset));
-    const diaSemana = dataBrasilia.getDay();
-    const diff = diaSemana === 0 ? 6 : diaSemana - 1;
-    const segunda = new Date(dataBrasilia);
-    segunda.setDate(dataBrasilia.getDate() - diff);
-    segunda.setHours(0, 0, 0, 0);
-    return `${segunda.getFullYear()}-${String(segunda.getMonth() + 1).padStart(2, '0')}-${String(segunda.getDate()).padStart(2, '0')}`;
+function getPrimeiroDiaMes() {
+    const hoje = getDataAtualBrasilia();
+    return hoje.substring(0, 8) + '01';
 }
 
-function getDataFimSemana() {
-    const inicio = getDataInicioSemana();
-    const data = new Date(inicio + 'T12:00:00-03:00');
-    data.setDate(data.getDate() + 5);
-    return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
-}
-
-function getResumoSemanal() {
-    const inicioSemana = getDataInicioSemana();
-    const fimSemana = getDataFimSemana();
-    const servicosSemana = dados[usuarioAtual].filter(s => s.data >= inicioSemana && s.data <= fimSemana);
-    const diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    const resumoDias = [];
-    
-    for (let i = 0; i < 6; i++) {
-        const dataDia = new Date(inicioSemana + 'T12:00:00-03:00');
-        dataDia.setDate(dataDia.getDate() + i);
-        const dataStr = `${dataDia.getFullYear()}-${String(dataDia.getMonth() + 1).padStart(2, '0')}-${String(dataDia.getDate()).padStart(2, '0')}`;
-        const servicosDia = servicosSemana.filter(s => s.data === dataStr);
-        const totalDia = servicosDia.reduce((sum, s) => sum + s.valor, 0);
-        const pagoDia = servicosDia.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
-        resumoDias.push({
-            dia: diasSemana[i],
-            data: dataStr,
-            quantidade: servicosDia.length,
-            total: totalDia,
-            pago: pagoDia,
-            fiado: totalDia - pagoDia
-        });
-    }
-    
-    const totalServicos = servicosSemana.length;
-    const totalValor = servicosSemana.reduce((sum, s) => sum + s.valor, 0);
-    const totalPago = servicosSemana.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
-    
-    return {
-        inicio: inicioSemana,
-        fim: fimSemana,
-        dias: resumoDias,
-        totalServicos,
-        totalValor,
-        totalPago,
-        totalFiado: totalValor - totalPago
-    };
-}
-
-function abrirModalResumoSemanal() {
-    const resumo = getResumoSemanal();
-    document.getElementById('semanaPeriodo').textContent = `${formatarDataBR(resumo.inicio)} a ${formatarDataBR(resumo.fim)}`;
-    document.getElementById('semanaServicos').textContent = resumo.totalServicos;
-    document.getElementById('semanaTotal').textContent = `R$ ${resumo.totalValor.toFixed(2)}`;
-    document.getElementById('semanaPago').textContent = `R$ ${resumo.totalPago.toFixed(2)}`;
-    document.getElementById('semanaFiado').textContent = `R$ ${resumo.totalFiado.toFixed(2)}`;
-    
-    let html = '';
-    resumo.dias.forEach(d => {
-        html += `<tr><td>${d.dia}<br><small style="color:#666;">${formatarDataBR(d.data)}</small></td><td>${d.quantidade}</td><td>R$ ${d.total.toFixed(2)}</td><td>R$ ${d.pago.toFixed(2)}</td></tr>`;
-    });
-    document.getElementById('tabelaResumoSemanal').innerHTML = html;
-    document.getElementById('modalResumoSemanal').style.display = 'flex';
-}
-
-function enviarResumoSemanalWhatsApp() {
-    const resumo = getResumoSemanal();
-    const telefone = dados.config.whatsapp;
-    let mensagem = `*📊 MEU RESUMO DA SEMANA - ${usuarioAtual.toUpperCase()}*\n\n📅 Período: ${formatarDataBR(resumo.inicio)} a ${formatarDataBR(resumo.fim)}\n\n📈 *RESUMO GERAL*\n• Total de serviços: ${resumo.totalServicos}\n• Valor total: R$ ${resumo.totalValor.toFixed(2)}\n• Valor recebido: R$ ${resumo.totalPago.toFixed(2)}\n• Valor fiado: R$ ${resumo.totalFiado.toFixed(2)}\n\n📱 *Sistema BarbaPRO Duo*`;
-    window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`, '_blank');
-    fecharModal('modalResumoSemanal');
-    mostrarFeedback('📱 Resumo da semana enviado!', 'success');
+function getUltimoDiaMes() {
+    const hoje = new Date(getDataAtualBrasilia() + 'T12:00:00-03:00');
+    const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    return `${ultimoDia.getFullYear()}-${String(ultimoDia.getMonth() + 1).padStart(2, '0')}-${String(ultimoDia.getDate()).padStart(2, '0')}`;
 }
 
 // ========== INICIALIZAÇÃO ==========
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 BarbaPRO - Sistema inicializando...');
-    inicializarSistema();
-});
-
 function inicializarSistema() {
+    console.log('🚀 BarbaPRO - Sistema inicializando...');
     carregarDadosLocais();
     garantirConfiguracoesAtualizadas();
     verificarDatasServicos();
+    
     const hoje = getDataAtualBrasilia();
+    dataFiltroAtual = hoje;
+    
     const dataFiltro = document.getElementById('dataFiltro');
     if (dataFiltro) dataFiltro.value = hoje;
-    dataFiltroAtual = hoje;
+    
     const dataHoje = document.getElementById('dataHoje');
     if (dataHoje) dataHoje.textContent = formatarDataBR(hoje);
+    
     console.log('📅 Data atual (Brasília):', hoje);
     console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
-    conectarWebSocket();
+    
+    inicializarMensalistasExemplo();
+    inicializarDespesasExemplo();
     atualizarInterface();
-    console.log('✅ Sistema inicializado com sucesso!');
+    atualizarResumoStatusMensalistas();
+    atualizarAlertasVencimento();
+    atualizarGraficoPizza();
+    iniciarVerificacaoVencimentos();
+    conectarWebSocket();
+    
+    console.log('✅ Conectado ao servidor!');
 }
 
 function garantirConfiguracoesAtualizadas() {
     if (!dados.config) {
-        dados.config = { pin: '1234', whatsapp: '11962094589', corte: 30, barba: 20, combo: 40 };
-    } else {
-        dados.config.corte = 30;
-        dados.config.barba = 20;
-        dados.config.combo = 40;
+        dados.config = { pin: '1234', whatsapp: '11962094589', corte: 30, barba: 20, combo: 40, orcamentoDespesas: 1500, notificacoesAtivas: true, diasAlerta: 3 };
     }
+    if (!dados.config.orcamentoDespesas) dados.config.orcamentoDespesas = 1500;
+    if (dados.config.notificacoesAtivas === undefined) dados.config.notificacoesAtivas = true;
+    if (!dados.config.diasAlerta) dados.config.diasAlerta = 3;
+    if (dados.config.corte !== 30) dados.config.corte = 30;
+    if (dados.config.barba !== 20) dados.config.barba = 20;
+    if (dados.config.combo !== 40) dados.config.combo = 40;
+    
     console.log('⚙️ Configurações atualizadas:', dados.config);
+}
+
+function inicializarMensalistasExemplo() {
+    if (!dados.mensalistas) dados.mensalistas = [];
+    
+    if (dados.mensalistas.length === 0) {
+        dados.mensalistas = [
+            { id: Date.now() + 1, nome: "Carlos Silva", telefone: "11999999999", barbeiro: "Gabriel", valor: 120, dataInicio: "2024-01-10", diaVencimento: 10, status: "pago", observacoes: "", ultimaAtualizacao: Date.now() },
+            { id: Date.now() + 2, nome: "Roberto Santos", telefone: "11988888888", barbeiro: "Wagner", valor: 120, dataInicio: "2024-01-15", diaVencimento: 15, status: "pendente", observacoes: "", ultimaAtualizacao: Date.now() }
+        ];
+        salvarDadosLocais();
+    }
+}
+
+function inicializarDespesasExemplo() {
+    if (!dados.despesas) dados.despesas = [];
+    
+    if (dados.despesas.length === 0) {
+        dados.despesas = [
+            { id: Date.now() + 1, descricao: "Compra de produtos", categoria: "Suprimentos", valor: 150.00, data: getDataAtualBrasilia(), tags: "", comprovante: "", observacoes: "", dataCriacao: Date.now() },
+            { id: Date.now() + 2, descricao: "Conta de energia", categoria: "Energia", valor: 85.50, data: getDataAtualBrasilia(), tags: "", comprovante: "", observacoes: "", dataCriacao: Date.now() }
+        ];
+        salvarDadosLocais();
+    }
 }
 
 // ========== WEBSOCKET ==========
@@ -2047,316 +2011,174 @@ function conectarWebSocket() {
         ws = new WebSocket(`${protocol}//${window.location.host}`);
         
         ws.onopen = function() {
-            console.log('✅ Conectado ao servidor!');
+            console.log('✅ WebSocket conectado!');
             isOnline = true;
-            atualizarStatusConexao(true);
-            mostrarFeedback('✅ Conectado ao servidor', 'success');
-            setTimeout(() => sincronizarDados(), 1000);
         };
         
         ws.onmessage = function(event) {
             try {
                 const data = JSON.parse(event.data);
-                console.log('📥 Mensagem do servidor:', data.type);
-                switch(data.type) {
-                    case 'dados_iniciais':
-                    case 'sync_completo':
-                        processarDadosServidor(data.data);
-                        break;
-                    case 'servico_removido':
-                        console.log('🗑️ Serviço removido remotamente:', data.id);
-                        if (data.barbeiro && dados[data.barbeiro]) {
-                            const index = dados[data.barbeiro].findIndex(s => s.id == data.id);
-                            if (index !== -1) {
-                                dados[data.barbeiro].splice(index, 1);
-                                salvarDadosLocais();
-                                if (usuarioAtual === data.barbeiro) atualizarListaServicos();
-                                mostrarFeedback(`🗑️ Serviço removido por ${data.barbeiro}`, 'info');
-                            }
-                        }
-                        break;
-                    case 'atualizar':
-                        sincronizarDados();
-                        break;
+                console.log('📥 Mensagem:', data.type);
+                if (data.type === 'sync_completo' || data.type === 'dados_iniciais') {
+                    processarDadosServidor(data.data);
                 }
             } catch (error) {
-                console.error('❌ Erro ao processar mensagem:', error);
+                console.error('Erro:', error);
             }
         };
         
         ws.onclose = function() {
-            console.log('🔌 Desconectado do servidor');
+            console.log('WebSocket desconectado');
             isOnline = false;
-            atualizarStatusConexao(false);
             setTimeout(conectarWebSocket, 5000);
         };
         
         ws.onerror = function(error) {
-            console.error('❌ Erro WebSocket:', error);
+            console.error('WebSocket erro:', error);
             isOnline = false;
-            atualizarStatusConexao(false);
         };
     } catch (error) {
-        console.error('❌ Erro ao conectar:', error);
+        console.error('Erro ao conectar:', error);
         isOnline = false;
-        atualizarStatusConexao(false);
-    }
-}
-
-function atualizarStatusConexao(online) {
-    const statusElement = document.getElementById('conexaoStatus');
-    if (statusElement) {
-        if (online) {
-            statusElement.textContent = 'ONLINE';
-            statusElement.className = 'conexao-status conexao-online';
-        } else {
-            statusElement.textContent = 'OFFLINE';
-            statusElement.className = 'conexao-status conexao-offline';
-        }
-    }
-}
-
-function carregarDadosLocais() {
-    try {
-        const dadosSalvos = localStorage.getItem('barbapro_duo');
-        if (dadosSalvos) {
-            const dadosParseados = JSON.parse(dadosSalvos);
-            if (Array.isArray(dadosParseados.Gabriel)) dados.Gabriel = dadosParseados.Gabriel;
-            if (Array.isArray(dadosParseados.Wagner)) dados.Wagner = dadosParseados.Wagner;
-            if (Array.isArray(dadosParseados.despesas)) dados.despesas = dadosParseados.despesas;
-            if (Array.isArray(dadosParseados.mensalistas)) dados.mensalistas = dadosParseados.mensalistas;
-            if (dadosParseados.config) dados.config = { ...dados.config, ...dadosParseados.config };
-            console.log('📂 Dados carregados - Gabriel:', dados.Gabriel.length, 'Wagner:', dados.Wagner.length);
-        }
-    } catch (error) {
-        console.error('❌ Erro ao carregar dados locais:', error);
-    }
-}
-
-function salvarDadosLocais() {
-    try {
-        localStorage.setItem('barbapro_duo', JSON.stringify(dados));
-        console.log('💾 Dados salvos localmente');
-        return true;
-    } catch (error) {
-        console.error('❌ Erro ao salvar dados locais:', error);
-        return false;
-    }
-}
-
-async function salvarDadosServidor() {
-    if (!isOnline) {
-        console.log('📴 Offline - salvando apenas localmente');
-        salvarDadosLocais();
-        return false;
-    }
-    try {
-        const response = await fetch('/api/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: dados })
-        });
-        if (response.ok) {
-            console.log('✅ Dados salvos no servidor');
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'update_data', data: dados }));
-            }
-            return true;
-        }
-        return false;
-    } catch (error) {
-        console.log('❌ Erro ao salvar no servidor:', error.message);
-        salvarDadosLocais();
-        return false;
     }
 }
 
 function processarDadosServidor(dadosServidor) {
-    try {
-        let alterado = false;
-        if (Array.isArray(dadosServidor.Gabriel)) {
-            const novos = unificarServicos(dados.Gabriel, dadosServidor.Gabriel);
-            if (novos.length !== dados.Gabriel.length) alterado = true;
-            dados.Gabriel = novos;
-        }
-        if (Array.isArray(dadosServidor.Wagner)) {
-            const novos = unificarServicos(dados.Wagner, dadosServidor.Wagner);
-            if (novos.length !== dados.Wagner.length) alterado = true;
-            dados.Wagner = novos;
-        }
-        if (Array.isArray(dadosServidor.mensalistas)) dados.mensalistas = unificarMensalistas(dados.mensalistas, dadosServidor.mensalistas);
-        if (Array.isArray(dadosServidor.despesas)) dados.despesas = unificarDespesas(dados.despesas, dadosServidor.despesas);
-        
-        if (alterado) {
-            salvarDadosLocais();
-            atualizarInterface();
-            mostrarFeedback('🔄 Dados sincronizados!', 'success');
-        }
-    } catch (error) {
-        console.error('❌ Erro ao processar dados do servidor:', error);
-    }
-}
-
-function unificarServicos(locais, servidor) {
-    const mapa = new Map();
-    servidor.forEach(s => { if (s.id) mapa.set(s.id, s); });
-    locais.forEach(s => {
-        if (s.id && !mapa.has(s.id)) mapa.set(s.id, s);
-        else if (s.id && mapa.has(s.id)) {
-            const existente = mapa.get(s.id);
-            if (s.timestamp && existente.timestamp && s.timestamp > existente.timestamp) mapa.set(s.id, s);
-        }
-    });
-    return Array.from(mapa.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-}
-
-function unificarMensalistas(locais, servidor) {
-    const mapa = new Map();
-    servidor.forEach(m => mapa.set(m.id, m));
-    locais.forEach(m => {
-        const existente = mapa.get(m.id);
-        if (!existente || (m.ultimaAtualizacao && existente.ultimaAtualizacao && m.ultimaAtualizacao > existente.ultimaAtualizacao)) {
-            mapa.set(m.id, m);
-        }
-    });
-    return Array.from(mapa.values()).sort((a, b) => b.id - a.id);
-}
-
-function unificarDespesas(locais, servidor) {
-    const mapa = new Map();
-    servidor.forEach(d => mapa.set(d.id, d));
-    locais.forEach(d => {
-        const existente = mapa.get(d.id);
-        if (!existente || (d.dataCriacao && existente.dataCriacao && d.dataCriacao > existente.dataCriacao)) {
-            mapa.set(d.id, d);
-        }
-    });
-    return Array.from(mapa.values()).sort((a, b) => b.id - a.id);
-}
-
-function aplicarConfiguracoes() {
-    const precoCorte = document.getElementById('precoCorte');
-    const precoBarba = document.getElementById('precoBarba');
-    const precoBarbaCabelo = document.getElementById('precoBarbaCabelo');
-    if (precoCorte) precoCorte.textContent = dados.config.corte.toFixed(2);
-    if (precoBarba) precoBarba.textContent = dados.config.barba.toFixed(2);
-    if (precoBarbaCabelo) precoBarbaCabelo.textContent = dados.config.combo.toFixed(2);
-}
-
-function verificarDatasServicos() {
-    const hoje = getDataAtualBrasilia();
-    let corrigidos = 0;
-    dados.Gabriel.forEach(s => { if (s.data > hoje) { s.data = hoje; corrigidos++; } });
-    dados.Wagner.forEach(s => { if (s.data > hoje) { s.data = hoje; corrigidos++; } });
-    if (corrigidos > 0) { salvarDadosLocais(); mostrarFeedback(`⚠️ ${corrigidos} serviços ajustados`, 'warning'); }
-}
-
-async function sincronizarDados() {
-    const btnSync = document.getElementById('btnSync');
-    const modal = document.getElementById('modalSincronizacao');
-    const icon = document.getElementById('syncStatusIcon');
-    const text = document.getElementById('syncStatusText');
-    const details = document.getElementById('syncStatusDetails');
+    let recarregar = false;
     
-    if (modal) modal.style.display = 'flex';
-    if (icon) icon.textContent = '🔄';
-    if (text) text.textContent = 'Sincronizando...';
-    if (details) details.textContent = 'Conectando...';
-    if (btnSync) btnSync.classList.add('syncing');
+    if (dadosServidor.Gabriel && Array.isArray(dadosServidor.Gabriel)) {
+        dados.Gabriel = dadosServidor.Gabriel;
+        recarregar = true;
+    }
+    if (dadosServidor.Wagner && Array.isArray(dadosServidor.Wagner)) {
+        dados.Wagner = dadosServidor.Wagner;
+        recarregar = true;
+    }
+    if (dadosServidor.mensalistas && Array.isArray(dadosServidor.mensalistas)) {
+        dados.mensalistas = dadosServidor.mensalistas;
+        recarregar = true;
+    }
+    if (dadosServidor.despesas && Array.isArray(dadosServidor.despesas)) {
+        dados.despesas = dadosServidor.despesas;
+        recarregar = true;
+    }
     
-    try {
-        const response = await fetch('/api/data');
-        if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-                processarDadosServidor(result.data);
-                const saveResponse = await fetch('/api/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: dados })
-                });
-                if (saveResponse.ok) {
-                    if (icon) icon.textContent = '✅';
-                    if (text) text.textContent = 'Sincronização completa!';
-                    if (details) details.textContent = 'Dados atualizados';
-                    setTimeout(() => { if (modal) modal.style.display = 'none'; }, 2000);
-                }
-            }
-        }
-    } catch (error) {
-        console.error('❌ Erro na sincronização:', error);
-        if (icon) icon.textContent = '❌';
-        if (text) text.textContent = 'Erro na sincronização';
-        setTimeout(() => { if (modal) modal.style.display = 'none'; }, 3000);
-    } finally {
-        if (btnSync) btnSync.classList.remove('syncing');
+    if (recarregar) {
+        salvarDadosLocais();
+        atualizarInterface();
+        atualizarListaMensalistas();
+        atualizarListaDespesas();
+        atualizarResumoStatusMensalistas();
     }
 }
 
-function atualizarInterface() {
-    atualizarListaServicos();
-    atualizarResumoDiario();
-    const usuarioAtualSpan = document.getElementById('usuarioAtual');
-    const nomeUsuarioSpan = document.getElementById('nomeUsuario');
-    if (usuarioAtualSpan) usuarioAtualSpan.textContent = usuarioAtual;
-    if (nomeUsuarioSpan) nomeUsuarioSpan.textContent = usuarioAtual;
-    aplicarConfiguracoes();
+// ========== FUNÇÕES DE EXCLUSÃO CORRIGIDAS ==========
+
+// EXCLUIR DESPESA - CORRIGIDA
+function excluirDespesa(id) {
+    console.log('🗑️ Tentando excluir despesa ID:', id);
+    
+    if (!confirm('⚠️ Tem certeza que deseja excluir esta despesa?')) return;
+    
+    // Encontrar a despesa antes de remover
+    const despesaRemovida = dados.despesas.find(d => d.id == id);
+    if (!despesaRemovida) {
+        mostrarFeedback('❌ Despesa não encontrada!', 'error');
+        return;
+    }
+    
+    // Remover do array
+    dados.despesas = dados.despesas.filter(d => d.id != id);
+    
+    // Salvar localmente
+    salvarDadosLocais();
+    
+    // Salvar no servidor
+    salvarDadosServidor();
+    
+    // Atualizar interface
+    atualizarListaDespesas();
+    atualizarEstatisticas();
+    
+    mostrarFeedback(`✅ Despesa "${despesaRemovida.descricao}" removida!`, 'success');
 }
 
-function toggleResultados() {
-    const container = document.getElementById('resultadosContainer');
-    const btn = document.getElementById('btnToggleResultados');
-    if (container && btn) {
-        if (container.classList.contains('show')) {
-            container.classList.remove('show');
-            btn.textContent = '👁️ Ver meus resultados do dia';
-        } else {
-            container.classList.add('show');
-            btn.textContent = '👁️ Ocultar resultados';
-            atualizarResumoDiario();
-        }
+// EXCLUIR MENSALISTA - CORRIGIDA
+function excluirMensalista(id) {
+    console.log('🗑️ Tentando excluir mensalista ID:', id);
+    
+    if (!confirm('⚠️ Tem certeza que deseja excluir este mensalista?')) return;
+    
+    // Encontrar o mensalista antes de remover
+    const mensalistaRemovido = dados.mensalistas.find(m => m.id == id);
+    if (!mensalistaRemovido) {
+        mostrarFeedback('❌ Mensalista não encontrado!', 'error');
+        return;
+    }
+    
+    // Remover do array
+    dados.mensalistas = dados.mensalistas.filter(m => m.id != id);
+    
+    // Salvar localmente
+    salvarDadosLocais();
+    
+    // Salvar no servidor
+    salvarDadosServidor();
+    
+    // Atualizar interface
+    atualizarListaMensalistas();
+    atualizarResumoStatusMensalistas();
+    atualizarAlertasVencimento();
+    
+    mostrarFeedback(`✅ Mensalista "${mensalistaRemovido.nome}" removido!`, 'success');
+}
+
+// MARCAR MENSALISTA COMO PAGO
+function marcarMensalistaPago(id) {
+    const mensalista = dados.mensalistas.find(m => m.id == id);
+    if (mensalista) {
+        mensalista.status = 'pago';
+        mensalista.ultimaAtualizacao = Date.now();
+        salvarDadosLocais();
+        salvarDadosServidor();
+        atualizarListaMensalistas();
+        atualizarResumoStatusMensalistas();
+        mostrarFeedback(`✅ ${mensalista.nome} marcado como PAGO!`, 'success');
     }
 }
 
-function atualizarResumoDiario() {
-    const hoje = getDataAtualBrasilia();
-    const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
-    const totalValor = servicosHoje.reduce((sum, s) => sum + s.valor, 0);
-    const totalFiado = servicosHoje.filter(s => !s.pago).reduce((sum, s) => sum + s.valor, 0);
-    const servicosEl = document.getElementById('resumoServicosHoje');
-    const totalEl = document.getElementById('resumoTotalHoje');
-    const fiadoEl = document.getElementById('resumoFiadoHoje');
-    if (servicosEl) servicosEl.textContent = servicosHoje.length;
-    if (totalEl) totalEl.textContent = `R$ ${totalValor.toFixed(2)}`;
-    if (fiadoEl) fiadoEl.textContent = `R$ ${totalFiado.toFixed(2)}`;
-}
-
-function trocarUsuario() {
-    usuarioAtual = usuarioAtual === 'Gabriel' ? 'Wagner' : 'Gabriel';
-    console.log('🔄 Trocando usuário para:', usuarioAtual);
+// EXCLUIR SERVIÇO
+function apagarServico(servicoId) {
+    if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?')) return;
+    
+    const index = dados[usuarioAtual].findIndex(s => s.id == servicoId);
+    if (index === -1) {
+        mostrarFeedback('❌ Serviço não encontrado!', 'error');
+        return;
+    }
+    
+    const servicoRemovido = dados[usuarioAtual][index];
+    dados[usuarioAtual].splice(index, 1);
+    
+    salvarDadosLocais();
+    salvarDadosServidor();
+    
     atualizarInterface();
-    mostrarFeedback(`👤 Usuário alterado para ${usuarioAtual}`);
+    atualizarGraficoPizza();
+    mostrarFeedback(`✅ Serviço de ${servicoRemovido.cliente} removido!`, 'success');
 }
 
+// ========== CRUD SERVIÇOS ==========
 function abrirModalPagamento(tipo) {
     servicoSelecionado = tipo;
     opcaoPagamentoSelecionada = null;
     metodoPagamentoSelecionado = null;
     
-    const modal = document.getElementById('modalPagamento');
-    if (modal) {
-        modal.querySelectorAll('.opcao-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-        modal.querySelectorAll('.metodo-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-    }
-    
-    const metodosContainer = document.getElementById('metodosPagamentoContainer');
-    if (metodosContainer) metodosContainer.style.display = 'none';
-    
     let nome, valor;
     switch(tipo) {
         case 'corte': nome = 'Corte'; valor = dados.config.corte; break;
         case 'barba': nome = 'Barba'; valor = dados.config.barba; break;
-        case 'barba-cabelo': nome = 'Barba + Cabelo'; valor = dados.config.combo; break;
+        case 'combo': nome = 'Corte + Barba'; valor = dados.config.combo; break;
         default: nome = 'Serviço'; valor = 0;
     }
     
@@ -2370,22 +2192,26 @@ function abrirModalPagamento(tipo) {
     if (nomeCliente) nomeCliente.value = '';
     if (erroNome) erroNome.style.display = 'none';
     
-    if (modal) modal.style.display = 'flex';
+    document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
+    document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
+    
+    const metodosContainer = document.getElementById('metodosPagamentoContainer');
+    if (metodosContainer) metodosContainer.style.display = 'none';
+    
+    document.getElementById('modalPagamento').style.display = 'flex';
 }
 
 function selecionarOpcaoPagamento(opcao) {
     opcaoPagamentoSelecionada = opcao;
-    metodoPagamentoSelecionado = null;
     document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
     event.currentTarget.classList.add('selecionado');
     
     const metodosContainer = document.getElementById('metodosPagamentoContainer');
     if (metodosContainer) {
+        metodosContainer.style.display = opcao === 'pago' ? 'block' : 'none';
         if (opcao === 'pago') {
-            metodosContainer.style.display = 'block';
+            metodoPagamentoSelecionado = null;
             document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-        } else {
-            metodosContainer.style.display = 'none';
         }
     }
 }
@@ -2397,31 +2223,7 @@ function selecionarMetodoPagamento(metodo) {
     event.currentTarget.classList.add('selecionado');
 }
 
-function selecionarOpcaoPagamentoCustom(opcao) {
-    opcaoPagamentoCustomSelecionada = opcao;
-    metodoPagamentoCustomSelecionado = null;
-    document.querySelectorAll('#modalOutro .opcao-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-    event.currentTarget.classList.add('selecionado');
-    
-    const metodosContainer = document.getElementById('metodosPagamentoContainerCustom');
-    if (metodosContainer) {
-        if (opcao === 'pago') {
-            metodosContainer.style.display = 'block';
-            document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-        } else {
-            metodosContainer.style.display = 'none';
-        }
-    }
-}
-
-function selecionarMetodoPagamentoCustom(metodo) {
-    if (opcaoPagamentoCustomSelecionada !== 'pago') return;
-    metodoPagamentoCustomSelecionado = metodo;
-    document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-    event.currentTarget.classList.add('selecionado');
-}
-
-async function confirmarServico() {
+function confirmarServico() {
     const nomeCliente = document.getElementById('nomeClientePagamento').value.trim();
     const erroNome = document.getElementById('erroNomeCliente');
     
@@ -2430,14 +2232,22 @@ async function confirmarServico() {
         mostrarFeedback('❌ Nome do cliente é obrigatório!', 'warning');
         return;
     }
-    if (!opcaoPagamentoSelecionada) { alert('⚠️ Selecione PAGO ou FIADO!'); return; }
-    if (opcaoPagamentoSelecionada === 'pago' && !metodoPagamentoSelecionado) { alert('⚠️ Selecione uma forma de pagamento!'); return; }
+    
+    if (!opcaoPagamentoSelecionada) {
+        alert('⚠️ Selecione PAGO ou FIADO!');
+        return;
+    }
+    
+    if (opcaoPagamentoSelecionada === 'pago' && !metodoPagamentoSelecionado) {
+        alert('⚠️ Selecione uma forma de pagamento!');
+        return;
+    }
     
     let valor, nome;
     switch(servicoSelecionado) {
         case 'corte': valor = dados.config.corte; nome = 'Corte'; break;
         case 'barba': valor = dados.config.barba; nome = 'Barba'; break;
-        case 'barba-cabelo': valor = dados.config.combo; nome = 'Barba + Cabelo'; break;
+        case 'combo': valor = dados.config.combo; nome = 'Corte + Barba'; break;
         default: valor = 0; nome = 'Serviço';
     }
     
@@ -2456,36 +2266,26 @@ async function confirmarServico() {
     
     dados[usuarioAtual].unshift(servico);
     salvarDadosLocais();
-    await salvarDadosServidor();
-    
-    if (isOnline && ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'novo_servico', barbeiro: usuarioAtual, servico: nome, cliente: nomeCliente, valor: valor }));
-    }
+    salvarDadosServidor();
     
     fecharModal('modalPagamento');
     atualizarInterface();
-    mostrarFeedback(`✅ Serviço ${opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO'}: ${nome} - ${nomeCliente} - R$ ${valor.toFixed(2)}`, 'success');
+    atualizarResumoStatusMensalistas();
+    atualizarGraficoPizza();
+    
+    mostrarFeedback(`✅ ${nome} - ${nomeCliente} - R$ ${valor.toFixed(2)} (${opcaoPagamentoSelecionada === 'pago' ? 'PAGO' : 'FIADO'})`, 'success');
 }
 
 function abrirModalOutro() {
     const valorCustom = document.getElementById('valorCustom');
     const nomeCliente = document.getElementById('nomeCliente');
-    const erroNome = document.getElementById('erroNomeClienteCustom');
     if (valorCustom) valorCustom.value = '';
     if (nomeCliente) nomeCliente.value = '';
-    if (erroNome) erroNome.style.display = 'none';
-    opcaoPagamentoCustomSelecionada = null;
-    metodoPagamentoCustomSelecionado = null;
     
-    document.querySelectorAll('#modalOutro .opcao-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-    document.querySelectorAll('#modalOutro .metodo-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-    
-    const metodosContainer = document.getElementById('metodosPagamentoContainerCustom');
-    if (metodosContainer) metodosContainer.style.display = 'none';
     document.getElementById('modalOutro').style.display = 'flex';
 }
 
-async function salvarServicoCustom() {
+function salvarServicoCustom() {
     const valorInput = document.getElementById('valorCustom').value;
     const valor = parseFloat(valorInput);
     const nomeCliente = document.getElementById('nomeCliente').value.trim();
@@ -2496,9 +2296,11 @@ async function salvarServicoCustom() {
         mostrarFeedback('❌ Nome do cliente é obrigatório!', 'warning');
         return;
     }
-    if (!valorInput || valor <= 0 || isNaN(valor)) { alert('⚠️ Insira um valor válido!'); return; }
-    if (!opcaoPagamentoCustomSelecionada) { alert('⚠️ Selecione PAGO ou FIADO!'); return; }
-    if (opcaoPagamentoCustomSelecionada === 'pago' && !metodoPagamentoCustomSelecionado) { alert('⚠️ Selecione uma forma de pagamento!'); return; }
+    
+    if (!valorInput || isNaN(valor) || valor <= 0) {
+        alert('⚠️ Insira um valor válido!');
+        return;
+    }
     
     const servico = {
         id: Date.now(),
@@ -2507,216 +2309,855 @@ async function salvarServicoCustom() {
         tipo: 'Outro',
         valor: valor,
         cliente: nomeCliente,
-        pago: opcaoPagamentoCustomSelecionada === 'pago',
-        metodoPagamento: opcaoPagamentoCustomSelecionada === 'pago' ? metodoPagamentoCustomSelecionado : null,
+        pago: false,
+        metodoPagamento: null,
         barbeiro: usuarioAtual,
         timestamp: Date.now()
     };
     
     dados[usuarioAtual].unshift(servico);
     salvarDadosLocais();
-    await salvarDadosServidor();
+    salvarDadosServidor();
     
     fecharModal('modalOutro');
     atualizarInterface();
-    mostrarFeedback(`✅ Serviço ${opcaoPagamentoCustomSelecionada === 'pago' ? 'PAGO' : 'FIADO'}: ${nomeCliente} - R$ ${valor.toFixed(2)}`, 'success');
+    atualizarGraficoPizza();
+    mostrarFeedback(`✅ Outro serviço - ${nomeCliente} - R$ ${valor.toFixed(2)} (FIADO)`, 'success');
 }
 
-function atualizarListaServicos() {
-    const container = document.getElementById('listaServicos');
-    const dataFiltro = dataFiltroAtual || getDataAtualBrasilia();
-    const servicosFiltrados = dados[usuarioAtual].filter(servico => servico.data === dataFiltro);
-    servicosFiltrados.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    
-    if (servicosFiltrados.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:40px;"><div style="font-size:48px;">📝</div><div>Nenhum serviço para ${formatarDataBR(dataFiltro)}</div></div>`;
-        return;
-    }
-    
-    let html = `<table style="width:100%; border-collapse:collapse;"><thead><tr style="background:rgba(255,170,0,0.1);"><th>Hora</th><th>Serviço</th><th>Cliente</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead><tbody>`;
-    servicosFiltrados.forEach(servico => {
-        const metodoIcon = servico.pago ? (servico.metodoPagamento === 'dinheiro' ? '💵' : servico.metodoPagamento === 'pix' ? '📱' : '💳') : '⏳';
-        html += `<tr>
-            <td>${servico.hora}</td>
-            <td>${servico.tipo}</td>
-            <td><strong>${servico.cliente}</strong></td>
-            <td>R$ ${servico.valor.toFixed(2)}</td>
-            <td class="${servico.pago ? 'servico-pago' : 'servico-fiado'}">${metodoIcon} ${servico.pago ? 'PAGO' : 'FIADO'}</td>
-            <td><button class="action-btn" onclick="apagarServico(${servico.id})" style="background:#ff3366; color:white; border:none; width:36px; height:36px; border-radius:8px; cursor:pointer;">×</button></td>
-        </tr>`;
-    });
-    html += `</tbody></table>`;
-    container.innerHTML = html;
-}
-
-// ========== APAGAR SERVIÇO - VERSÃO CORRIGIDA ==========
-async function apagarServico(servicoId) {
-    if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação será sincronizada com todos os dispositivos!')) return;
-    
-    const index = dados[usuarioAtual].findIndex(s => s.id == servicoId);
-    if (index === -1) {
-        mostrarFeedback('❌ Serviço não encontrado!', 'danger');
-        return;
-    }
-    
-    const servicoRemovido = dados[usuarioAtual][index];
-    console.log('🗑️ Removendo serviço:', servicoRemovido);
-    
-    // Remover localmente
-    dados[usuarioAtual].splice(index, 1);
-    salvarDadosLocais();
+// ========== ATUALIZAR INTERFACE ==========
+function atualizarInterface() {
+    atualizarEstatisticas();
     atualizarListaServicos();
     atualizarResumoDiario();
     
-    // Sincronizar com servidor
+    const usuarioAtualSpan = document.getElementById('usuarioAtual');
+    if (usuarioAtualSpan) usuarioAtualSpan.textContent = usuarioAtual;
+    
+    const usuarioSelecionado = document.getElementById('usuarioSelecionado');
+    if (usuarioSelecionado) usuarioSelecionado.textContent = usuarioAtual;
+    
+    const btnTrocar = document.getElementById('btnTrocarUsuario');
+    if (btnTrocar) btnTrocar.textContent = `🔄 ${usuarioAtual === 'Gabriel' ? 'Ir para Wagner' : 'Ir para Gabriel'}`;
+}
+
+function atualizarEstatisticas() {
+    const hoje = getDataAtualBrasilia();
+    const primeiroDiaMes = getPrimeiroDiaMes();
+    const ultimoDiaMes = getUltimoDiaMes();
+    
+    // Gabriel
+    const servicosGabrielHoje = dados.Gabriel.filter(s => s.data === hoje);
+    const totalGabrielHoje = servicosGabrielHoje.reduce((soma, s) => soma + s.valor, 0);
+    const fiadoGabrielHoje = servicosGabrielHoje.filter(s => !s.pago).reduce((soma, s) => soma + s.valor, 0);
+    const mediaGabriel = servicosGabrielHoje.length > 0 ? totalGabrielHoje / servicosGabrielHoje.length : 0;
+    
+    const gabrielHoje = document.getElementById('gabrielHoje');
+    const gabrielTotalHoje = document.getElementById('gabrielTotalHoje');
+    const gabrielFiadoHoje = document.getElementById('gabrielFiadoHoje');
+    const gabrielMedia = document.getElementById('gabrielMedia');
+    
+    if (gabrielHoje) gabrielHoje.textContent = servicosGabrielHoje.length;
+    if (gabrielTotalHoje) gabrielTotalHoje.textContent = `R$ ${totalGabrielHoje.toFixed(2)}`;
+    if (gabrielFiadoHoje) gabrielFiadoHoje.textContent = `R$ ${fiadoGabrielHoje.toFixed(2)}`;
+    if (gabrielMedia) gabrielMedia.textContent = `R$ ${mediaGabriel.toFixed(2)}`;
+    
+    // Wagner
+    const servicosWagnerHoje = dados.Wagner.filter(s => s.data === hoje);
+    const totalWagnerHoje = servicosWagnerHoje.reduce((soma, s) => soma + s.valor, 0);
+    const fiadoWagnerHoje = servicosWagnerHoje.filter(s => !s.pago).reduce((soma, s) => soma + s.valor, 0);
+    const mediaWagner = servicosWagnerHoje.length > 0 ? totalWagnerHoje / servicosWagnerHoje.length : 0;
+    
+    const wagnerHoje = document.getElementById('wagnerHoje');
+    const wagnerTotalHoje = document.getElementById('wagnerTotalHoje');
+    const wagnerFiadoHoje = document.getElementById('wagnerFiadoHoje');
+    const wagnerMedia = document.getElementById('wagnerMedia');
+    
+    if (wagnerHoje) wagnerHoje.textContent = servicosWagnerHoje.length;
+    if (wagnerTotalHoje) wagnerTotalHoje.textContent = `R$ ${totalWagnerHoje.toFixed(2)}`;
+    if (wagnerFiadoHoje) wagnerFiadoHoje.textContent = `R$ ${fiadoWagnerHoje.toFixed(2)}`;
+    if (wagnerMedia) wagnerMedia.textContent = `R$ ${mediaWagner.toFixed(2)}`;
+    
+    // Totais do Mês
+    const servicosGabrielMes = dados.Gabriel.filter(s => s.data >= primeiroDiaMes && s.data <= ultimoDiaMes);
+    const servicosWagnerMes = dados.Wagner.filter(s => s.data >= primeiroDiaMes && s.data <= ultimoDiaMes);
+    const todosServicosMes = [...servicosGabrielMes, ...servicosWagnerMes];
+    
+    const totalMes = todosServicosMes.reduce((soma, s) => soma + s.valor, 0);
+    const fiadoMes = todosServicosMes.filter(s => !s.pago).reduce((soma, s) => soma + s.valor, 0);
+    
+    const totalMesEl = document.getElementById('totalMes');
+    const servicosMesEl = document.getElementById('servicosMes');
+    const fiadoMesEl = document.getElementById('fiadoMes');
+    
+    if (totalMesEl) totalMesEl.textContent = `R$ ${totalMes.toFixed(2)}`;
+    if (servicosMesEl) servicosMesEl.textContent = todosServicosMes.length;
+    if (fiadoMesEl) fiadoMesEl.textContent = `R$ ${fiadoMes.toFixed(2)}`;
+    
+    // Pagamentos do dia
+    const todosServicosHoje = [...servicosGabrielHoje, ...servicosWagnerHoje];
+    const dinheiro = todosServicosHoje.filter(s => s.pago && s.metodoPagamento === 'dinheiro').reduce((soma, s) => soma + s.valor, 0);
+    const pix = todosServicosHoje.filter(s => s.pago && s.metodoPagamento === 'pix').reduce((soma, s) => soma + s.valor, 0);
+    const debito = todosServicosHoje.filter(s => s.pago && s.metodoPagamento === 'debito').reduce((soma, s) => soma + s.valor, 0);
+    const credito = todosServicosHoje.filter(s => s.pago && s.metodoPagamento === 'credito').reduce((soma, s) => soma + s.valor, 0);
+    
+    const totalDinheiro = document.getElementById('totalDinheiro');
+    const totalPix = document.getElementById('totalPix');
+    const totalDebito = document.getElementById('totalDebito');
+    const totalCredito = document.getElementById('totalCredito');
+    
+    if (totalDinheiro) totalDinheiro.textContent = `R$ ${dinheiro.toFixed(2)}`;
+    if (totalPix) totalPix.textContent = `R$ ${pix.toFixed(2)}`;
+    if (totalDebito) totalDebito.textContent = `R$ ${debito.toFixed(2)}`;
+    if (totalCredito) totalCredito.textContent = `R$ ${credito.toFixed(2)}`;
+    
+    // Despesas do Mês
+    const despesasMes = dados.despesas.filter(d => d.data >= primeiroDiaMes && d.data <= ultimoDiaMes);
+    const totalDespesas = despesasMes.reduce((soma, d) => soma + d.valor, 0);
+    const maiorDespesa = despesasMes.length > 0 ? Math.max(...despesasMes.map(d => d.valor)) : 0;
+    
+    const totalDespesasMes = document.getElementById('totalDespesasMes');
+    const numDespesasMes = document.getElementById('numDespesasMes');
+    const maiorDespesaMes = document.getElementById('maiorDespesaMes');
+    const lucroLiquido = document.getElementById('lucroLiquido');
+    
+    if (totalDespesasMes) totalDespesasMes.textContent = `R$ ${totalDespesas.toFixed(2)}`;
+    if (numDespesasMes) numDespesasMes.textContent = despesasMes.length;
+    if (maiorDespesaMes) maiorDespesaMes.textContent = `R$ ${maiorDespesa.toFixed(2)}`;
+    if (lucroLiquido) lucroLiquido.textContent = `R$ ${(totalMes - totalDespesas).toFixed(2)}`;
+}
+
+function atualizarListaServicos() {
+    const container = document.getElementById('listaServicosRecentes');
+    if (!container) {
+        console.error('Elemento listaServicosRecentes não encontrado');
+        return;
+    }
+    
+    const hoje = getDataAtualBrasilia();
+    const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
+    servicosHoje.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    
+    if (servicosHoje.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:60px 20px;">
+                <div style="font-size:48px; margin-bottom:15px;">📝</div>
+                <div style="color:#aaa;">Nenhum serviço registrado hoje</div>
+                <div style="color:#666; font-size:14px; margin-top:10px;">${formatarDataBR(hoje)}</div>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = `
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th style="text-align:left; padding:15px; background:rgba(255,170,0,0.1);">Hora</th>
+                    <th style="text-align:left; padding:15px; background:rgba(255,170,0,0.1);">Serviço</th>
+                    <th style="text-align:left; padding:15px; background:rgba(255,170,0,0.1);">Cliente</th>
+                    <th style="text-align:left; padding:15px; background:rgba(255,170,0,0.1);">Valor</th>
+                    <th style="text-align:left; padding:15px; background:rgba(255,170,0,0.1);">Status</th>
+                    <th style="text-align:center; padding:15px; background:rgba(255,170,0,0.1); width:60px;">Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    servicosHoje.forEach(servico => {
+        const statusText = servico.pago ? `✅ PAGO ${servico.metodoPagamento ? `(${servico.metodoPagamento.toUpperCase()})` : ''}` : '⏳ FIADO';
+        const statusColor = servico.pago ? '#25D366' : '#FF9500';
+        
+        html += `
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 15px;">${servico.hora}</td>
+                <td style="padding: 15px;"><strong>${servico.tipo}</strong></td>
+                <td style="padding: 15px;">${servico.cliente}</td>
+                <td style="padding: 15px;">R$ ${servico.valor.toFixed(2)}</td>
+                <td style="padding: 15px; color: ${statusColor};">${statusText}</td>
+                <td style="padding: 15px; text-align: center;">
+                    <button onclick="apagarServico(${servico.id})" 
+                            style="background: rgba(255,50,50,0.2); color:#ff3366; border:1px solid rgba(255,50,50,0.3); width:36px; height:36px; border-radius:10px; cursor:pointer; font-size:20px; font-weight:bold;">
+                        ✕
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    const totalHoje = servicosHoje.reduce((soma, s) => soma + s.valor, 0);
+    const totalPago = servicosHoje.filter(s => s.pago).reduce((soma, s) => soma + s.valor, 0);
+    const totalFiado = totalHoje - totalPago;
+    
+    html += `
+            </tbody>
+        </table>
+        <div style="margin-top:20px; padding:15px; background:rgba(255,170,0,0.1); border-radius:10px; text-align:center;">
+            <strong>💰 Total do dia:</strong> R$ ${totalHoje.toFixed(2)} | 
+            <strong style="color:#25D366;">✅ Recebido:</strong> R$ ${totalPago.toFixed(2)} | 
+            <strong style="color:#FF9500;">⏳ Fiado:</strong> R$ ${totalFiado.toFixed(2)}
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function atualizarResumoDiario() {
+    const hoje = getDataAtualBrasilia();
+    const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
+    const totalValor = servicosHoje.reduce((soma, s) => soma + s.valor, 0);
+    const totalFiado = servicosHoje.filter(s => !s.pago).reduce((soma, s) => soma + s.valor, 0);
+    
+    const servicosEl = document.getElementById('resumoServicosHoje');
+    const totalEl = document.getElementById('resumoTotalHoje');
+    const fiadoEl = document.getElementById('resumoFiadoHoje');
+    
+    if (servicosEl) servicosEl.textContent = servicosHoje.length;
+    if (totalEl) totalEl.textContent = `R$ ${totalValor.toFixed(2)}`;
+    if (fiadoEl) fiadoEl.textContent = `R$ ${totalFiado.toFixed(2)}`;
+}
+
+function atualizarGraficoPizza() {
+    const canvas = document.getElementById('graficoPizza');
+    if (!canvas) return;
+    
+    const hoje = getDataAtualBrasilia();
+    const servicosGabrielHoje = dados.Gabriel.filter(s => s.data === hoje);
+    const servicosWagnerHoje = dados.Wagner.filter(s => s.data === hoje);
+    const totalGabriel = servicosGabrielHoje.reduce((soma, s) => soma + s.valor, 0);
+    const totalWagner = servicosWagnerHoje.reduce((soma, s) => soma + s.valor, 0);
+    
+    if (graficoPizza) graficoPizza.destroy();
+    
+    graficoPizza = new Chart(canvas, {
+        type: 'pie',
+        data: {
+            labels: ['Gabriel', 'Wagner'],
+            datasets: [{
+                data: [totalGabriel, totalWagner],
+                backgroundColor: ['#ffaa00', '#25D366'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#fff' } }
+            }
+        }
+    });
+}
+
+function trocarUsuario() {
+    usuarioAtual = usuarioAtual === 'Gabriel' ? 'Wagner' : 'Gabriel';
+    console.log('🔄 Usuário alterado para:', usuarioAtual);
+    atualizarInterface();
+    mostrarFeedback(`👤 Agora você está como ${usuarioAtual}`, 'success');
+}
+
+// ========== MENSALISTAS ==========
+function atualizarListaMensalistas() {
+    const container = document.getElementById('listaMensalistasDashboard');
+    if (!container) return;
+    
+    if (!dados.mensalistas || dados.mensalistas.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:40px;">👥 Nenhum mensalista cadastrado</div>`;
+        return;
+    }
+    
+    let html = '<div style="display:flex; flex-direction:column; gap:15px;">';
+    
+    dados.mensalistas.forEach(m => {
+        const hoje = new Date();
+        const dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento);
+        let statusClass = '';
+        let statusText = '';
+        
+        if (m.status === 'pago') {
+            statusClass = 'status-pago';
+            statusText = '✅ PAGO';
+        } else if (m.status === 'pendente') {
+            if (dataVencimento < hoje) {
+                statusClass = 'status-vencido';
+                statusText = '⚠️ VENCIDO';
+            } else {
+                statusClass = 'status-pendente';
+                statusText = '⏳ PENDENTE';
+            }
+        } else {
+            statusClass = 'status-vencido';
+            statusText = '⚠️ VENCIDO';
+        }
+        
+        html += `
+            <div style="background:rgba(255,255,255,0.05); border-radius:15px; padding:20px; border-left:4px solid ${statusClass === 'status-pago' ? '#25D366' : statusClass === 'status-pendente' ? '#FF9500' : '#ff3366'};">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <strong style="font-size:18px;">${m.nome}</strong>
+                        <span style="display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; margin-left:10px; background:${statusClass === 'status-pago' ? 'rgba(37,211,102,0.2)' : statusClass === 'status-pendente' ? 'rgba(255,149,0,0.2)' : 'rgba(255,51,102,0.2)'}; color:${statusClass === 'status-pago' ? '#25D366' : statusClass === 'status-pendente' ? '#FF9500' : '#ff3366'};">${statusText}</span>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="marcarMensalistaPago(${m.id})" style="padding:8px 16px; background:linear-gradient(135deg,#00cc99,#009973); color:white; border:none; border-radius:12px; cursor:pointer;">✅ Marcar Pago</button>
+                        <button onclick="excluirMensalista(${m.id})" style="padding:8px 16px; background:linear-gradient(135deg,#ff3366,#cc0033); color:white; border:none; border-radius:12px; cursor:pointer;">🗑️ Excluir</button>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:15px;">
+                    <div><span style="color:#aaa;">👤 Barbeiro:</span> ${m.barbeiro}</div>
+                    <div><span style="color:#aaa;">💰 Valor:</span> R$ ${m.valor.toFixed(2)}</div>
+                    <div><span style="color:#aaa;">📅 Vencimento:</span> Dia ${m.diaVencimento}</div>
+                    <div><span style="color:#aaa;">📱 Telefone:</span> ${m.telefone || 'Não informado'}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function marcarMensalistaPago(id) {
+    const mensalista = dados.mensalistas.find(m => m.id == id);
+    if (mensalista) {
+        mensalista.status = 'pago';
+        mensalista.ultimaAtualizacao = Date.now();
+        salvarDadosLocais();
+        salvarDadosServidor();
+        atualizarListaMensalistas();
+        atualizarResumoStatusMensalistas();
+        mostrarFeedback(`✅ ${mensalista.nome} marcado como PAGO!`, 'success');
+    }
+}
+
+function atualizarResumoStatusMensalistas() {
+    if (!dados.mensalistas) return;
+    
+    const total = dados.mensalistas.length;
+    const pagos = dados.mensalistas.filter(m => m.status === 'pago').length;
+    const pendentes = dados.mensalistas.filter(m => m.status === 'pendente').length;
+    const vencidos = dados.mensalistas.filter(m => m.status === 'vencido').length;
+    
+    const hoje = new Date();
+    const venceHoje = dados.mensalistas.filter(m => {
+        if (m.status === 'pago') return false;
+        const dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento);
+        return dataVencimento.getDate() === hoje.getDate() && dataVencimento.getMonth() === hoje.getMonth();
+    }).length;
+    
+    const counterTodos = document.getElementById('counterTodos');
+    const counterPagos = document.getElementById('counterPagos');
+    const counterPendentes = document.getElementById('counterPendentes');
+    const counterVencidos = document.getElementById('counterVencidos');
+    const counterHoje = document.getElementById('counterHoje');
+    
+    if (counterTodos) counterTodos.textContent = total;
+    if (counterPagos) counterPagos.textContent = pagos;
+    if (counterPendentes) counterPendentes.textContent = pendentes;
+    if (counterVencidos) counterVencidos.textContent = vencidos;
+    if (counterHoje) counterHoje.textContent = venceHoje;
+}
+
+function atualizarAlertasVencimento() {
+    const container = document.getElementById('alertasVencimento');
+    if (!container) return;
+    
+    const hoje = new Date();
+    const vencidos = dados.mensalistas.filter(m => {
+        if (m.status === 'pago') return false;
+        const dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento);
+        return dataVencimento < hoje;
+    });
+    
+    if (vencidos.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    container.innerHTML = `
+        <div style="background:rgba(255,51,102,0.1); border:2px solid rgba(255,51,102,0.3); border-radius:15px; padding:20px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                <span style="font-size:24px;">⚠️</span>
+                <strong style="color:#ff3366;">ALERTA DE VENCIMENTO</strong>
+            </div>
+            ${vencidos.map(m => `<div style="padding:10px; background:rgba(255,51,102,0.1); border-radius:10px; margin-bottom:10px;">
+                <strong>${m.nome}</strong> - ${m.barbeiro}<br>
+                <small>Vencimento: Dia ${m.diaVencimento} - Valor: R$ ${m.valor.toFixed(2)}</small>
+            </div>`).join('')}
+        </div>
+    `;
+}
+
+function abrirModalNovoMensalista() {
+    const nomeInput = document.getElementById('nomeMensalista');
+    const telefoneInput = document.getElementById('telefoneMensalista');
+    const valorInput = document.getElementById('valorMensalista');
+    const diaVencimentoInput = document.getElementById('diaVencimentoMensalista');
+    
+    if (nomeInput) nomeInput.value = '';
+    if (telefoneInput) telefoneInput.value = '';
+    if (valorInput) valorInput.value = '';
+    if (diaVencimentoInput) diaVencimentoInput.value = '';
+    
+    const barbeiroSelect = document.getElementById('barbeiroMensalista');
+    if (barbeiroSelect) barbeiroSelect.value = 'Gabriel';
+    
+    const statusSelect = document.getElementById('statusMensalista');
+    if (statusSelect) statusSelect.value = 'pendente';
+    
+    const observacoesTextarea = document.getElementById('observacoesMensalista');
+    if (observacoesTextarea) observacoesTextarea.value = '';
+    
+    const modal = document.getElementById('modalMensalistas');
+    if (modal) modal.style.display = 'flex';
+}
+
+function adicionarMensalista() {
+    const nome = document.getElementById('nomeMensalista').value.trim();
+    const telefone = document.getElementById('telefoneMensalista').value.trim();
+    const barbeiro = document.getElementById('barbeiroMensalista').value;
+    const valor = parseFloat(document.getElementById('valorMensalista').value);
+    const diaVencimento = parseInt(document.getElementById('diaVencimentoMensalista').value);
+    const status = document.getElementById('statusMensalista').value;
+    const observacoes = document.getElementById('observacoesMensalista').value;
+    
+    if (!nome) {
+        mostrarFeedback('❌ Nome é obrigatório!', 'warning');
+        return;
+    }
+    
+    if (isNaN(valor) || valor <= 0) {
+        mostrarFeedback('❌ Valor inválido!', 'warning');
+        return;
+    }
+    
+    if (isNaN(diaVencimento) || diaVencimento < 1 || diaVencimento > 31) {
+        mostrarFeedback('❌ Dia de vencimento inválido (1-31)!', 'warning');
+        return;
+    }
+    
+    const novoMensalista = {
+        id: Date.now(),
+        nome: nome,
+        telefone: telefone,
+        barbeiro: barbeiro,
+        valor: valor,
+        dataInicio: getDataAtualBrasilia(),
+        diaVencimento: diaVencimento,
+        status: status,
+        observacoes: observacoes,
+        ultimaAtualizacao: Date.now()
+    };
+    
+    dados.mensalistas.push(novoMensalista);
+    salvarDadosLocais();
+    salvarDadosServidor();
+    
+    fecharModal('modalMensalistas');
+    atualizarListaMensalistas();
+    atualizarResumoStatusMensalistas();
+    mostrarFeedback(`✅ Mensalista ${nome} cadastrado!`, 'success');
+}
+
+// ========== DESPESAS ==========
+function atualizarListaDespesas() {
+    const container = document.getElementById('listaDespesasRecentes');
+    if (!container) return;
+    
+    if (!dados.despesas || dados.despesas.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:40px;">💸 Nenhuma despesa registrada</div>`;
+        return;
+    }
+    
+    const primeiroDiaMes = getPrimeiroDiaMes();
+    const ultimoDiaMes = getUltimoDiaMes();
+    const despesasMes = dados.despesas.filter(d => d.data >= primeiroDiaMes && d.data <= ultimoDiaMes);
+    despesasMes.sort((a, b) => b.dataCriacao - a.dataCriacao);
+    
+    if (despesasMes.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:40px;">💸 Nenhuma despesa registrada este mês</div>`;
+        return;
+    }
+    
+    let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+    
+    despesasMes.forEach(d => {
+        html += `
+            <div style="background:rgba(255,51,102,0.05); border-radius:12px; padding:15px; border-left:4px solid #ff3366;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <strong>${d.descricao}</strong>
+                        <span style="background:rgba(255,51,102,0.2); color:#ff99bb; padding:4px 12px; border-radius:20px; font-size:12px; margin-left:10px;">${d.categoria}</span>
+                    </div>
+                    <div style="font-size:24px; font-weight:700; color:#ff3366;">R$ ${d.valor.toFixed(2)}</div>
+                </div>
+                <div style="color:#aaa; font-size:13px; margin-top:10px;">📅 ${formatarDataBR(d.data)}</div>
+                <div style="margin-top:10px;">
+                    <button onclick="excluirDespesa(${d.id})" style="padding:5px 12px; background:linear-gradient(135deg,#ff3366,#cc0033); color:white; border:none; border-radius:8px; cursor:pointer; font-size:12px;">🗑️ Excluir</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    const totalDespesas = despesasMes.reduce((soma, d) => soma + d.valor, 0);
+    const orcamento = dados.config.orcamentoDespesas || 1500;
+    const percentual = (totalDespesas / orcamento) * 100;
+    
+    html += `
+        </div>
+        <div style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <strong>💰 Orçamento Mês</strong>
+                <span>R$ ${totalDespesas.toFixed(2)} / R$ ${orcamento.toFixed(2)}</span>
+            </div>
+            <div style="height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
+                <div style="height:100%; width:${Math.min(percentual, 100)}%; background:linear-gradient(90deg, #ff3366, #ff6699); border-radius:4px;"></div>
+            </div>
+            <div style="text-align:center; margin-top:10px; color:${percentual > 100 ? '#ff3366' : '#aaa'}">
+                ${percentual > 100 ? '⚠️ Orçamento excedido!' : `${percentual.toFixed(1)}% do orçamento`}
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function abrirModalNovaDespesa() {
+    const descricaoInput = document.getElementById('descricaoDespesa');
+    const valorInput = document.getElementById('valorDespesa');
+    const dataInput = document.getElementById('dataDespesa');
+    
+    if (descricaoInput) descricaoInput.value = '';
+    if (valorInput) valorInput.value = '';
+    if (dataInput) dataInput.value = getDataAtualBrasilia();
+    
+    const categoriaSelect = document.getElementById('categoriaDespesa');
+    if (categoriaSelect) categoriaSelect.value = 'Suprimentos';
+    
+    const tagsInput = document.getElementById('tagsDespesa');
+    const comprovanteInput = document.getElementById('comprovanteDespesa');
+    const observacoesTextarea = document.getElementById('observacoesDespesa');
+    
+    if (tagsInput) tagsInput.value = '';
+    if (comprovanteInput) comprovanteInput.value = '';
+    if (observacoesTextarea) observacoesTextarea.value = '';
+    
+    const modal = document.getElementById('modalDespesas');
+    if (modal) modal.style.display = 'flex';
+}
+
+function adicionarDespesa() {
+    const descricao = document.getElementById('descricaoDespesa').value.trim();
+    const categoria = document.getElementById('categoriaDespesa').value;
+    const valor = parseFloat(document.getElementById('valorDespesa').value);
+    const data = document.getElementById('dataDespesa').value;
+    const tags = document.getElementById('tagsDespesa').value;
+    const comprovante = document.getElementById('comprovanteDespesa').value;
+    const observacoes = document.getElementById('observacoesDespesa').value;
+    
+    if (!descricao) {
+        mostrarFeedback('❌ Descrição é obrigatória!', 'warning');
+        return;
+    }
+    
+    if (isNaN(valor) || valor <= 0) {
+        mostrarFeedback('❌ Valor inválido!', 'warning');
+        return;
+    }
+    
+    if (!data) {
+        mostrarFeedback('❌ Data é obrigatória!', 'warning');
+        return;
+    }
+    
+    const novaDespesa = {
+        id: Date.now(),
+        descricao: descricao,
+        categoria: categoria,
+        valor: valor,
+        data: data,
+        tags: tags,
+        comprovante: comprovante,
+        observacoes: observacoes,
+        dataCriacao: Date.now()
+    };
+    
+    dados.despesas.push(novaDespesa);
+    salvarDadosLocais();
+    salvarDadosServidor();
+    
+    fecharModal('modalDespesas');
+    atualizarListaDespesas();
+    atualizarEstatisticas();
+    mostrarFeedback(`✅ Despesa de R$ ${valor.toFixed(2)} registrada!`, 'success');
+}
+
+// ========== FUNÇÕES DE PERSISTÊNCIA ==========
+function carregarDadosLocais() {
+    try {
+        const dadosSalvos = localStorage.getItem('barbapro_duo');
+        if (dadosSalvos) {
+            const dadosParseados = JSON.parse(dadosSalvos);
+            if (Array.isArray(dadosParseados.Gabriel)) dados.Gabriel = dadosParseados.Gabriel;
+            if (Array.isArray(dadosParseados.Wagner)) dados.Wagner = dadosParseados.Wagner;
+            if (Array.isArray(dadosParseados.despesas)) dados.despesas = dadosParseados.despesas;
+            if (Array.isArray(dadosParseados.mensalistas)) dados.mensalistas = dadosParseados.mensalistas;
+            if (dadosParseados.config) dados.config = { ...dados.config, ...dadosParseados.config };
+            console.log('📂 Dados carregados - Gabriel:', dados.Gabriel.length, 'Wagner:', dados.Wagner.length);
+            console.log('📂 Mensalistas:', dados.mensalistas.length, 'Despesas:', dados.despesas.length);
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados:', error);
+    }
+}
+
+function salvarDadosLocais() {
+    try {
+        localStorage.setItem('barbapro_duo', JSON.stringify(dados));
+        console.log('💾 Dados salvos localmente');
+        console.log('  - Mensalistas:', dados.mensalistas.length);
+        console.log('  - Despesas:', dados.despesas.length);
+    } catch (error) {
+        console.error('❌ Erro ao salvar:', error);
+    }
+}
+
+async function salvarDadosServidor() {
     try {
         const response = await fetch('/api/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ data: dados })
         });
-        
-        if (response.ok) {
-            console.log('✅ Exclusão salva no servidor');
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({
-                    type: 'servico_removido',
-                    id: servicoId,
-                    barbeiro: usuarioAtual,
-                    timestamp: Date.now()
-                }));
-                // Enviar sync completo para garantir
-                setTimeout(() => {
-                    ws.send(JSON.stringify({ type: 'sync_completo', data: dados }));
-                }, 100);
-            }
-            mostrarFeedback('✅ Serviço removido e sincronizado!', 'success');
-        } else {
-            mostrarFeedback('⚠️ Serviço removido apenas localmente', 'warning');
+        if (response.ok && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'update_data', data: dados }));
         }
     } catch (error) {
-        console.error('❌ Erro na sincronização:', error);
-        mostrarFeedback('⚠️ Serviço removido apenas localmente', 'warning');
+        console.log('Offline - salvando localmente');
     }
 }
 
-function filtrarServicos() {
-    const dataSelecionada = document.getElementById('dataFiltro').value;
-    if (!dataSelecionada) { alert('⚠️ Selecione uma data!'); return; }
-    dataFiltroAtual = dataSelecionada;
-    atualizarListaServicos();
-}
-
-function limparFiltro() {
+function verificarDatasServicos() {
     const hoje = getDataAtualBrasilia();
-    const dataFiltro = document.getElementById('dataFiltro');
-    if (dataFiltro) dataFiltro.value = hoje;
-    dataFiltroAtual = hoje;
-    atualizarListaServicos();
-}
-
-function abrirModalEnviarWhatsApp() {
-    const hoje = getDataAtualBrasilia();
-    const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
-    const totalValor = servicosHoje.reduce((sum, s) => sum + s.valor, 0);
-    const totalPago = servicosHoje.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
-    const mensagem = `*💈 MEU RESUMO DO DIA - ${usuarioAtual.toUpperCase()}*\n📅 Data: ${formatarDataBR(hoje)}\n\n📊 Serviços: ${servicosHoje.length}\n💰 Total: R$ ${totalValor.toFixed(2)}\n✅ Recebido: R$ ${totalPago.toFixed(2)}\n⏳ Fiado: R$ ${(totalValor - totalPago).toFixed(2)}\n\n📱 Sistema BarbaPRO Duo`;
-    const msgTextarea = document.getElementById('mensagemWhatsApp');
-    if (msgTextarea) msgTextarea.value = mensagem;
-    document.getElementById('modalEnviarWhatsApp').style.display = 'flex';
-}
-
-function enviarWhatsAppDireto() {
-    const mensagem = document.getElementById('mensagemWhatsApp').value;
-    const telefone = dados.config.whatsapp;
-    if (!mensagem.trim()) { alert('⚠️ Mensagem vazia!'); return; }
-    window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`, '_blank');
-    fecharModal('modalEnviarWhatsApp');
-    mostrarFeedback('📱 Mensagem enviada!', 'success');
-}
-
-function irParaDashboard() {
-    document.getElementById('modalSenhaDashboard').style.display = 'flex';
-    const pinInput = document.getElementById('pinDashboard');
-    if (pinInput) {
-        pinInput.value = '';
-        pinInput.focus();
+    let corrigidos = 0;
+    
+    dados.Gabriel.forEach(s => {
+        if (s.data > hoje) {
+            s.data = hoje;
+            corrigidos++;
+        }
+    });
+    
+    dados.Wagner.forEach(s => {
+        if (s.data > hoje) {
+            s.data = hoje;
+            corrigidos++;
+        }
+    });
+    
+    if (corrigidos > 0) {
+        salvarDadosLocais();
+        console.log(`⚠️ ${corrigidos} serviços corrigidos`);
     }
 }
 
-function verificarSenhaDashboard() {
-    const senha = document.getElementById('pinDashboard').value;
-    if (senha === dados.config.pin || senha === '9828') {
-        mostrarFeedback('✅ Senha correta! Redirecionando...', 'success');
-        fecharModal('modalSenhaDashboard');
-        setTimeout(() => { window.location.href = '/dashboard'; }, 500);
-    } else {
-        alert('❌ Senha incorreta!');
-        const pinInput = document.getElementById('pinDashboard');
-        if (pinInput) pinInput.value = '';
+function iniciarVerificacaoVencimentos() {
+    setInterval(() => {
+        if (dados.config.notificacoesAtivas) {
+            verificarVencimentosMensalistas();
+        }
+    }, 60000);
+}
+
+function verificarVencimentosMensalistas() {
+    const hoje = new Date();
+    const vencidos = dados.mensalistas.filter(m => {
+        if (m.status === 'pago') return false;
+        const dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento);
+        return dataVencimento < hoje;
+    });
+    
+    if (vencidos.length > 0) {
+        mostrarFeedback(`⚠️ ${vencidos.length} mensalista(s) com vencimento em atraso!`, 'warning');
     }
 }
 
+// ========== FUNÇÕES GERAIS ==========
 function fecharModal(id) {
     const modal = document.getElementById(id);
     if (modal) modal.style.display = 'none';
 }
 
-function mostrarFeedback(mensagem, tipo = 'info') {
+function mostrarFeedback(mensagem, tipo = 'success') {
     const feedback = document.createElement('div');
     feedback.style.cssText = `
-        position: fixed; top: 20px; right: 20px;
-        background: ${tipo === 'success' ? 'rgba(37,211,102,0.95)' : tipo === 'warning' ? 'rgba(255,149,0,0.95)' : 'rgba(255,170,0,0.95)'};
-        color: white; padding: 15px 25px; border-radius: 10px;
-        z-index: 10000; max-width: 350px; animation: slideInRight 0.3s ease;
-        font-size: 14px; font-weight: bold;
+        position: fixed; bottom: 20px; right: 20px;
+        background: ${tipo === 'success' ? '#25D366' : tipo === 'warning' ? '#FF9500' : '#ff3366'};
+        color: white; padding: 12px 20px; border-radius: 10px;
+        z-index: 10000; font-size: 14px; font-weight: bold;
+        animation: slideInRight 0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     `;
-    feedback.innerHTML = mensagem;
+    feedback.textContent = mensagem;
     document.body.appendChild(feedback);
-    setTimeout(() => {
-        feedback.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => { if (feedback.parentNode) feedback.parentNode.removeChild(feedback); }, 300);
-    }, 3000);
+    setTimeout(() => feedback.remove(), 3000);
 }
 
-function mostrarNotificacaoServico(data) {
-    if (data.barbeiro !== usuarioAtual) {
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed; top: 20px; right: 20px;
-            background: linear-gradient(45deg, #ffaa00, #ff5500); color: white;
-            padding: 15px 20px; border-radius: 10px; z-index: 10000;
-            animation: slideInRight 0.3s ease; border-left: 4px solid #25D366;
-        `;
-        notification.innerHTML = `<strong>💈 Novo Serviço - ${data.barbeiro}</strong><br>${data.servico} para ${data.cliente}<br>R$ ${data.valor}`;
-        document.body.appendChild(notification);
-        setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => { if (notification.parentNode) notification.parentNode.removeChild(notification); }, 300);
-        }, 5000);
-    }
+function recarregarSistema() {
+    carregarDadosLocais();
+    atualizarInterface();
+    atualizarListaMensalistas();
+    atualizarListaDespesas();
+    atualizarResumoStatusMensalistas();
+    atualizarGraficoPizza();
+    mostrarFeedback('🔄 Sistema recarregado!', 'success');
+}
+
+function voltarRegistro() {
+    window.location.href = '/';
+}
+
+function abrirConfiguracoes() {
+    const numWhats = document.getElementById('numWhats');
+    const valCorte = document.getElementById('valCorte');
+    const valBarba = document.getElementById('valBarba');
+    const valCombo = document.getElementById('valCombo');
+    const orcamentoDespesas = document.getElementById('orcamentoDespesas');
+    const diasAlerta = document.getElementById('diasAlerta');
+    
+    if (numWhats) numWhats.value = dados.config.whatsapp;
+    if (valCorte) valCorte.value = dados.config.corte;
+    if (valBarba) valBarba.value = dados.config.barba;
+    if (valCombo) valCombo.value = dados.config.combo;
+    if (orcamentoDespesas) orcamentoDespesas.value = dados.config.orcamentoDespesas || 1500;
+    if (diasAlerta) diasAlerta.value = dados.config.diasAlerta || 3;
+    
+    const notificacoesAtivas = document.getElementById('notificacoesAtivas');
+    if (notificacoesAtivas) notificacoesAtivas.value = dados.config.notificacoesAtivas ? 'true' : 'false';
+    
+    const modal = document.getElementById('modalConfig');
+    if (modal) modal.style.display = 'flex';
+}
+
+function salvarConfiguracoes() {
+    const numWhats = document.getElementById('numWhats');
+    const valCorte = document.getElementById('valCorte');
+    const valBarba = document.getElementById('valBarba');
+    const valCombo = document.getElementById('valCombo');
+    const orcamentoDespesas = document.getElementById('orcamentoDespesas');
+    const notificacoesAtivas = document.getElementById('notificacoesAtivas');
+    const diasAlerta = document.getElementById('diasAlerta');
+    
+    if (numWhats) dados.config.whatsapp = numWhats.value;
+    if (valCorte) dados.config.corte = parseFloat(valCorte.value);
+    if (valBarba) dados.config.barba = parseFloat(valBarba.value);
+    if (valCombo) dados.config.combo = parseFloat(valCombo.value);
+    if (orcamentoDespesas) dados.config.orcamentoDespesas = parseFloat(orcamentoDespesas.value);
+    if (notificacoesAtivas) dados.config.notificacoesAtivas = notificacoesAtivas.value === 'true';
+    if (diasAlerta) dados.config.diasAlerta = parseInt(diasAlerta.value);
+    
+    salvarDadosLocais();
+    salvarDadosServidor();
+    fecharModal('modalConfig');
+    atualizarInterface();
+    mostrarFeedback('⚙️ Configurações salvas!', 'success');
+}
+
+function enviarResumoWhatsApp() {
+    const hoje = getDataAtualBrasilia();
+    const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
+    const totalValor = servicosHoje.reduce((soma, s) => soma + s.valor, 0);
+    const totalPago = servicosHoje.filter(s => s.pago).reduce((soma, s) => soma + s.valor, 0);
+    const totalFiado = totalValor - totalPago;
+    
+    let listaServicos = '';
+    servicosHoje.forEach(s => {
+        listaServicos += `• ${s.hora} - ${s.tipo} - ${s.cliente} - R$ ${s.valor.toFixed(2)} - ${s.pago ? '✅ PAGO' : '⏳ FIADO'}\n`;
+    });
+    
+    const mensagem = `*💈 RESUMO DO DIA - ${usuarioAtual.toUpperCase()}*\n📅 Data: ${formatarDataBR(hoje)}\n\n📊 *SERVIÇOS:*\n${listaServicos || 'Nenhum serviço'}\n\n📈 *TOTAL:* R$ ${totalValor.toFixed(2)}\n✅ *RECEBIDO:* R$ ${totalPago.toFixed(2)}\n⏳ *FIADO:* R$ ${totalFiado.toFixed(2)}\n\n📱 BarbaPRO Duo`;
+    
+    window.open(`https://wa.me/${dados.config.whatsapp}?text=${encodeURIComponent(mensagem)}`, '_blank');
+    mostrarFeedback('📱 Resumo enviado!', 'success');
+}
+
+function filtrarMensalistasPorStatus(status) {
+    const filtroStatus = document.getElementById('filtroStatusMensalistas');
+    if (filtroStatus) filtroStatus.value = status;
+    
+    document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
+    if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    
+    atualizarListaMensalistas();
 }
 
 // ========== EVENT LISTENERS ==========
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('modal')) event.target.style.display = 'none';
+document.addEventListener('DOMContentLoaded', function() {
+    inicializarSistema();
+    
+    // Botões principais
+    const btnTrocarUsuario = document.getElementById('btnTrocarUsuario');
+    const btnRecarregar = document.getElementById('btnRecarregar');
+    const btnVoltarRegistro = document.getElementById('btnVoltarRegistro');
+    const btnConfiguracoes = document.getElementById('btnConfiguracoes');
+    const btnSalvarConfiguracoes = document.getElementById('btnSalvarConfiguracoes');
+    const btnEnviarResumo = document.getElementById('btnEnviarResumo');
+    const btnNovoMensalista = document.getElementById('btnNovoMensalista');
+    const btnAdicionarMensalista = document.getElementById('btnAdicionarMensalista');
+    const btnNovaDespesa = document.getElementById('btnNovaDespesa');
+    const btnAdicionarDespesa = document.getElementById('btnAdicionarDespesa');
+    const btnFiltrarMensalistas = document.getElementById('btnFiltrarMensalistas');
+    const btnLimparFiltros = document.getElementById('btnLimparFiltros');
+    
+    if (btnTrocarUsuario) btnTrocarUsuario.addEventListener('click', trocarUsuario);
+    if (btnRecarregar) btnRecarregar.addEventListener('click', recarregarSistema);
+    if (btnVoltarRegistro) btnVoltarRegistro.addEventListener('click', voltarRegistro);
+    if (btnConfiguracoes) btnConfiguracoes.addEventListener('click', abrirConfiguracoes);
+    if (btnSalvarConfiguracoes) btnSalvarConfiguracoes.addEventListener('click', salvarConfiguracoes);
+    if (btnEnviarResumo) btnEnviarResumo.addEventListener('click', enviarResumoWhatsApp);
+    if (btnNovoMensalista) btnNovoMensalista.addEventListener('click', abrirModalNovoMensalista);
+    if (btnAdicionarMensalista) btnAdicionarMensalista.addEventListener('click', adicionarMensalista);
+    if (btnNovaDespesa) btnNovaDespesa.addEventListener('click', abrirModalNovaDespesa);
+    if (btnAdicionarDespesa) btnAdicionarDespesa.addEventListener('click', adicionarDespesa);
+    if (btnFiltrarMensalistas) btnFiltrarMensalistas.addEventListener('click', () => atualizarListaMensalistas());
+    if (btnLimparFiltros) btnLimparFiltros.addEventListener('click', () => {
+        const dataInicio = document.getElementById('dataInicioMensalistas');
+        const dataFim = document.getElementById('dataFimMensalistas');
+        const filtroStatus = document.getElementById('filtroStatusMensalistas');
+        const filtroBarbeiro = document.getElementById('filtroBarbeiroMensalistas');
+        
+        if (dataInicio) dataInicio.value = '';
+        if (dataFim) dataFim.value = '';
+        if (filtroStatus) filtroStatus.value = 'todos';
+        if (filtroBarbeiro) filtroBarbeiro.value = 'todos';
+        
+        atualizarListaMensalistas();
+    });
+    
+    // Fechar modais
+    document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modal = btn.closest('.modal');
+            if (modal) modal.style.display = 'none';
+        });
+    });
+    
+    window.addEventListener('click', (event) => {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    });
 });
 
-const pinDashboard = document.getElementById('pinDashboard');
-if (pinDashboard) pinDashboard.addEventListener('keypress', e => { if (e.key === 'Enter') verificarSenhaDashboard(); });
+// Estilos adicionais
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+`;
+document.head.appendChild(style);
 
-const valorCustom = document.getElementById('valorCustom');
-if (valorCustom) valorCustom.addEventListener('keypress', e => { if (e.key === 'Enter') salvarServicoCustom(); });
-
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) { carregarDadosLocais(); atualizarInterface(); }
-});
-
-window.addEventListener('beforeunload', function() { salvarDadosLocais(); });
-
-setInterval(() => { if (isOnline) salvarDadosServidor(); }, 5 * 60 * 1000);
-
-console.log('💈 BarbaPRO Duo - Sistema de Registro carregado!');
+console.log('💈 BarbaPRO Duo - Sistema carregado!');
 console.log('💰 Valores: Corte R$30 | Barba R$20 | Combo R$40');
     </script>
 </body>
