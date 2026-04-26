@@ -1039,17 +1039,17 @@ select:focus {
 // ========== VARIÁVEIS GLOBAIS ==========
 let usuarioAtual = 'Gabriel';
 let dados = {
-  Gabriel: [],
-  Wagner: [],
-  despesas: [],
-  mensalistas: [],
-  config: {
-    pin: '1234',
-    whatsapp: '11962094589',
-    corte: 30,
-    barba: 20,
-    combo: 40
-  }
+    Gabriel: [],
+    Wagner: [],
+    despesas: [],
+    mensalistas: [],
+    config: {
+        pin: '1234',
+        whatsapp: '11962094589',
+        corte: 30,
+        barba: 20,
+        combo: 40
+    }
 };
 
 let servicoSelecionado = null;
@@ -1086,91 +1086,6 @@ function getHoraAtualBrasilia() {
     const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
     const dataBrasilia = new Date(utc + (3600000 * offset));
     return `${String(dataBrasilia.getHours()).padStart(2, '0')}:${String(dataBrasilia.getMinutes()).padStart(2, '0')}`;
-}
-
-// ========== FUNÇÕES DE RESUMO SEMANAL ==========
-function getDataInicioSemana() {
-    const hoje = new Date();
-    const offset = -3;
-    const utc = hoje.getTime() + (hoje.getTimezoneOffset() * 60000);
-    const dataBrasilia = new Date(utc + (3600000 * offset));
-    const diaSemana = dataBrasilia.getDay();
-    const diff = diaSemana === 0 ? 6 : diaSemana - 1;
-    const segunda = new Date(dataBrasilia);
-    segunda.setDate(dataBrasilia.getDate() - diff);
-    segunda.setHours(0, 0, 0, 0);
-    return `${segunda.getFullYear()}-${String(segunda.getMonth() + 1).padStart(2, '0')}-${String(segunda.getDate()).padStart(2, '0')}`;
-}
-
-function getDataFimSemana() {
-    const inicio = getDataInicioSemana();
-    const data = new Date(inicio + 'T12:00:00-03:00');
-    data.setDate(data.getDate() + 5);
-    return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
-}
-
-function getResumoSemanal() {
-    const inicioSemana = getDataInicioSemana();
-    const fimSemana = getDataFimSemana();
-    const servicosSemana = dados[usuarioAtual].filter(s => s.data >= inicioSemana && s.data <= fimSemana);
-    const diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    const resumoDias = [];
-    
-    for (let i = 0; i < 6; i++) {
-        const dataDia = new Date(inicioSemana + 'T12:00:00-03:00');
-        dataDia.setDate(dataDia.getDate() + i);
-        const dataStr = `${dataDia.getFullYear()}-${String(dataDia.getMonth() + 1).padStart(2, '0')}-${String(dataDia.getDate()).padStart(2, '0')}`;
-        const servicosDia = servicosSemana.filter(s => s.data === dataStr);
-        const totalDia = servicosDia.reduce((sum, s) => sum + s.valor, 0);
-        const pagoDia = servicosDia.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
-        resumoDias.push({
-            dia: diasSemana[i],
-            data: dataStr,
-            quantidade: servicosDia.length,
-            total: totalDia,
-            pago: pagoDia,
-            fiado: totalDia - pagoDia
-        });
-    }
-    
-    const totalServicos = servicosSemana.length;
-    const totalValor = servicosSemana.reduce((sum, s) => sum + s.valor, 0);
-    const totalPago = servicosSemana.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
-    
-    return {
-        inicio: inicioSemana,
-        fim: fimSemana,
-        dias: resumoDias,
-        totalServicos,
-        totalValor,
-        totalPago,
-        totalFiado: totalValor - totalPago
-    };
-}
-
-function abrirModalResumoSemanal() {
-    const resumo = getResumoSemanal();
-    document.getElementById('semanaPeriodo').textContent = `${formatarDataBR(resumo.inicio)} a ${formatarDataBR(resumo.fim)}`;
-    document.getElementById('semanaServicos').textContent = resumo.totalServicos;
-    document.getElementById('semanaTotal').textContent = `R$ ${resumo.totalValor.toFixed(2)}`;
-    document.getElementById('semanaPago').textContent = `R$ ${resumo.totalPago.toFixed(2)}`;
-    document.getElementById('semanaFiado').textContent = `R$ ${resumo.totalFiado.toFixed(2)}`;
-    
-    let html = '';
-    resumo.dias.forEach(d => {
-        html += `<tr><td>${d.dia}<br><small style="color:#666;">${formatarDataBR(d.data)}</small></td><td>${d.quantidade}</td><td>R$ ${d.total.toFixed(2)}</td><td>R$ ${d.pago.toFixed(2)}</td></tr>`;
-    });
-    document.getElementById('tabelaResumoSemanal').innerHTML = html;
-    document.getElementById('modalResumoSemanal').style.display = 'flex';
-}
-
-function enviarResumoSemanalWhatsApp() {
-    const resumo = getResumoSemanal();
-    const telefone = dados.config.whatsapp;
-    let mensagem = `*📊 MEU RESUMO DA SEMANA - ${usuarioAtual.toUpperCase()}*\n\n📅 Período: ${formatarDataBR(resumo.inicio)} a ${formatarDataBR(resumo.fim)}\n\n📈 *RESUMO GERAL*\n• Total de serviços: ${resumo.totalServicos}\n• Valor total: R$ ${resumo.totalValor.toFixed(2)}\n• Valor recebido: R$ ${resumo.totalPago.toFixed(2)}\n• Valor fiado: R$ ${resumo.totalFiado.toFixed(2)}\n\n📱 *Sistema BarbaPRO Duo*`;
-    window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`, '_blank');
-    fecharModal('modalResumoSemanal');
-    mostrarFeedback('📱 Resumo da semana enviado!', 'success');
 }
 
 // ========== INICIALIZAÇÃO ==========
@@ -1709,14 +1624,14 @@ function atualizarListaServicos() {
             <td><strong>${servico.cliente}</strong></td>
             <td>R$ ${servico.valor.toFixed(2)}</td>
             <td class="${servico.pago ? 'servico-pago' : 'servico-fiado'}">${metodoIcon} ${servico.pago ? 'PAGO' : 'FIADO'}</td>
-            <td><button class="action-btn" onclick="apagarServico(${servico.id})" style="background:#ff3366; color:white; border:none; width:36px; height:36px; border-radius:8px; cursor:pointer;">×</button></td>
+            <td><button class="action-btn" onclick="apagarServico(${servico.id})">×</button></td>
         </tr>`;
     });
     html += `</tbody></table>`;
     container.innerHTML = html;
 }
 
-// ========== APAGAR SERVIÇO - VERSÃO CORRIGIDA ==========
+// ========== APAGAR SERVIÇO CORRIGIDO ==========
 async function apagarServico(servicoId) {
     if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação será sincronizada com todos os dispositivos!')) return;
     
@@ -1729,13 +1644,11 @@ async function apagarServico(servicoId) {
     const servicoRemovido = dados[usuarioAtual][index];
     console.log('🗑️ Removendo serviço:', servicoRemovido);
     
-    // Remover localmente
     dados[usuarioAtual].splice(index, 1);
     salvarDadosLocais();
     atualizarListaServicos();
     atualizarResumoDiario();
     
-    // Sincronizar com servidor
     try {
         const response = await fetch('/api/save', {
             method: 'POST',
@@ -1752,7 +1665,6 @@ async function apagarServico(servicoId) {
                     barbeiro: usuarioAtual,
                     timestamp: Date.now()
                 }));
-                // Enviar sync completo para garantir
                 setTimeout(() => {
                     ws.send(JSON.stringify({ type: 'sync_completo', data: dados }));
                 }, 100);
@@ -1844,24 +1756,6 @@ function mostrarFeedback(mensagem, tipo = 'info') {
         feedback.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => { if (feedback.parentNode) feedback.parentNode.removeChild(feedback); }, 300);
     }, 3000);
-}
-
-function mostrarNotificacaoServico(data) {
-    if (data.barbeiro !== usuarioAtual) {
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed; top: 20px; right: 20px;
-            background: linear-gradient(45deg, #ffaa00, #ff5500); color: white;
-            padding: 15px 20px; border-radius: 10px; z-index: 10000;
-            animation: slideInRight 0.3s ease; border-left: 4px solid #25D366;
-        `;
-        notification.innerHTML = `<strong>💈 Novo Serviço - ${data.barbeiro}</strong><br>${data.servico} para ${data.cliente}<br>R$ ${data.valor}`;
-        document.body.appendChild(notification);
-        setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => { if (notification.parentNode) notification.parentNode.removeChild(notification); }, 300);
-        }, 5000);
-    }
 }
 
 // ========== EVENT LISTENERS ==========
