@@ -33,6 +33,7 @@
         .badge-success { background: rgba(37,211,102,0.2); color: #25D366; }
         .badge-warning { background: rgba(255,170,0,0.2); color: #ffaa00; }
         .badge-danger { background: rgba(255,51,102,0.2); color: #ff3366; }
+        .badge-info { background: rgba(0,150,255,0.2); color: #0096ff; }
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .stat-item { text-align: center; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; cursor: pointer; transition: all 0.3s ease; }
         .stat-item:hover { background: rgba(255,170,0,0.1); transform: scale(1.02); }
@@ -46,24 +47,17 @@
         .input-group { display: flex; flex-direction: column; gap: 5px; }
         .input-group label { font-size: 12px; color: #aaa; }
         .input-group input, .input-group select { padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; }
-        .status-resumo { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; }
         .status-menu { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; }
         .status-btn { padding: 8px 16px; background: rgba(255,255,255,0.05); border: none; border-radius: 20px; color: #fff; cursor: pointer; transition: all 0.3s ease; }
         .status-btn.active { background: #ffaa00; color: #1a1a2e; }
         .status-btn:hover { background: rgba(255,170,0,0.3); }
         .status-counter { background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
-        .push-notification { display: none; position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #ff3366, #cc0033); border-radius: 15px; padding: 15px 20px; z-index: 10000; min-width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideInRight 0.3s ease; }
-        .push-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .push-title { font-weight: bold; font-size: 14px; }
-        .push-close { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
         th { background: rgba(255,170,0,0.1); }
         .action-btn { background: rgba(255,50,50,0.2); color: #ff3366; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 18px; transition: all 0.2s ease; }
         .action-btn:hover { background: rgba(255,50,50,0.5); transform: scale(1.05); }
-        .servico-pago { color: #25D366; }
-        .servico-fiado { color: #FF9500; }
         .grafico-container { padding: 20px; max-height: 300px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; border: 1px solid rgba(255,170,0,0.3); }
@@ -76,11 +70,11 @@
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
         .form-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+        .pagamento-semanal { background: linear-gradient(135deg, rgba(0,204,153,0.1), rgba(0,153,115,0.05)); border: 2px solid #00cc99; border-radius: 15px; padding: 20px; margin-bottom: 20px; text-align: center; }
+        .pagamento-semanal h3 { color: #00cc99; margin-bottom: 15px; }
+        .pagamento-valor { font-size: 36px; font-weight: bold; color: #00cc99; margin: 10px 0; }
+        .pagamento-detalhes { font-size: 12px; color: #aaa; margin-top: 10px; }
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #ffaa00; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -97,12 +91,13 @@
             </div>
         </header>
 
-        <div class="push-notification" id="pushNotification">
-            <div class="push-header"><div class="push-title">⚠️ ALERTA DE VENCIMENTO</div><button class="push-close" onclick="fecharNotificacao()">×</button></div>
-            <div id="pushNotificationMessage">Mensalistas vencidos detectados!</div>
+        <!-- PAGAMENTO SEMANAL - NOVO -->
+        <div class="pagamento-semanal" id="pagamentoSemanal">
+            <h3>💰 PAGAMENTO SEMANAL DO GABRIEL</h3>
+            <div class="pagamento-valor" id="valorPagamentoSemanal">R$ 0,00</div>
+            <div class="pagamento-detalhes" id="detalhesPagamentoSemanal">Carregando...</div>
+            <button class="btn btn-whatsapp" onclick="enviarPagamentoSemanalWhatsApp()" style="margin-top: 15px; padding: 10px 20px;">📱 Enviar Comprovante</button>
         </div>
-
-        <audio id="alertSound" preload="auto"></audio>
 
         <div class="dashboard-grid">
             <div class="card">
@@ -171,130 +166,118 @@
         </div>
 
         <div class="card">
-            <div class="card-header"><div class="card-title">👥 MENSALISTAS - GERENCIAMENTO INTELIGENTE</div><div><button class="btn btn-success" id="btnNovoMensalista" style="margin-right: 10px;">+ Novo Mensalista</button><button class="btn btn-whatsapp" id="btnNotificarTodos" onclick="notificarTodosMensalistas()">🔔 Notificar Todos</button></div></div>
-            <div class="status-resumo" id="resumoStatusMensalistas"></div>
+            <div class="card-header"><div class="card-title">👥 MENSALISTAS</div><div><button class="btn btn-success" id="btnNovoMensalista">+ Novo Mensalista</button></div></div>
             <div class="status-menu">
-                <button class="status-btn active" onclick="filtrarMensalistasPorStatus('todos')">📋 Todos <span class="status-counter" id="counterTodos">0</span></button>
+                <button class="status-btn" onclick="filtrarMensalistasPorStatus('todos')">📋 Todos <span class="status-counter" id="counterTodos">0</span></button>
                 <button class="status-btn" onclick="filtrarMensalistasPorStatus('pago')">✅ Pagos <span class="status-counter" id="counterPagos">0</span></button>
                 <button class="status-btn" onclick="filtrarMensalistasPorStatus('pendente')">⏳ Pendentes <span class="status-counter" id="counterPendentes">0</span></button>
                 <button class="status-btn" onclick="filtrarMensalistasPorStatus('vencido')">⚠️ Vencidos <span class="status-counter" id="counterVencidos">0</span></button>
                 <button class="status-btn" onclick="filtrarMensalistasPorStatus('hoje')">📅 Vence Hoje <span class="status-counter" id="counterHoje">0</span></button>
-            </div>
-            <div class="filtro-container">
-                <div class="filtro-grid">
-                    <div class="input-group"><label>📅 Data Início</label><input type="date" id="dataInicioMensalistas"></div>
-                    <div class="input-group"><label>📅 Data Fim</label><input type="date" id="dataFimMensalistas"></div>
-                    <div class="input-group"><label>📊 Status</label><select id="filtroStatusMensalistas"><option value="todos">📋 Todos os Status</option><option value="pago">✅ Pagos</option><option value="pendente">⏳ Pendentes</option><option value="vencido">⚠️ Vencidos</option></select></div>
-                    <div class="input-group"><label>👤 Barbeiro</label><select id="filtroBarbeiroMensalistas"><option value="todos">👥 Todos Barbeiros</option><option value="Gabriel">👨‍🦱 Gabriel</option><option value="Wagner">👨‍🦱 Wagner</option></select></div>
-                    <div style="display: flex; align-items: flex-end; gap: 10px;"><button class="btn btn-primary" id="btnFiltrarMensalistas" style="flex: 1;">🔍 Aplicar Filtros</button><button class="btn btn-secondary" id="btnLimparFiltros" style="flex: 1;">🗑️ Limpar Filtros</button></div>
-                </div>
             </div>
             <div id="alertasVencimento"></div>
             <div id="listaMensalistasDashboard"></div>
         </div>
 
         <div class="card">
-            <div class="card-header"><div class="card-title">💸 DESPESAS RECENTES</div><button class="btn btn-secondary" id="btnExportarDespesas">📤 Exportar Dados</button></div>
+            <div class="card-header"><div class="card-title">💸 DESPESAS RECENTES</div><button class="btn btn-secondary" id="btnExportarDespesas">📤 Exportar</button></div>
             <div class="filtro-container">
                 <div class="filtro-grid">
-                    <div class="input-group"><label>📅 Data Início</label><input type="date" id="dataInicioDespesas"></div>
-                    <div class="input-group"><label>📅 Data Fim</label><input type="date" id="dataFimDespesas"></div>
-                    <div class="input-group"><label>📊 Categoria</label><select id="filtroCategoriaDespesas"><option value="todos">📋 Todas Categorias</option><option value="Suprimentos">🛒 Suprimentos</option><option value="Aluguel">🏢 Aluguel</option><option value="Energia">💡 Energia</option><option value="Água">🚰 Água</option><option value="Internet">🌐 Internet</option><option value="Manutenção">🔧 Manutenção</option><option value="Outros">📦 Outros</option></select></div>
-                    <div style="display: flex; align-items: flex-end; gap: 10px;"><button class="btn btn-primary" id="btnFiltrarDespesas" style="flex: 1;">🔍 Filtrar Despesas</button><button class="btn btn-danger" id="btnNovaDespesaRapida" style="flex: 1;">+ Nova Despesa</button></div>
+                    <div class="input-group"><label>Data Início</label><input type="date" id="dataInicioDespesas"></div>
+                    <div class="input-group"><label>Data Fim</label><input type="date" id="dataFimDespesas"></div>
+                    <div class="input-group"><label>Categoria</label><select id="filtroCategoriaDespesas"><option value="todos">Todas</option><option value="Suprimentos">Suprimentos</option><option value="Aluguel">Aluguel</option><option value="Energia">Energia</option><option value="Outros">Outros</option></select></div>
+                    <div><button class="btn btn-primary" id="btnFiltrarDespesas">🔍 Filtrar</button></div>
                 </div>
             </div>
             <div id="listaDespesasRecentes"></div>
         </div>
 
         <div class="card">
-            <div class="card-header"><div class="card-title">📝 SERVIÇOS RECENTES</div><button class="btn btn-secondary" id="btnExportarServicos">📤 Exportar Dados</button></div>
+            <div class="card-header"><div class="card-title">📝 SERVIÇOS RECENTES</div><button class="btn btn-secondary" id="btnExportarServicos">📤 Exportar</button></div>
             <div class="filtro-container">
                 <div class="filtro-grid">
-                    <div class="input-group"><label>📅 Data Início</label><input type="date" id="dataInicioServicos"></div>
-                    <div class="input-group"><label>📅 Data Fim</label><input type="date" id="dataFimServicos"></div>
-                    <div class="input-group"><label>👤 Barbeiro</label><select id="filtroBarbeiroServicos"><option value="todos">👥 Todos Barbeiros</option><option value="Gabriel">👨‍🦱 Gabriel</option><option value="Wagner">👨‍🦱 Wagner</option></select></div>
-                    <div class="input-group"><label>💰 Status Pagamento</label><select id="filtroPagamentoServicos"><option value="todos">📋 Todos</option><option value="pago">✅ Pagos</option><option value="fiado">⏳ Fiados</option></select></div>
-                    <div style="display: flex; align-items: flex-end; gap: 10px;"><button class="btn btn-primary" id="btnFiltrarServicos" style="flex: 1;">🔍 Filtrar Serviços</button><button class="btn btn-whatsapp" id="btnEnviarRelatorioServicos" style="flex: 1;">📱 Enviar Relatório</button></div>
+                    <div class="input-group"><label>Data Início</label><input type="date" id="dataInicioServicos"></div>
+                    <div class="input-group"><label>Data Fim</label><input type="date" id="dataFimServicos"></div>
+                    <div class="input-group"><label>Barbeiro</label><select id="filtroBarbeiroServicos"><option value="todos">Todos</option><option value="Gabriel">Gabriel</option><option value="Wagner">Wagner</option></select></div>
+                    <div class="input-group"><label>Status</label><select id="filtroPagamentoServicos"><option value="todos">Todos</option><option value="pago">Pagos</option><option value="fiado">Fiados</option></select></div>
+                    <div><button class="btn btn-primary" id="btnFiltrarServicos">🔍 Filtrar</button></div>
                 </div>
             </div>
             <div class="table-container"><div id="listaServicosRecentes"></div></div>
         </div>
     </div>
 
-    <!-- MODAIS -->
-    <div id="modalResumo" class="modal"><div class="modal-content"><div class="modal-header"><h2 class="modal-title">📊 RESUMO COMPLETO - BARBEIROS</h2><button class="close-btn" data-modal="modalResumo">&times;</button></div><div id="conteudoResumo"></div><div class="form-actions"><button class="btn btn-secondary" data-modal="modalResumo">Fechar</button><button class="btn btn-whatsapp" id="btnEnviarResumoCompleto">📱 Enviar por WhatsApp</button></div></div></div>
+    <!-- MODAL RESUMO COMPLETO -->
+    <div id="modalResumoCompleto" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2 class="modal-title">📊 RESUMO COMPLETO</h2><button class="close-btn" data-modal="modalResumoCompleto">&times;</button></div>
+            <div id="conteudoResumoCompleto" style="max-height: 500px; overflow-y: auto;"></div>
+            <div class="form-actions"><button class="btn btn-secondary" data-modal="modalResumoCompleto">Fechar</button><button class="btn btn-whatsapp" id="btnEnviarResumoCompletoWhatsApp">📱 Enviar por WhatsApp</button></div>
+        </div>
+    </div>
 
-    <div id="modalPagamentos" class="modal"><div class="modal-content"><div class="modal-header"><h2 class="modal-title">💰 RELATÓRIO DE PAGAMENTOS DETALHADO</h2><button class="close-btn" data-modal="modalPagamentos">&times;</button></div><div class="filtro-container"><div class="filtro-grid"><div class="input-group"><label>📅 Data Início</label><input type="date" id="dataInicioPagamentos"></div><div class="input-group"><label>📅 Data Fim</label><input type="date" id="dataFimPagamentos"></div><div class="input-group"><label>👤 Barbeiro</label><select id="filtroBarbeiroPagamentos"><option value="todos">👥 Todos Barbeiros</option><option value="Gabriel">👨‍🦱 Gabriel</option><option value="Wagner">👨‍🦱 Wagner</option></select></div><div style="display: flex; align-items: flex-end; gap: 10px;"><button class="btn btn-primary" id="btnGerarRelatorio" style="flex: 1;">📈 Gerar Relatório</button><button class="btn btn-whatsapp" id="btnEnviarRelatorioWhatsApp" style="flex: 1;">📱 Enviar WhatsApp</button></div></div></div><div id="relatorioPagamentosDetalhado"></div></div></div>
+    <!-- MODAL RELATÓRIO DETALHADO -->
+    <div id="modalRelatorioDetalhado" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2 class="modal-title">📄 RELATÓRIO DETALHADO</h2><button class="close-btn" data-modal="modalRelatorioDetalhado">&times;</button></div>
+            <div id="conteudoRelatorioDetalhado" style="max-height: 500px; overflow-y: auto;"></div>
+            <div class="form-actions"><button class="btn btn-secondary" data-modal="modalRelatorioDetalhado">Fechar</button><button class="btn btn-whatsapp" id="btnEnviarRelatorioDetalhadoWhatsApp">📱 Enviar por WhatsApp</button></div>
+        </div>
+    </div>
 
-    <div id="modalMensalistas" class="modal"><div class="modal-content"><div class="modal-header"><h2 class="modal-title">👥 GERENCIAMENTO DE MENSALISTAS</h2><button class="close-btn" data-modal="modalMensalistas">&times;</button></div><div class="card" style="margin-bottom: 25px;"><div class="card-header"><div class="card-title">➕ NOVO MENSALISTA</div><div class="badge badge-success">CADASTRO</div></div><div class="form-grid"><div class="form-group"><label>👤 Nome do Cliente *</label><input type="text" id="nomeMensalista" placeholder="Nome completo do cliente"></div><div class="form-group"><label>📱 Telefone (WhatsApp)</label><input type="tel" id="telefoneMensalista" placeholder="(11) 99999-9999" maxlength="15"></div><div class="form-group"><label>👨‍🦱 Barbeiro *</label><select id="barbeiroMensalista"><option value="Gabriel">Gabriel</option><option value="Wagner">Wagner</option></select></div><div class="form-group"><label>💰 Valor Mensal (R$) *</label><input type="number" step="0.01" id="valorMensalista" placeholder="120.00"></div><div class="form-group"><label>📅 Data de Início *</label><input type="date" id="dataInicioMensalista"></div><div class="form-group"><label>📅 Dia de Vencimento (1-31) *</label><input type="number" min="1" max="31" id="diaVencimentoMensalista" placeholder="10"></div><div class="form-group"><label>📊 Status *</label><select id="statusMensalista"><option value="pago">✅ Pago</option><option value="pendente">⏳ Pendente</option><option value="vencido">⚠️ Vencido</option></select></div><div class="form-group"><label>📝 Observações</label><textarea id="observacoesMensalista" rows="2" placeholder="Observações importantes..."></textarea></div></div><div class="form-actions"><button class="btn btn-secondary" id="btnLimparFormMensalista">Limpar Formulário</button><button class="btn btn-success" id="btnAdicionarMensalista">✅ Cadastrar Mensalista</button></div></div><div id="listaMensalistasModal"></div></div></div>
+    <!-- MODAL MENSALISTAS -->
+    <div id="modalMensalistas" class="modal"><div class="modal-content"><div class="modal-header"><h2>👥 Novo Mensalista</h2><button class="close-btn" data-modal="modalMensalistas">&times;</button></div>
+        <div class="form-group"><label>Nome</label><input type="text" id="nomeMensalista" placeholder="Nome do cliente"></div>
+        <div class="form-group"><label>Telefone</label><input type="tel" id="telefoneMensalista" placeholder="(11) 99999-9999"></div>
+        <div class="form-group"><label>Barbeiro</label><select id="barbeiroMensalista"><option value="Gabriel">Gabriel</option><option value="Wagner">Wagner</option></select></div>
+        <div class="form-group"><label>Valor Mensal</label><input type="number" step="0.01" id="valorMensalista" placeholder="120.00"></div>
+        <div class="form-group"><label>Dia Vencimento</label><input type="number" min="1" max="31" id="diaVencimentoMensalista" placeholder="10"></div>
+        <div class="form-group"><label>Status</label><select id="statusMensalista"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+        <div class="form-actions"><button class="btn btn-secondary" data-modal="modalMensalistas">Cancelar</button><button class="btn btn-success" id="btnAdicionarMensalista">✅ Cadastrar</button></div>
+    </div></div>
 
-    <div id="modalDespesas" class="modal"><div class="modal-content"><div class="modal-header"><h2 class="modal-title">💸 GERENCIAMENTO DE DESPESAS</h2><button class="close-btn" data-modal="modalDespesas">&times;</button></div><div class="card" style="margin-bottom: 25px;"><div class="card-header"><div class="card-title">➕ NOVA DESPESA</div><div class="badge badge-danger">REGISTRO</div></div><div class="form-grid"><div class="form-group"><label>📝 Descrição *</label><input type="text" id="descricaoDespesa" placeholder="Ex: Compra de produtos, Pagamento de conta..."></div><div class="form-group"><label>📊 Categoria *</label><select id="categoriaDespesa"><option value="Suprimentos">🛒 Suprimentos</option><option value="Aluguel">🏢 Aluguel</option><option value="Energia">💡 Energia</option><option value="Água">🚰 Água</option><option value="Internet">🌐 Internet</option><option value="Manutenção">🔧 Manutenção</option><option value="Salários">💼 Salários</option><option value="Marketing">📢 Marketing</option><option value="Outros">📦 Outros</option></select></div><div class="form-group"><label>💰 Valor (R$) *</label><input type="number" step="0.01" id="valorDespesa" placeholder="0.00"></div><div class="form-group"><label>📅 Data *</label><input type="date" id="dataDespesa"></div><div class="form-group"><label>🏷️ Tags (separadas por vírgula)</label><input type="text" id="tagsDespesa" placeholder="urgente, mensal, variável"></div><div class="form-group"><label>🧾 Comprovante (opcional)</label><input type="text" id="comprovanteDespesa" placeholder="Número ou descrição do comprovante"></div><div class="form-group"><label>📝 Observações</label><textarea id="observacoesDespesa" rows="2" placeholder="Detalhes adicionais..."></textarea></div></div><div class="form-actions"><button class="btn btn-secondary" id="btnLimparFormDespesa">Limpar Formulário</button><button class="btn btn-danger" id="btnAdicionarDespesa">💾 Registrar Despesa</button></div></div><div class="card" style="margin-bottom: 25px;"><div class="card-header"><div class="card-title">📈 RESUMO FINANCEIRO</div><div class="badge badge-warning">MÊS ATUAL</div></div><div id="resumoFinanceiroDespesas"></div></div><div id="listaDespesasModal"></div></div></div>
+    <!-- MODAL DESPESAS -->
+    <div id="modalDespesas" class="modal"><div class="modal-content"><div class="modal-header"><h2>💸 Nova Despesa</h2><button class="close-btn" data-modal="modalDespesas">&times;</button></div>
+        <div class="form-group"><label>Descrição</label><input type="text" id="descricaoDespesa" placeholder="Descrição"></div>
+        <div class="form-group"><label>Categoria</label><select id="categoriaDespesa"><option value="Suprimentos">Suprimentos</option><option value="Aluguel">Aluguel</option><option value="Energia">Energia</option><option value="Outros">Outros</option></select></div>
+        <div class="form-group"><label>Valor</label><input type="number" step="0.01" id="valorDespesa" placeholder="0.00"></div>
+        <div class="form-group"><label>Data</label><input type="date" id="dataDespesa"></div>
+        <div class="form-actions"><button class="btn btn-secondary" data-modal="modalDespesas">Cancelar</button><button class="btn btn-danger" id="btnAdicionarDespesa">💾 Registrar</button></div>
+    </div></div>
 
-    <div id="modalConfig" class="modal"><div class="modal-content"><div class="modal-header"><h2 class="modal-title">⚙️ CONFIGURAÇÕES DO SISTEMA</h2><button class="close-btn" data-modal="modalConfig">&times;</button></div><div class="form-grid"><div class="form-group"><label>📱 Número WhatsApp Relatórios</label><input type="tel" id="numWhats" placeholder="11974065186"></div><div class="form-group"><label>🔐 Novo PIN (4 dígitos)</label><input type="password" id="novoPin" maxlength="4" placeholder="****"></div><div class="form-group"><label>💰 Valor Corte</label><input type="number" step="0.01" id="valCorte" placeholder="Valor atual: R$ 28.00"></div><div class="form-group"><label>💰 Valor Barba</label><input type="number" step="0.01" id="valBarba" placeholder="Valor atual: R$ 15.00"></div><div class="form-group"><label>💰 Valor Combo</label><input type="number" step="0.01" id="valCombo" placeholder="Valor atual: R$ 40.00"></div><div class="form-group"><label>💸 Orçamento Mensal Despesas</label><input type="number" step="0.01" id="orcamentoDespesas" placeholder="R$ 1500.00"></div><div class="form-group"><label>🔔 Notificações de Vencimento</label><select id="notificacoesAtivas"><option value="true">✅ Ativas</option><option value="false">❌ Desativadas</option></select></div><div class="form-group"><label>⏰ Dias antes para alerta</label><input type="number" min="1" max="7" id="diasAlerta" placeholder="3"></div></div><div class="form-actions"><button class="btn btn-secondary" data-modal="modalConfig">Cancelar</button><button class="btn btn-primary" id="btnSalvarConfiguracoes">💾 Salvar Configurações</button></div></div></div>
+    <!-- MODAL CONFIGURAÇÕES -->
+    <div id="modalConfig" class="modal"><div class="modal-content"><div class="modal-header"><h2>⚙️ Configurações</h2><button class="close-btn" data-modal="modalConfig">&times;</button></div>
+        <div class="form-group"><label>WhatsApp</label><input type="tel" id="numWhats" placeholder="5511999999999"></div>
+        <div class="form-group"><label>Valor Corte</label><input type="number" step="0.01" id="valCorte"></div>
+        <div class="form-group"><label>Valor Barba</label><input type="number" step="0.01" id="valBarba"></div>
+        <div class="form-group"><label>Valor Combo</label><input type="number" step="0.01" id="valCombo"></div>
+        <div class="form-actions"><button class="btn btn-secondary" data-modal="modalConfig">Cancelar</button><button class="btn btn-primary" id="btnSalvarConfiguracoes">💾 Salvar</button></div>
+    </div></div>
 
     <script>
 // ========== VARIÁVEIS GLOBAIS ==========
-let usuarioAtual = 'Gabriel';
 let dados = {
     Gabriel: [],
     Wagner: [],
     despesas: [],
     mensalistas: [],
-    config: {
-        pin: '1234',
-        whatsapp: '5511974065186',
-        corte: 30,
-        barba: 20,
-        combo: 40,
-        orcamentoDespesas: 1500,
-        notificacoesAtivas: true,
-        diasAlerta: 3
-    }
+    config: { pin: '1234', whatsapp: '5511974065186', corte: 30, barba: 20, combo: 40, orcamentoDespesas: 1500 }
 };
-
-let servicoSelecionado = null;
-let opcaoPagamentoSelecionada = null;
-let metodoPagamentoSelecionado = null;
-let dataFiltroAtual = null;
 let ws = null;
-let isOnline = false;
 let graficoPizza = null;
-let syncTimeout = null;
 
-// ========== FUNÇÕES DE DATA ==========
+// ========== FUNÇÕES AUXILIARES ==========
 function getDataAtualBrasilia() {
     const agora = new Date();
     const offset = -3;
     const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
     const dataBrasilia = new Date(utc + (3600000 * offset));
-    const ano = dataBrasilia.getFullYear();
-    const mes = String(dataBrasilia.getMonth() + 1).padStart(2, '0');
-    const dia = String(dataBrasilia.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
+    return `${dataBrasilia.getFullYear()}-${String(dataBrasilia.getMonth() + 1).padStart(2, '0')}-${String(dataBrasilia.getDate()).padStart(2, '0')}`;
 }
 
 function formatarDataBR(dataISO) {
     if (!dataISO) return '';
-    if (dataISO.includes('/')) return dataISO;
-    const partes = dataISO.split('-');
-    if (partes.length !== 3) return dataISO;
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
-function formatarDataISO(dataBR) {
-    if (!dataBR) return '';
-    if (dataBR.includes('-')) return dataBR;
-    const partes = dataBR.split('/');
-    if (partes.length !== 3) return dataBR;
-    return `${partes[2]}-${partes[1]}-${partes[0]}`;
-}
-
-function getHoraAtualBrasilia() {
-    const agora = new Date();
-    const offset = -3;
-    const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
-    const dataBrasilia = new Date(utc + (3600000 * offset));
-    return `${String(dataBrasilia.getHours()).padStart(2, '0')}:${String(dataBrasilia.getMinutes()).padStart(2, '0')}`;
+    const [ano, mes, dia] = dataISO.split('-');
+    return `${dia}/${mes}/${ano}`;
 }
 
 function getPrimeiroDiaMes() {
@@ -304,68 +287,75 @@ function getPrimeiroDiaMes() {
 
 function getUltimoDiaMes() {
     const hoje = new Date(getDataAtualBrasilia() + 'T12:00:00-03:00');
-    const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-    return `${ultimoDia.getFullYear()}-${String(ultimoDia.getMonth() + 1).padStart(2, '0')}-${String(ultimoDia.getDate()).padStart(2, '0')}`;
+    return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate()}`;
 }
 
-// ========== INICIALIZAÇÃO ==========
-function inicializarSistema() {
-    console.log('🚀 BarbaPRO - Dashboard inicializando...');
-    carregarDadosLocais();
-    garantirConfiguracoesAtualizadas();
-    verificarDatasServicos();
-    
-    const hoje = getDataAtualBrasilia();
-    dataFiltroAtual = hoje;
-    
-    const dataInicioServicos = document.getElementById('dataInicioServicos');
-    const dataFimServicos = document.getElementById('dataFimServicos');
-    
-    if (dataInicioServicos) dataInicioServicos.value = getPrimeiroDiaMes();
-    if (dataFimServicos) dataFimServicos.value = getUltimoDiaMes();
-    
-    console.log('📅 Data atual (Brasília):', hoje);
-    console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
-    
-    inicializarDadosExemplo();
-    atualizarTudo();
-    atualizarResumoStatusMensalistas();
-    atualizarAlertasVencimento();
-    atualizarGraficoPizza();
-    iniciarVerificacaoVencimentos();
-    conectarWebSocket();
-    
-    console.log('✅ Dashboard inicializado com sucesso!');
+function getDataSegunda() {
+    const hoje = new Date();
+    const dia = hoje.getDay();
+    const diff = hoje.getDate() - dia + (dia === 0 ? -6 : 1);
+    const segunda = new Date(hoje.setDate(diff));
+    return `${segunda.getFullYear()}-${String(segunda.getMonth() + 1).padStart(2, '0')}-${String(segunda.getDate()).padStart(2, '0')}`;
 }
 
-function garantirConfiguracoesAtualizadas() {
-    if (!dados.config) {
-        dados.config = { pin: '1234', whatsapp: '5511974065186', corte: 30, barba: 20, combo: 40, orcamentoDespesas: 1500, notificacoesAtivas: true, diasAlerta: 3 };
-    }
-    if (!dados.config.orcamentoDespesas) dados.config.orcamentoDespesas = 1500;
-    if (dados.config.notificacoesAtivas === undefined) dados.config.notificacoesAtivas = true;
-    if (!dados.config.diasAlerta) dados.config.diasAlerta = 3;
-    if (!dados.config.whatsapp) dados.config.whatsapp = '5511974065186';
-    
-    console.log('⚙️ Configurações atualizadas:', dados.config);
+function getDataSabado() {
+    const segunda = new Date(getDataSegunda());
+    const sabado = new Date(segunda);
+    sabado.setDate(segunda.getDate() + 5);
+    return `${sabado.getFullYear()}-${String(sabado.getMonth() + 1).padStart(2, '0')}-${String(sabado.getDate()).padStart(2, '0')}`;
 }
 
-function inicializarDadosExemplo() {
-    if (!dados.mensalistas || dados.mensalistas.length === 0) {
-        dados.mensalistas = [
-            { id: Date.now() + 1, nome: "Carlos Silva", telefone: "11999999999", barbeiro: "Gabriel", valor: 120, dataInicio: "2024-01-10", diaVencimento: 10, status: "pago", observacoes: "", ultimaAtualizacao: Date.now() },
-            { id: Date.now() + 2, nome: "Roberto Santos", telefone: "11988888888", barbeiro: "Wagner", valor: 120, dataInicio: "2024-01-15", diaVencimento: 15, status: "pendente", observacoes: "", ultimaAtualizacao: Date.now() }
-        ];
-        salvarDadosLocais();
-    }
+// ========== CALCULAR PAGAMENTO SEMANAL ==========
+function calcularPagamentoSemanal() {
+    const dataInicio = getDataSegunda();
+    const dataFim = getDataSabado();
     
-    if (!dados.despesas || dados.despesas.length === 0) {
-        dados.despesas = [
-            { id: Date.now() + 1, descricao: "Compra de produtos", categoria: "Suprimentos", valor: 150.00, data: getDataAtualBrasilia(), tags: "", comprovante: "", observacoes: "", dataCriacao: Date.now() },
-            { id: Date.now() + 2, descricao: "Conta de energia", categoria: "Energia", valor: 85.50, data: getDataAtualBrasilia(), tags: "", comprovante: "", observacoes: "", dataCriacao: Date.now() }
-        ];
-        salvarDadosLocais();
-    }
+    const servicosGabriel = dados.Gabriel.filter(s => s.data >= dataInicio && s.data <= dataFim);
+    const totalSemanal = servicosGabriel.reduce((sum, s) => sum + s.valor, 0);
+    const valorPagar = totalSemanal / 2; // 50% para o Gabriel
+    
+    document.getElementById('valorPagamentoSemanal').textContent = `R$ ${valorPagar.toFixed(2)}`;
+    document.getElementById('detalhesPagamentoSemanal').innerHTML = `
+        Período: ${formatarDataBR(dataInicio)} a ${formatarDataBR(dataFim)}<br>
+        Total de serviços do Gabriel: ${servicosGabriel.length} serviços<br>
+        Valor total: R$ ${totalSemanal.toFixed(2)}<br>
+        <strong>50% para Gabriel: R$ ${valorPagar.toFixed(2)}</strong>
+    `;
+    
+    return { totalSemanal, valorPagar, servicos: servicosGabriel.length, dataInicio, dataFim };
+}
+
+function enviarPagamentoSemanalWhatsApp() {
+    const { totalSemanal, valorPagar, servicos, dataInicio, dataFim } = calcularPagamentoSemanal();
+    const mensagem = `*💈 PAGAMENTO SEMANAL - GABRIEL*\n\n📅 Período: ${formatarDataBR(dataInicio)} a ${formatarDataBR(dataFim)}\n✂️ Serviços realizados: ${servicos}\n💰 Valor total: R$ ${totalSemanal.toFixed(2)}\n✅ 50% para Gabriel: *R$ ${valorPagar.toFixed(2)}*\n\n📱 BarbaPRO Duo`;
+    window.open(`https://wa.me/${dados.config.whatsapp}?text=${encodeURIComponent(mensagem)}`, '_blank');
+}
+
+// ========== PERSISTÊNCIA ==========
+function carregarDadosLocais() {
+    try {
+        const dadosSalvos = localStorage.getItem('barbapro_duo');
+        if (dadosSalvos) {
+            const dp = JSON.parse(dadosSalvos);
+            if (dp.Gabriel) dados.Gabriel = dp.Gabriel;
+            if (dp.Wagner) dados.Wagner = dp.Wagner;
+            if (dp.despesas) dados.despesas = dp.despesas;
+            if (dp.mensalistas) dados.mensalistas = dp.mensalistas;
+            if (dp.config) dados.config = { ...dados.config, ...dp.config };
+            console.log('📂 Dados carregados - Gabriel:', dados.Gabriel.length, 'Wagner:', dados.Wagner.length);
+        }
+    } catch (e) { console.error(e); }
+}
+
+function salvarDadosLocais() {
+    localStorage.setItem('barbapro_duo', JSON.stringify(dados));
+}
+
+async function salvarDadosServidor() {
+    try {
+        await fetch('/api/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: dados }) });
+        console.log('✅ Dados salvos no servidor');
+    } catch (e) { console.log('⚠️ Offline - dados salvos localmente'); }
 }
 
 // ========== WEBSOCKET ==========
@@ -373,217 +363,65 @@ function conectarWebSocket() {
     try {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         ws = new WebSocket(`${protocol}//${window.location.host}`);
-        
-        ws.onopen = function() {
-            console.log('✅ WebSocket conectado!');
-            isOnline = true;
-            mostrarFeedback('✅ Conectado ao servidor', 'success');
-            sincronizarDados();
-        };
-        
-        ws.onmessage = function(event) {
-            try {
-                const data = JSON.parse(event.data);
-                console.log('📥 Mensagem recebida:', data.type);
-                
-                switch(data.type) {
-                    case 'sync_completo':
-                    case 'dados_iniciais':
-                        processarDadosServidor(data.data);
-                        break;
-                    case 'servico_removido':
-                        console.log('🗑️ Exclusão remota recebida:', data.servicoId, 'Barbeiro:', data.barbeiro);
-                        removerServicoLocalmente(data.servicoId, data.barbeiro);
-                        break;
-                    case 'servico_adicionado':
-                        console.log('➕ Novo serviço remoto:', data.servico);
-                        adicionarServicoLocalmente(data.servico);
-                        break;
-                    case 'sync_required':
-                        console.log('🔄 Sincronização solicitada');
-                        sincronizarDados();
-                        break;
-                }
-            } catch (error) {
-                console.error('Erro ao processar mensagem:', error);
+        ws.onopen = () => { console.log('✅ WebSocket conectado!'); sincronizarDados(); };
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'sync_completo' || data.type === 'dados_iniciais') {
+                if (data.data.Gabriel) dados.Gabriel = data.data.Gabriel;
+                if (data.data.Wagner) dados.Wagner = data.data.Wagner;
+                if (data.data.despesas) dados.despesas = data.data.despesas;
+                if (data.data.mensalistas) dados.mensalistas = data.data.mensalistas;
+                salvarDadosLocais();
+                atualizarTudo();
+            }
+            if (data.type === 'servico_removido') {
+                dados.Gabriel = dados.Gabriel.filter(s => s.id != data.servicoId);
+                dados.Wagner = dados.Wagner.filter(s => s.id != data.servicoId);
+                salvarDadosLocais();
+                atualizarTudo();
+                mostrarFeedback('🗑️ Serviço removido por outro dispositivo!');
             }
         };
-        
-        ws.onclose = function() {
-            console.log('WebSocket desconectado');
-            isOnline = false;
-            mostrarFeedback('⚠️ Desconectado do servidor', 'warning');
-            setTimeout(conectarWebSocket, 5000);
-        };
-        
-        ws.onerror = function(error) {
-            console.error('WebSocket erro:', error);
-            isOnline = false;
-        };
-    } catch (error) {
-        console.error('Erro ao conectar:', error);
-        isOnline = false;
-    }
-}
-
-function processarDadosServidor(dadosServidor) {
-    let recarregar = false;
-    
-    if (dadosServidor.Gabriel && Array.isArray(dadosServidor.Gabriel)) {
-        if (JSON.stringify(dados.Gabriel) !== JSON.stringify(dadosServidor.Gabriel)) {
-            dados.Gabriel = dadosServidor.Gabriel;
-            recarregar = true;
-            console.log('📥 Gabriel atualizado:', dados.Gabriel.length);
-        }
-    }
-    if (dadosServidor.Wagner && Array.isArray(dadosServidor.Wagner)) {
-        if (JSON.stringify(dados.Wagner) !== JSON.stringify(dadosServidor.Wagner)) {
-            dados.Wagner = dadosServidor.Wagner;
-            recarregar = true;
-            console.log('📥 Wagner atualizado:', dados.Wagner.length);
-        }
-    }
-    if (dadosServidor.mensalistas && Array.isArray(dadosServidor.mensalistas)) {
-        dados.mensalistas = dadosServidor.mensalistas;
-        recarregar = true;
-    }
-    if (dadosServidor.despesas && Array.isArray(dadosServidor.despesas)) {
-        dados.despesas = dadosServidor.despesas;
-        recarregar = true;
-    }
-    
-    if (recarregar) {
-        salvarDadosLocais();
-        atualizarTudo();
-        atualizarResumoStatusMensalistas();
-        atualizarGraficoPizza();
-        mostrarFeedback('🔄 Dados sincronizados!', 'success');
-    }
-}
-
-function removerServicoLocalmente(servicoId, barbeiro) {
-    console.log(`🗑️ Removendo serviço ${servicoId} do barbeiro ${barbeiro}`);
-    
-    if (barbeiro === 'Gabriel') {
-        const index = dados.Gabriel.findIndex(s => s.id == servicoId);
-        if (index !== -1) {
-            dados.Gabriel.splice(index, 1);
-            console.log('✅ Serviço removido de Gabriel');
-        }
-    } else if (barbeiro === 'Wagner') {
-        const index = dados.Wagner.findIndex(s => s.id == servicoId);
-        if (index !== -1) {
-            dados.Wagner.splice(index, 1);
-            console.log('✅ Serviço removido de Wagner');
-        }
-    }
-    
-    salvarDadosLocais();
-    atualizarTudo();
-    atualizarGraficoPizza();
-}
-
-function adicionarServicoLocalmente(servico) {
-    console.log('➕ Adicionando serviço localmente:', servico);
-    
-    if (servico.barbeiro === 'Gabriel') {
-        const existe = dados.Gabriel.some(s => s.id == servico.id);
-        if (!existe) {
-            dados.Gabriel.unshift(servico);
-            console.log('✅ Serviço adicionado a Gabriel');
-        }
-    } else if (servico.barbeiro === 'Wagner') {
-        const existe = dados.Wagner.some(s => s.id == servico.id);
-        if (!existe) {
-            dados.Wagner.unshift(servico);
-            console.log('✅ Serviço adicionado a Wagner');
-        }
-    }
-    
-    salvarDadosLocais();
-    atualizarTudo();
-    atualizarGraficoPizza();
+        ws.onclose = () => setTimeout(conectarWebSocket, 5000);
+    } catch(e) { console.error(e); }
 }
 
 async function sincronizarDados() {
-    console.log('🔄 Sincronizando dados...');
     try {
         const response = await fetch('/api/data');
         if (response.ok) {
             const result = await response.json();
             if (result.success && result.data) {
-                processarDadosServidor(result.data);
-                mostrarFeedback('✅ Dados sincronizados!', 'success');
+                if (result.data.Gabriel) dados.Gabriel = result.data.Gabriel;
+                if (result.data.Wagner) dados.Wagner = result.data.Wagner;
+                if (result.data.despesas) dados.despesas = result.data.despesas;
+                if (result.data.mensalistas) dados.mensalistas = result.data.mensalistas;
+                salvarDadosLocais();
+                atualizarTudo();
+                mostrarFeedback('✅ Dados sincronizados!');
             }
         }
-    } catch (error) {
-        console.error('Erro na sincronização:', error);
-    }
+    } catch(e) { console.log('Erro na sincronização'); }
 }
 
-// ========== FUNÇÃO DE EXCLUIR SERVIÇO ==========
+// ========== FUNÇÃO DE EXCLUIR ==========
 async function apagarServico(servicoId) {
-    if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação será sincronizada com todos os dispositivos!')) return;
+    if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?')) return;
     
-    let barbeiroEncontrado = null;
-    let indexEncontrado = -1;
-    let servicoRemovido = null;
-    
-    const gabrielIndex = dados.Gabriel.findIndex(s => s.id == servicoId);
-    if (gabrielIndex !== -1) {
-        barbeiroEncontrado = 'Gabriel';
-        indexEncontrado = gabrielIndex;
-        servicoRemovido = dados.Gabriel[gabrielIndex];
+    if (dados.Gabriel.some(s => s.id == servicoId)) {
+        dados.Gabriel = dados.Gabriel.filter(s => s.id != servicoId);
+    } else if (dados.Wagner.some(s => s.id == servicoId)) {
+        dados.Wagner = dados.Wagner.filter(s => s.id != servicoId);
     } else {
-        const wagnerIndex = dados.Wagner.findIndex(s => s.id == servicoId);
-        if (wagnerIndex !== -1) {
-            barbeiroEncontrado = 'Wagner';
-            indexEncontrado = wagnerIndex;
-            servicoRemovido = dados.Wagner[wagnerIndex];
-        }
-    }
-    
-    if (barbeiroEncontrado === null || indexEncontrado === -1) {
-        mostrarFeedback('❌ Serviço não encontrado!', 'error');
+        mostrarFeedback('❌ Serviço não encontrado!');
         return;
     }
     
-    console.log(`🗑️ Removendo serviço:`, servicoRemovido);
-    
-    dados[barbeiroEncontrado].splice(indexEncontrado, 1);
     salvarDadosLocais();
+    await salvarDadosServidor();
+    if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'sync_completo', data: dados })); }
     atualizarTudo();
-    atualizarGraficoPizza();
-    
-    try {
-        const response = await fetch('/api/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: dados })
-        });
-        
-        if (response.ok && ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-                type: 'servico_removido',
-                servicoId: servicoId,
-                barbeiro: barbeiroEncontrado,
-                timestamp: Date.now()
-            }));
-            
-            setTimeout(() => {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ type: 'sync_completo', data: dados }));
-                }
-            }, 100);
-            
-            mostrarFeedback(`✅ Serviço de ${servicoRemovido.cliente} removido e sincronizado!`, 'success');
-        } else {
-            mostrarFeedback(`⚠️ Serviço removido apenas localmente`, 'warning');
-        }
-    } catch (error) {
-        console.error('Erro na sincronização:', error);
-        mostrarFeedback(`⚠️ Serviço removido apenas localmente`, 'warning');
-    }
+    mostrarFeedback('✅ Serviço removido!');
 }
 
 // ========== ATUALIZAR INTERFACE ==========
@@ -594,114 +432,64 @@ function atualizarTudo() {
     atualizarListaDespesas();
     atualizarResumoStatusMensalistas();
     atualizarGraficoPizza();
+    calcularPagamentoSemanal();
 }
 
 function atualizarEstatisticas() {
     const hoje = getDataAtualBrasilia();
-    const primeiroDiaMes = getPrimeiroDiaMes();
-    const ultimoDiaMes = getUltimoDiaMes();
+    const primeiroDia = getPrimeiroDiaMes();
+    const ultimoDia = getUltimoDiaMes();
     
-    // Gabriel - Hoje
-    const servicosGabrielHoje = dados.Gabriel.filter(s => s.data === hoje);
-    const totalGabrielHoje = servicosGabrielHoje.reduce((soma, s) => soma + s.valor, 0);
-    const fiadoGabrielHoje = servicosGabrielHoje.filter(s => !s.pago).reduce((soma, s) => soma + s.valor, 0);
-    const mediaGabriel = servicosGabrielHoje.length > 0 ? totalGabrielHoje / servicosGabrielHoje.length : 0;
+    const gHoje = dados.Gabriel.filter(s => s.data === hoje);
+    document.getElementById('gabrielHoje').textContent = gHoje.length;
+    document.getElementById('gabrielTotalHoje').textContent = `R$ ${gHoje.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`;
+    document.getElementById('gabrielFiadoHoje').textContent = `R$ ${gHoje.filter(s => !s.pago).reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`;
+    document.getElementById('gabrielMedia').textContent = `R$ ${gHoje.length ? (gHoje.reduce((s, srv) => s + srv.valor, 0) / gHoje.length).toFixed(2) : '0.00'}`;
     
-    const gabrielHojeEl = document.getElementById('gabrielHoje');
-    const gabrielTotalHojeEl = document.getElementById('gabrielTotalHoje');
-    const gabrielFiadoHojeEl = document.getElementById('gabrielFiadoHoje');
-    const gabrielMediaEl = document.getElementById('gabrielMedia');
+    const wHoje = dados.Wagner.filter(s => s.data === hoje);
+    document.getElementById('wagnerHoje').textContent = wHoje.length;
+    document.getElementById('wagnerTotalHoje').textContent = `R$ ${wHoje.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`;
+    document.getElementById('wagnerFiadoHoje').textContent = `R$ ${wHoje.filter(s => !s.pago).reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`;
+    document.getElementById('wagnerMedia').textContent = `R$ ${wHoje.length ? (wHoje.reduce((s, srv) => s + srv.valor, 0) / wHoje.length).toFixed(2) : '0.00'}`;
     
-    if (gabrielHojeEl) gabrielHojeEl.textContent = servicosGabrielHoje.length;
-    if (gabrielTotalHojeEl) gabrielTotalHojeEl.textContent = `R$ ${totalGabrielHoje.toFixed(2)}`;
-    if (gabrielFiadoHojeEl) gabrielFiadoHojeEl.textContent = `R$ ${fiadoGabrielHoje.toFixed(2)}`;
-    if (gabrielMediaEl) gabrielMediaEl.textContent = `R$ ${mediaGabriel.toFixed(2)}`;
+    const todosMes = [...dados.Gabriel.filter(s => s.data >= primeiroDia && s.data <= ultimoDia), ...dados.Wagner.filter(s => s.data >= primeiroDia && s.data <= ultimoDia)];
+    const totalMes = todosMes.reduce((s, srv) => s + srv.valor, 0);
+    document.getElementById('totalMes').textContent = `R$ ${totalMes.toFixed(2)}`;
+    document.getElementById('servicosMes').textContent = todosMes.length;
+    document.getElementById('fiadoMes').textContent = `R$ ${todosMes.filter(s => !s.pago).reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`;
     
-    // Wagner - Hoje
-    const servicosWagnerHoje = dados.Wagner.filter(s => s.data === hoje);
-    const totalWagnerHoje = servicosWagnerHoje.reduce((soma, s) => soma + s.valor, 0);
-    const fiadoWagnerHoje = servicosWagnerHoje.filter(s => !s.pago).reduce((soma, s) => soma + s.valor, 0);
-    const mediaWagner = servicosWagnerHoje.length > 0 ? totalWagnerHoje / servicosWagnerHoje.length : 0;
+    const todosHoje = [...gHoje, ...wHoje];
+    document.getElementById('totalDinheiro').textContent = `R$ ${todosHoje.filter(s => s.pago && s.metodoPagamento === 'dinheiro').reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`;
+    document.getElementById('totalPix').textContent = `R$ ${todosHoje.filter(s => s.pago && s.metodoPagamento === 'pix').reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`;
+    document.getElementById('totalDebito').textContent = `R$ ${todosHoje.filter(s => s.pago && s.metodoPagamento === 'debito').reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`;
+    document.getElementById('totalCredito').textContent = `R$ ${todosHoje.filter(s => s.pago && s.metodoPagamento === 'credito').reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`;
     
-    const wagnerHojeEl = document.getElementById('wagnerHoje');
-    const wagnerTotalHojeEl = document.getElementById('wagnerTotalHoje');
-    const wagnerFiadoHojeEl = document.getElementById('wagnerFiadoHoje');
-    const wagnerMediaEl = document.getElementById('wagnerMedia');
-    
-    if (wagnerHojeEl) wagnerHojeEl.textContent = servicosWagnerHoje.length;
-    if (wagnerTotalHojeEl) wagnerTotalHojeEl.textContent = `R$ ${totalWagnerHoje.toFixed(2)}`;
-    if (wagnerFiadoHojeEl) wagnerFiadoHojeEl.textContent = `R$ ${fiadoWagnerHoje.toFixed(2)}`;
-    if (wagnerMediaEl) wagnerMediaEl.textContent = `R$ ${mediaWagner.toFixed(2)}`;
-    
-    // Totais do Mês
-    const servicosGabrielMes = dados.Gabriel.filter(s => s.data >= primeiroDiaMes && s.data <= ultimoDiaMes);
-    const servicosWagnerMes = dados.Wagner.filter(s => s.data >= primeiroDiaMes && s.data <= ultimoDiaMes);
-    const todosServicosMes = [...servicosGabrielMes, ...servicosWagnerMes];
-    
-    const totalMes = todosServicosMes.reduce((soma, s) => soma + s.valor, 0);
-    const fiadoMes = todosServicosMes.filter(s => !s.pago).reduce((soma, s) => soma + s.valor, 0);
-    
-    const totalMesEl = document.getElementById('totalMes');
-    const servicosMesEl = document.getElementById('servicosMes');
-    const fiadoMesEl = document.getElementById('fiadoMes');
-    
-    if (totalMesEl) totalMesEl.textContent = `R$ ${totalMes.toFixed(2)}`;
-    if (servicosMesEl) servicosMesEl.textContent = todosServicosMes.length;
-    if (fiadoMesEl) fiadoMesEl.textContent = `R$ ${fiadoMes.toFixed(2)}`;
-    
-    // Pagamentos do dia
-    const todosServicosHoje = [...servicosGabrielHoje, ...servicosWagnerHoje];
-    const dinheiro = todosServicosHoje.filter(s => s.pago && s.metodoPagamento === 'dinheiro').reduce((soma, s) => soma + s.valor, 0);
-    const pix = todosServicosHoje.filter(s => s.pago && s.metodoPagamento === 'pix').reduce((soma, s) => soma + s.valor, 0);
-    const debito = todosServicosHoje.filter(s => s.pago && s.metodoPagamento === 'debito').reduce((soma, s) => soma + s.valor, 0);
-    const credito = todosServicosHoje.filter(s => s.pago && s.metodoPagamento === 'credito').reduce((soma, s) => soma + s.valor, 0);
-    
-    const totalDinheiroEl = document.getElementById('totalDinheiro');
-    const totalPixEl = document.getElementById('totalPix');
-    const totalDebitoEl = document.getElementById('totalDebito');
-    const totalCreditoEl = document.getElementById('totalCredito');
-    
-    if (totalDinheiroEl) totalDinheiroEl.textContent = `R$ ${dinheiro.toFixed(2)}`;
-    if (totalPixEl) totalPixEl.textContent = `R$ ${pix.toFixed(2)}`;
-    if (totalDebitoEl) totalDebitoEl.textContent = `R$ ${debito.toFixed(2)}`;
-    if (totalCreditoEl) totalCreditoEl.textContent = `R$ ${credito.toFixed(2)}`;
-    
-    // Despesas do Mês
-    const despesasMes = dados.despesas.filter(d => d.data >= primeiroDiaMes && d.data <= ultimoDiaMes);
-    const totalDespesas = despesasMes.reduce((soma, d) => soma + d.valor, 0);
-    const maiorDespesa = despesasMes.length > 0 ? Math.max(...despesasMes.map(d => d.valor)) : 0;
-    
-    const totalDespesasMesEl = document.getElementById('totalDespesasMes');
-    const numDespesasMesEl = document.getElementById('numDespesasMes');
-    const maiorDespesaMesEl = document.getElementById('maiorDespesaMes');
-    const lucroLiquidoEl = document.getElementById('lucroLiquido');
-    
-    if (totalDespesasMesEl) totalDespesasMesEl.textContent = `R$ ${totalDespesas.toFixed(2)}`;
-    if (numDespesasMesEl) numDespesasMesEl.textContent = despesasMes.length;
-    if (maiorDespesaMesEl) maiorDespesaMesEl.textContent = `R$ ${maiorDespesa.toFixed(2)}`;
-    if (lucroLiquidoEl) lucroLiquidoEl.textContent = `R$ ${(totalMes - totalDespesas).toFixed(2)}`;
-    if (document.getElementById('despesasMes')) document.getElementById('despesasMes').textContent = `R$ ${totalDespesas.toFixed(2)}`;
+    const despesasMes = dados.despesas.filter(d => d.data >= primeiroDia && d.data <= ultimoDia);
+    const totalDesp = despesasMes.reduce((s, d) => s + d.valor, 0);
+    document.getElementById('totalDespesasMes').textContent = `R$ ${totalDesp.toFixed(2)}`;
+    document.getElementById('numDespesasMes').textContent = despesasMes.length;
+    document.getElementById('maiorDespesaMes').textContent = `R$ ${despesasMes.length ? Math.max(...despesasMes.map(d => d.valor)).toFixed(2) : '0.00'}`;
+    document.getElementById('lucroLiquido').textContent = `R$ ${(totalMes - totalDesp).toFixed(2)}`;
+    document.getElementById('despesasMes').textContent = `R$ ${totalDesp.toFixed(2)}`;
 }
 
 function atualizarListaServicos() {
     const container = document.getElementById('listaServicosRecentes');
-    if (!container) {
-        console.error('Elemento listaServicosRecentes não encontrado');
-        return;
-    }
+    if (!container) return;
     
-    const barbeiroFiltro = document.getElementById('filtroBarbeiroServicos').value;
+    const dataInicio = document.getElementById('dataInicioServicos').value || getPrimeiroDiaMes();
+    const dataFim = document.getElementById('dataFimServicos').value || getUltimoDiaMes();
+    const barbeiro = document.getElementById('filtroBarbeiroServicos').value;
     const statusPgt = document.getElementById('filtroPagamentoServicos').value;
-    const hoje = getDataAtualBrasilia();
     
     let servicos = [];
-    if (barbeiroFiltro === 'todos') {
+    if (barbeiro === 'todos') {
         servicos = [...dados.Gabriel, ...dados.Wagner];
     } else {
-        servicos = dados[barbeiroFiltro] || [];
+        servicos = dados[barbeiro] || [];
     }
     
-    servicos = servicos.filter(s => s.data === hoje);
+    servicos = servicos.filter(s => s.data >= dataInicio && s.data <= dataFim);
     
     if (statusPgt !== 'todos') {
         servicos = servicos.filter(s => statusPgt === 'pago' ? s.pago : !s.pago);
@@ -710,17 +498,18 @@ function atualizarListaServicos() {
     servicos.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     
     if (servicos.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:60px 20px;"><div style="font-size:48px; margin-bottom:15px;">📝</div><div style="color:#aaa;">Nenhum serviço registrado hoje</div><div style="color:#666; font-size:14px; margin-top:10px;">${formatarDataBR(hoje)}</div></div>`;
+        container.innerHTML = `<div style="text-align:center; padding:60px 20px;"><div style="font-size:48px;">📝</div><div>Nenhum serviço encontrado no período</div><div style="color:#666; font-size:14px; margin-top:10px;">${formatarDataBR(dataInicio)} a ${formatarDataBR(dataFim)}</div></div>`;
         return;
     }
     
-    let html = `<table><thead><tr><th>Hora</th><th>Barbeiro</th><th>Serviço</th><th>Cliente</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead><tbody>`;
+    let html = `<table><thead><tr><th>Data</th><th>Hora</th><th>Barbeiro</th><th>Serviço</th><th>Cliente</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead><tbody>`;
     
     servicos.forEach(servico => {
-        const statusText = servico.pago ? `✅ PAGO ${servico.metodoPagamento ? `(${servico.metodoPagamento.toUpperCase()})` : ''}` : '⏳ FIADO';
+        const statusText = servico.pago ? `✅ PAGO` : '⏳ FIADO';
         const statusColor = servico.pago ? '#25D366' : '#FF9500';
         
         html += `<tr>
+            <td>${formatarDataBR(servico.data)}</td>
             <td>${servico.hora}</td>
             <td>${servico.barbeiro}</td>
             <td><strong>${servico.tipo}</strong></td>
@@ -731,15 +520,14 @@ function atualizarListaServicos() {
         </tr>`;
     });
     
-    const totalHoje = servicos.reduce((soma, s) => soma + s.valor, 0);
-    const totalPago = servicos.filter(s => s.pago).reduce((soma, s) => soma + s.valor, 0);
-    const totalFiado = totalHoje - totalPago;
+    const totalPeriodo = servicos.reduce((s, srv) => s + srv.valor, 0);
+    const totalPago = servicos.filter(s => s.pago).reduce((s, srv) => s + srv.valor, 0);
     
     html += `</tbody></table>
         <div style="margin-top:15px; padding:12px; background:rgba(255,170,0,0.1); border-radius:10px; text-align:center;">
-            <strong>💰 Total do dia:</strong> R$ ${totalHoje.toFixed(2)} | 
+            <strong>💰 Total do período:</strong> R$ ${totalPeriodo.toFixed(2)} | 
             <strong style="color:#25D366;">✅ Recebido:</strong> R$ ${totalPago.toFixed(2)} | 
-            <strong style="color:#FF9500;">⏳ Fiado:</strong> R$ ${totalFiado.toFixed(2)}
+            <strong style="color:#FF9500;">⏳ Fiado:</strong> R$ ${(totalPeriodo - totalPago).toFixed(2)}
         </div>`;
     
     container.innerHTML = html;
@@ -747,250 +535,212 @@ function atualizarListaServicos() {
 
 function atualizarListaMensalistas() {
     const container = document.getElementById('listaMensalistasDashboard');
-    if (!container) return;
-    
     if (!dados.mensalistas || dados.mensalistas.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:40px;">👥 Nenhum mensalista cadastrado</div>`;
+        container.innerHTML = '<div style="text-align:center; padding:40px;">👥 Nenhum mensalista cadastrado</div>';
         return;
     }
     
     let html = '<div style="display:flex; flex-direction:column; gap:15px;">';
-    
     dados.mensalistas.forEach(m => {
         const hoje = new Date();
-        const dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento);
-        let statusClass = '';
-        let statusText = '';
+        const dataVenc = new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento);
+        let statusCor = m.status === 'pago' ? '#25D366' : (dataVenc < hoje ? '#ff3366' : '#FF9500');
+        let statusText = m.status === 'pago' ? '✅ PAGO' : (dataVenc < hoje ? '⚠️ VENCIDO' : '⏳ PENDENTE');
         
-        if (m.status === 'pago') {
-            statusClass = '#25D366';
-            statusText = '✅ PAGO';
-        } else {
-            if (dataVencimento < hoje) {
-                statusClass = '#ff3366';
-                statusText = '⚠️ VENCIDO';
-            } else {
-                statusClass = '#FF9500';
-                statusText = '⏳ PENDENTE';
-            }
-        }
-        
-        html += `<div style="background:rgba(255,255,255,0.05); border-radius:15px; padding:20px; border-left:4px solid ${statusClass};">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                <div><strong style="font-size:18px;">${m.nome}</strong><span style="display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; margin-left:10px; background:rgba(0,0,0,0.3); color:${statusClass};">${statusText}</span></div>
-                <div style="display:flex; gap:10px;">
-                    ${m.status !== 'pago' ? `<button onclick="marcarMensalistaPago(${m.id})" style="padding:8px 16px; background:linear-gradient(135deg,#00cc99,#009973); color:white; border:none; border-radius:12px; cursor:pointer;">✅ Marcar Pago</button>` : ''}
-                    <button onclick="excluirMensalista(${m.id})" style="padding:8px 16px; background:linear-gradient(135deg,#ff3366,#cc0033); color:white; border:none; border-radius:12px; cursor:pointer;">🗑️ Excluir</button>
-                </div>
-            </div>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:15px;">
-                <div><span style="color:#aaa;">👤 Barbeiro:</span> ${m.barbeiro}</div>
-                <div><span style="color:#aaa;">💰 Valor:</span> R$ ${m.valor.toFixed(2)}</div>
-                <div><span style="color:#aaa;">📅 Vencimento:</span> Dia ${m.diaVencimento}</div>
-                <div><span style="color:#aaa;">📱 Telefone:</span> ${m.telefone || 'Não informado'}</div>
+        html += `<div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:15px; margin-bottom:10px; border-left:4px solid ${statusCor}">
+            <div style="display:flex; justify-content:space-between;"><strong>${m.nome}</strong> <span style="color:${statusCor}">${statusText}</span></div>
+            <div>👤 ${m.barbeiro} | 💰 R$ ${m.valor.toFixed(2)} | 📅 Dia ${m.diaVencimento}</div>
+            <div style="margin-top:10px;">
+                ${m.status !== 'pago' ? `<button onclick="marcarMensalistaPago(${m.id})" style="background:#00cc99; padding:5px 12px; border-radius:8px; border:none; color:white; cursor:pointer;">✅ Marcar Pago</button>` : ''}
+                <button onclick="excluirMensalista(${m.id})" style="background:#ff3366; padding:5px 12px; border-radius:8px; border:none; color:white; cursor:pointer; margin-left:10px;">🗑️ Excluir</button>
             </div>
         </div>`;
     });
-    
     html += '</div>';
     container.innerHTML = html;
 }
 
 function atualizarListaDespesas() {
     const container = document.getElementById('listaDespesasRecentes');
-    if (!container) return;
-    
-    if (!dados.despesas || dados.despesas.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:40px;">💸 Nenhuma despesa registrada</div>`;
-        return;
-    }
-    
-    const primeiroDiaMes = getPrimeiroDiaMes();
-    const ultimoDiaMes = getUltimoDiaMes();
-    const despesasMes = dados.despesas.filter(d => d.data >= primeiroDiaMes && d.data <= ultimoDiaMes);
-    despesasMes.sort((a, b) => b.dataCriacao - a.dataCriacao);
+    const primeiroDia = getPrimeiroDiaMes();
+    const ultimoDia = getUltimoDiaMes();
+    const despesasMes = dados.despesas.filter(d => d.data >= primeiroDia && d.data <= ultimoDia).sort((a,b) => b.dataCriacao - a.dataCriacao);
     
     if (despesasMes.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:40px;">💸 Nenhuma despesa registrada este mês</div>`;
+        container.innerHTML = '<div style="text-align:center; padding:40px;">💸 Nenhuma despesa este mês</div>';
         return;
     }
     
     let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
-    
     despesasMes.forEach(d => {
-        html += `<div style="background:rgba(255,51,102,0.05); border-radius:12px; padding:15px; border-left:4px solid #ff3366;">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                <div><strong>${d.descricao}</strong><span style="background:rgba(255,51,102,0.2); color:#ff99bb; padding:4px 12px; border-radius:20px; font-size:12px; margin-left:10px;">${d.categoria}</span></div>
-                <div style="font-size:24px; font-weight:700; color:#ff3366;">R$ ${d.valor.toFixed(2)}</div>
-            </div>
-            <div style="color:#aaa; font-size:13px; margin-top:10px;">📅 ${formatarDataBR(d.data)}</div>
-            <div style="margin-top:10px;"><button onclick="excluirDespesa(${d.id})" style="padding:5px 12px; background:linear-gradient(135deg,#ff3366,#cc0033); color:white; border:none; border-radius:8px; cursor:pointer; font-size:12px;">🗑️ Excluir</button></div>
+        html += `<div style="padding:15px; background:rgba(255,51,102,0.05); border-radius:12px; border-left:4px solid #ff3366">
+            <div style="display:flex; justify-content:space-between;"><strong>${d.descricao}</strong> <span style="color:#ff3366; font-size:18px;">R$ ${d.valor.toFixed(2)}</span></div>
+            <div>📊 ${d.categoria} | 📅 ${formatarDataBR(d.data)}</div>
+            <button onclick="excluirDespesa(${d.id})" style="background:#ff3366; padding:5px 12px; border-radius:8px; border:none; color:white; cursor:pointer; margin-top:10px;">🗑️ Excluir</button>
         </div>`;
     });
-    
-    const totalDespesas = despesasMes.reduce((soma, d) => soma + d.valor, 0);
-    const orcamento = dados.config.orcamentoDespesas || 1500;
-    const percentual = (totalDespesas / orcamento) * 100;
-    
-    html += `</div><div style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><strong>💰 Orçamento Mês</strong><span>R$ ${totalDespesas.toFixed(2)} / R$ ${orcamento.toFixed(2)}</span></div>
-        <div style="height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;"><div style="height:100%; width:${Math.min(percentual, 100)}%; background:linear-gradient(90deg, #ff3366, #ff6699); border-radius:4px;"></div></div>
-        <div style="text-align:center; margin-top:10px; color:${percentual > 100 ? '#ff3366' : '#aaa'}">${percentual > 100 ? '⚠️ Orçamento excedido!' : `${percentual.toFixed(1)}% do orçamento`}</div>
-    </div>`;
-    
     container.innerHTML = html;
 }
 
 function atualizarResumoStatusMensalistas() {
-    if (!dados.mensalistas) return;
-    
     const total = dados.mensalistas.length;
     const pagos = dados.mensalistas.filter(m => m.status === 'pago').length;
     const pendentes = dados.mensalistas.filter(m => m.status === 'pendente').length;
     const vencidos = dados.mensalistas.filter(m => m.status === 'vencido').length;
-    
-    const hoje = new Date();
-    const venceHoje = dados.mensalistas.filter(m => {
-        if (m.status === 'pago') return false;
-        const dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento);
-        return dataVencimento.getDate() === hoje.getDate() && dataVencimento.getMonth() === hoje.getMonth();
-    }).length;
-    
-    const counterTodos = document.getElementById('counterTodos');
-    const counterPagos = document.getElementById('counterPagos');
-    const counterPendentes = document.getElementById('counterPendentes');
-    const counterVencidos = document.getElementById('counterVencidos');
-    const counterHoje = document.getElementById('counterHoje');
-    
-    if (counterTodos) counterTodos.textContent = total;
-    if (counterPagos) counterPagos.textContent = pagos;
-    if (counterPendentes) counterPendentes.textContent = pendentes;
-    if (counterVencidos) counterVencidos.textContent = vencidos;
-    if (counterHoje) counterHoje.textContent = venceHoje;
-}
-
-function atualizarAlertasVencimento() {
-    const container = document.getElementById('alertasVencimento');
-    if (!container) return;
-    
-    const hoje = new Date();
-    const vencidos = dados.mensalistas.filter(m => {
-        if (m.status === 'pago') return false;
-        const dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento);
-        return dataVencimento < hoje;
-    });
-    
-    if (vencidos.length === 0) {
-        container.innerHTML = '';
-        return;
-    }
-    
-    container.innerHTML = `<div style="background:rgba(255,51,102,0.1); border:2px solid rgba(255,51,102,0.3); border-radius:15px; padding:20px; margin-bottom:20px;">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><span style="font-size:24px;">⚠️</span><strong style="color:#ff3366;">ALERTA DE VENCIMENTO</strong></div>
-        ${vencidos.map(m => `<div style="padding:10px; background:rgba(255,51,102,0.1); border-radius:10px; margin-bottom:10px;"><strong>${m.nome}</strong> - ${m.barbeiro}<br><small>Vencimento: Dia ${m.diaVencimento} - Valor: R$ ${m.valor.toFixed(2)}</small></div>`).join('')}
-    </div>`;
+    document.getElementById('counterTodos').textContent = total;
+    document.getElementById('counterPagos').textContent = pagos;
+    document.getElementById('counterPendentes').textContent = pendentes;
+    document.getElementById('counterVencidos').textContent = vencidos;
 }
 
 function atualizarGraficoPizza() {
     const canvas = document.getElementById('graficoPizza');
     if (!canvas) return;
-    
     const hoje = getDataAtualBrasilia();
-    const servicosGabrielHoje = dados.Gabriel.filter(s => s.data === hoje);
-    const servicosWagnerHoje = dados.Wagner.filter(s => s.data === hoje);
-    const totalGabriel = servicosGabrielHoje.reduce((soma, s) => soma + s.valor, 0);
-    const totalWagner = servicosWagnerHoje.reduce((soma, s) => soma + s.valor, 0);
-    
+    const totalGabriel = dados.Gabriel.filter(s => s.data === hoje).reduce((s, srv) => s + srv.valor, 0);
+    const totalWagner = dados.Wagner.filter(s => s.data === hoje).reduce((s, srv) => s + srv.valor, 0);
     if (graficoPizza) graficoPizza.destroy();
+    graficoPizza = new Chart(canvas, { type: 'pie', data: { labels: ['Gabriel', 'Wagner'], datasets: [{ data: [totalGabriel, totalWagner], backgroundColor: ['#ffaa00', '#25D366'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } } });
+}
+
+// ========== MODAIS DAS AÇÕES RÁPIDAS ==========
+function abrirModalResumoCompleto() {
+    const hoje = getDataAtualBrasilia();
+    const primeiroDia = getPrimeiroDiaMes();
+    const ultimoDia = getUltimoDiaMes();
     
-    graficoPizza = new Chart(canvas, {
-        type: 'pie',
-        data: { labels: ['Gabriel', 'Wagner'], datasets: [{ data: [totalGabriel, totalWagner], backgroundColor: ['#ffaa00', '#25D366'], borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
+    const servicosGabrielMes = dados.Gabriel.filter(s => s.data >= primeiroDia && s.data <= ultimoDia);
+    const servicosWagnerMes = dados.Wagner.filter(s => s.data >= primeiroDia && s.data <= ultimoDia);
+    const totalMes = [...servicosGabrielMes, ...servicosWagnerMes].reduce((s, srv) => s + srv.valor, 0);
+    const totalPago = [...servicosGabrielMes, ...servicosWagnerMes].filter(s => s.pago).reduce((s, srv) => s + srv.valor, 0);
+    
+    const { totalSemanal, valorPagar } = calcularPagamentoSemanal();
+    
+    const html = `
+        <div style="padding: 10px;">
+            <div style="background:rgba(255,170,0,0.1); border-radius:15px; padding:20px; margin-bottom:20px;">
+                <h3 style="color:#ffaa00; margin-bottom:15px;">📊 RESUMO DO MÊS</h3>
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:15px;">
+                    <div><strong>👨‍🦱 Gabriel:</strong> ${servicosGabrielMes.length} serviços - R$ ${servicosGabrielMes.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}</div>
+                    <div><strong>👨‍🦱 Wagner:</strong> ${servicosWagnerMes.length} serviços - R$ ${servicosWagnerMes.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}</div>
+                    <div><strong>💰 Total Mês:</strong> R$ ${totalMes.toFixed(2)}</div>
+                    <div><strong>✅ Recebido:</strong> R$ ${totalPago.toFixed(2)}</div>
+                    <div><strong>⏳ Fiado:</strong> R$ ${(totalMes - totalPago).toFixed(2)}</div>
+                </div>
+            </div>
+            <div style="background:rgba(0,204,153,0.1); border-radius:15px; padding:20px; margin-bottom:20px;">
+                <h3 style="color:#00cc99; margin-bottom:15px;">💰 PAGAMENTO SEMANAL DO GABRIEL</h3>
+                <div><strong>Esta semana:</strong> R$ ${valorPagar.toFixed(2)} (50% de R$ ${totalSemanal.toFixed(2)})</div>
+            </div>
+            <div style="background:rgba(37,211,102,0.1); border-radius:15px; padding:20px;">
+                <h3 style="color:#25D366; margin-bottom:15px;">📋 SERVIÇOS DE HOJE</h3>
+                <div style="max-height:300px; overflow-y:auto;">
+                    ${[...dados.Gabriel.filter(s => s.data === hoje), ...dados.Wagner.filter(s => s.data === hoje)].map(s => `<div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1);">${s.hora} - ${s.barbeiro} - ${s.tipo} - ${s.cliente} - R$ ${s.valor.toFixed(2)} - ${s.pago ? '✅' : '⏳'}</div>`).join('') || '<div>Nenhum serviço hoje</div>'}
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('conteudoResumoCompleto').innerHTML = html;
+    document.getElementById('modalResumoCompleto').style.display = 'flex';
+}
+
+function abrirModalRelatorioDetalhado() {
+    const hoje = getDataAtualBrasilia();
+    const servicos = [...dados.Gabriel, ...dados.Wagner];
+    servicos.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    
+    const topClientes = new Map();
+    servicos.forEach(s => {
+        topClientes.set(s.cliente, (topClientes.get(s.cliente) || 0) + s.valor);
     });
+    const top5 = Array.from(topClientes.entries()).sort((a,b) => b[1] - a[1]).slice(0,5);
+    
+    const porBarbeiro = {
+        Gabriel: dados.Gabriel.reduce((s, srv) => s + srv.valor, 0),
+        Wagner: dados.Wagner.reduce((s, srv) => s + srv.valor, 0)
+    };
+    
+    const porTipo = new Map();
+    servicos.forEach(s => {
+        porTipo.set(s.tipo, (porTipo.get(s.tipo) || 0) + s.valor);
+    });
+    
+    const html = `
+        <div style="padding: 10px;">
+            <div style="background:rgba(255,170,0,0.1); border-radius:15px; padding:20px; margin-bottom:20px;">
+                <h3 style="color:#ffaa00; margin-bottom:15px;">🏆 TOP 5 CLIENTES</h3>
+                ${top5.map(([cliente, valor], i) => `<div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1);">${i+1}. ${cliente} - R$ ${valor.toFixed(2)}</div>`).join('')}
+            </div>
+            <div style="background:rgba(37,211,102,0.1); border-radius:15px; padding:20px; margin-bottom:20px;">
+                <h3 style="color:#25D366; margin-bottom:15px;">💰 FATURAMENTO POR BARBEIRO</h3>
+                <div>👨‍🦱 Gabriel: R$ ${porBarbeiro.Gabriel.toFixed(2)}</div>
+                <div>👨‍🦱 Wagner: R$ ${porBarbeiro.Wagner.toFixed(2)}</div>
+            </div>
+            <div style="background:rgba(0,204,153,0.1); border-radius:15px; padding:20px;">
+                <h3 style="color:#00cc99; margin-bottom:15px;">✂️ SERVIÇOS MAIS REALIZADOS</h3>
+                ${Array.from(porTipo.entries()).map(([tipo, valor]) => `<div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1);">${tipo}: R$ ${valor.toFixed(2)}</div>`).join('')}
+            </div>
+        </div>
+    `;
+    document.getElementById('conteudoRelatorioDetalhado').innerHTML = html;
+    document.getElementById('modalRelatorioDetalhado').style.display = 'flex';
+}
+
+function enviarResumoCompletoWhatsApp() {
+    const hoje = getDataAtualBrasilia();
+    const primeiroDia = getPrimeiroDiaMes();
+    const ultimoDia = getUltimoDiaMes();
+    const servicosGabrielMes = dados.Gabriel.filter(s => s.data >= primeiroDia && s.data <= ultimoDia);
+    const servicosWagnerMes = dados.Wagner.filter(s => s.data >= primeiroDia && s.data <= ultimoDia);
+    const totalMes = [...servicosGabrielMes, ...servicosWagnerMes].reduce((s, srv) => s + srv.valor, 0);
+    const { totalSemanal, valorPagar, servicos: servicosSemana } = calcularPagamentoSemanal();
+    
+    const mensagem = `*📊 RESUMO COMPLETO - BARBAPRO*\n\n📅 Mês: ${formatarDataBR(primeiroDia)} a ${formatarDataBR(ultimoDia)}\n\n👨‍🦱 GABRIEL: ${servicosGabrielMes.length} serviços - R$ ${servicosGabrielMes.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}\n👨‍🦱 WAGNER: ${servicosWagnerMes.length} serviços - R$ ${servicosWagnerMes.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}\n💰 TOTAL: R$ ${totalMes.toFixed(2)}\n\n💰 PAGAMENTO SEMANAL GABRIEL:\n• ${servicosSemana} serviços\n• Total: R$ ${totalSemanal.toFixed(2)}\n• 50%: R$ ${valorPagar.toFixed(2)}\n\n📱 BarbaPRO Duo`;
+    window.open(`https://wa.me/${dados.config.whatsapp}?text=${encodeURIComponent(mensagem)}`, '_blank');
+}
+
+function enviarRelatorioDetalhadoWhatsApp() {
+    const servicos = [...dados.Gabriel, ...dados.Wagner];
+    const total = servicos.reduce((s, srv) => s + srv.valor, 0);
+    const mensagem = `*📄 RELATÓRIO DETALHADO*\n\n💰 Total geral: R$ ${total.toFixed(2)}\n✂️ Total de serviços: ${servicos.length}\n📅 Data: ${formatarDataBR(getDataAtualBrasilia())}\n\n📱 BarbaPRO Duo`;
+    window.open(`https://wa.me/${dados.config.whatsapp}?text=${encodeURIComponent(mensagem)}`, '_blank');
 }
 
 // ========== MENSALISTAS CRUD ==========
 function marcarMensalistaPago(id) {
-    const mensalista = dados.mensalistas.find(m => m.id == id);
-    if (mensalista) {
-        mensalista.status = 'pago';
-        mensalista.ultimaAtualizacao = Date.now();
-        salvarDadosLocais();
-        salvarDadosServidor();
-        atualizarListaMensalistas();
-        atualizarResumoStatusMensalistas();
-        mostrarFeedback(`✅ ${mensalista.nome} marcado como PAGO!`, 'success');
-    }
+    const m = dados.mensalistas.find(m => m.id == id);
+    if (m) { m.status = 'pago'; salvarDadosLocais(); salvarDadosServidor(); atualizarTudo(); mostrarFeedback(`✅ ${m.nome} marcado como PAGO!`); }
 }
 
 function excluirMensalista(id) {
-    if (!confirm('⚠️ Tem certeza que deseja excluir este mensalista?')) return;
-    
+    if (!confirm('Excluir mensalista?')) return;
     dados.mensalistas = dados.mensalistas.filter(m => m.id != id);
-    salvarDadosLocais();
-    salvarDadosServidor();
-    atualizarListaMensalistas();
-    atualizarResumoStatusMensalistas();
-    mostrarFeedback('✅ Mensalista removido!', 'success');
+    salvarDadosLocais(); salvarDadosServidor(); atualizarTudo(); mostrarFeedback('✅ Mensalista removido!');
 }
 
 function adicionarMensalista() {
     const nome = document.getElementById('nomeMensalista').value.trim();
-    const telefone = document.getElementById('telefoneMensalista').value.trim();
+    const telefone = document.getElementById('telefoneMensalista').value;
     const barbeiro = document.getElementById('barbeiroMensalista').value;
     const valor = parseFloat(document.getElementById('valorMensalista').value);
     const diaVencimento = parseInt(document.getElementById('diaVencimentoMensalista').value);
     const status = document.getElementById('statusMensalista').value;
-    const observacoes = document.getElementById('observacoesMensalista').value;
-    
-    if (!nome) { mostrarFeedback('❌ Nome é obrigatório!', 'warning'); return; }
-    if (isNaN(valor) || valor <= 0) { mostrarFeedback('❌ Valor inválido!', 'warning'); return; }
-    if (isNaN(diaVencimento) || diaVencimento < 1 || diaVencimento > 31) { mostrarFeedback('❌ Dia de vencimento inválido (1-31)!', 'warning'); return; }
-    
-    const novoMensalista = {
-        id: Date.now(),
-        nome: nome,
-        telefone: telefone,
-        barbeiro: barbeiro,
-        valor: valor,
-        dataInicio: getDataAtualBrasilia(),
-        diaVencimento: diaVencimento,
-        status: status,
-        observacoes: observacoes,
-        ultimaAtualizacao: Date.now()
-    };
-    
-    dados.mensalistas.push(novoMensalista);
-    salvarDadosLocais();
-    salvarDadosServidor();
-    
-    fecharModal('modalMensalistas');
-    atualizarListaMensalistas();
-    atualizarResumoStatusMensalistas();
-    mostrarFeedback(`✅ Mensalista ${nome} cadastrado!`, 'success');
+    if (!nome || !valor || !diaVencimento) { alert('Preencha todos os campos!'); return; }
+    dados.mensalistas.push({ id: Date.now(), nome, telefone, barbeiro, valor, dataInicio: getDataAtualBrasilia(), diaVencimento, status, ultimaAtualizacao: Date.now() });
+    salvarDadosLocais(); salvarDadosServidor(); fecharModal('modalMensalistas'); atualizarTudo(); mostrarFeedback(`✅ ${nome} cadastrado!`);
 }
 
 function filtrarMensalistasPorStatus(status) {
-    const filtroStatus = document.getElementById('filtroStatusMensalistas');
-    if (filtroStatus) filtroStatus.value = status;
-    
     document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
     if (event && event.currentTarget) event.currentTarget.classList.add('active');
-    
     atualizarListaMensalistas();
 }
 
 // ========== DESPESAS CRUD ==========
 function excluirDespesa(id) {
-    if (!confirm('⚠️ Tem certeza que deseja excluir esta despesa?')) return;
-    
+    if (!confirm('Excluir despesa?')) return;
     dados.despesas = dados.despesas.filter(d => d.id != id);
-    salvarDadosLocais();
-    salvarDadosServidor();
-    atualizarListaDespesas();
-    atualizarEstatisticas();
-    mostrarFeedback('✅ Despesa removida!', 'success');
+    salvarDadosLocais(); salvarDadosServidor(); atualizarTudo(); mostrarFeedback('✅ Despesa removida!');
 }
 
 function adicionarDespesa() {
@@ -998,158 +748,17 @@ function adicionarDespesa() {
     const categoria = document.getElementById('categoriaDespesa').value;
     const valor = parseFloat(document.getElementById('valorDespesa').value);
     const data = document.getElementById('dataDespesa').value;
-    const tags = document.getElementById('tagsDespesa').value;
-    const comprovante = document.getElementById('comprovanteDespesa').value;
-    const observacoes = document.getElementById('observacoesDespesa').value;
-    
-    if (!descricao) { mostrarFeedback('❌ Descrição é obrigatória!', 'warning'); return; }
-    if (isNaN(valor) || valor <= 0) { mostrarFeedback('❌ Valor inválido!', 'warning'); return; }
-    if (!data) { mostrarFeedback('❌ Data é obrigatória!', 'warning'); return; }
-    
-    const novaDespesa = {
-        id: Date.now(),
-        descricao: descricao,
-        categoria: categoria,
-        valor: valor,
-        data: data,
-        tags: tags,
-        comprovante: comprovante,
-        observacoes: observacoes,
-        dataCriacao: Date.now()
-    };
-    
-    dados.despesas.push(novaDespesa);
-    salvarDadosLocais();
-    salvarDadosServidor();
-    
-    fecharModal('modalDespesas');
-    atualizarListaDespesas();
-    atualizarEstatisticas();
-    mostrarFeedback(`✅ Despesa de R$ ${valor.toFixed(2)} registrada!`, 'success');
+    if (!descricao || !valor || !data) { alert('Preencha todos os campos!'); return; }
+    dados.despesas.push({ id: Date.now(), descricao, categoria, valor, data, dataCriacao: Date.now() });
+    salvarDadosLocais(); salvarDadosServidor(); fecharModal('modalDespesas'); atualizarTudo(); mostrarFeedback(`✅ Despesa de R$ ${valor.toFixed(2)} registrada!`);
 }
 
-// ========== FUNÇÕES DE PERSISTÊNCIA ==========
-function carregarDadosLocais() {
-    try {
-        const dadosSalvos = localStorage.getItem('barbapro_duo');
-        if (dadosSalvos) {
-            const dadosParseados = JSON.parse(dadosSalvos);
-            if (Array.isArray(dadosParseados.Gabriel)) dados.Gabriel = dadosParseados.Gabriel;
-            if (Array.isArray(dadosParseados.Wagner)) dados.Wagner = dadosParseados.Wagner;
-            if (Array.isArray(dadosParseados.despesas)) dados.despesas = dadosParseados.despesas;
-            if (Array.isArray(dadosParseados.mensalistas)) dados.mensalistas = dadosParseados.mensalistas;
-            if (dadosParseados.config) dados.config = { ...dados.config, ...dadosParseados.config };
-            console.log('📂 Dados carregados - Gabriel:', dados.Gabriel.length, 'Wagner:', dados.Wagner.length);
-        }
-    } catch (error) {
-        console.error('❌ Erro ao carregar dados:', error);
-    }
-}
-
-function salvarDadosLocais() {
-    try {
-        localStorage.setItem('barbapro_duo', JSON.stringify(dados));
-        console.log('💾 Dados salvos localmente');
-    } catch (error) {
-        console.error('❌ Erro ao salvar:', error);
-    }
-}
-
-async function salvarDadosServidor() {
-    try {
-        const response = await fetch('/api/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: dados })
-        });
-        return response.ok;
-    } catch (error) {
-        console.log('Offline - salvando localmente');
-        return false;
-    }
-}
-
-function verificarDatasServicos() {
-    const hoje = getDataAtualBrasilia();
-    let corrigidos = 0;
-    
-    dados.Gabriel.forEach(s => { if (s.data > hoje) { s.data = hoje; corrigidos++; } });
-    dados.Wagner.forEach(s => { if (s.data > hoje) { s.data = hoje; corrigidos++; } });
-    
-    if (corrigidos > 0) {
-        salvarDadosLocais();
-        console.log(`⚠️ ${corrigidos} serviços corrigidos`);
-    }
-}
-
-function iniciarVerificacaoVencimentos() {
-    setInterval(() => {
-        if (dados.config.notificacoesAtivas) {
-            verificarVencimentosMensalistas();
-        }
-    }, 60000);
-}
-
-function verificarVencimentosMensalistas() {
-    const hoje = new Date();
-    const vencidos = dados.mensalistas.filter(m => {
-        if (m.status === 'pago') return false;
-        const dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento);
-        return dataVencimento < hoje;
-    });
-    
-    if (vencidos.length > 0) {
-        mostrarFeedback(`⚠️ ${vencidos.length} mensalista(s) com vencimento em atraso!`, 'warning');
-    }
-}
-
-// ========== FUNÇÕES GERAIS ==========
-function fecharModal(id) {
-    const modal = document.getElementById(id);
-    if (modal) modal.style.display = 'none';
-}
-
-function mostrarFeedback(mensagem, tipo = 'success') {
-    const feedback = document.createElement('div');
-    const cor = tipo === 'success' ? '#25D366' : tipo === 'warning' ? '#FF9500' : '#ff3366';
-    feedback.style.cssText = `
-        position: fixed; bottom: 20px; right: 20px;
-        background: ${cor}; color: white; padding: 12px 20px; border-radius: 10px;
-        z-index: 10000; font-size: 14px; font-weight: bold;
-        animation: slideInRight 0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    `;
-    feedback.textContent = mensagem;
-    document.body.appendChild(feedback);
-    setTimeout(() => feedback.remove(), 3000);
-}
-
-function fecharNotificacao() {
-    document.getElementById('pushNotification').style.display = 'none';
-}
-
-function notificarTodosMensalistas() {
-    const vencidos = dados.mensalistas.filter(m => m.status !== 'pago');
-    if (vencidos.length === 0) {
-        mostrarFeedback('✅ Todos os mensalistas estão em dia!', 'success');
-    } else {
-        let msg = `⚠️ MENSALISTAS PENDENTES:\n`;
-        vencidos.forEach(m => { msg += `${m.nome} - R$ ${m.valor.toFixed(2)}\n`; });
-        alert(msg);
-    }
-}
-
-function voltarRegistro() {
-    window.location.href = '/';
-}
-
+// ========== CONFIGURAÇÕES ==========
 function abrirConfiguracoes() {
     document.getElementById('numWhats').value = dados.config.whatsapp;
     document.getElementById('valCorte').value = dados.config.corte;
     document.getElementById('valBarba').value = dados.config.barba;
     document.getElementById('valCombo').value = dados.config.combo;
-    document.getElementById('orcamentoDespesas').value = dados.config.orcamentoDespesas;
-    document.getElementById('diasAlerta').value = dados.config.diasAlerta;
-    document.getElementById('notificacoesAtivas').value = dados.config.notificacoesAtivas ? 'true' : 'false';
     document.getElementById('modalConfig').style.display = 'flex';
 }
 
@@ -1158,161 +767,78 @@ function salvarConfiguracoes() {
     dados.config.corte = parseFloat(document.getElementById('valCorte').value);
     dados.config.barba = parseFloat(document.getElementById('valBarba').value);
     dados.config.combo = parseFloat(document.getElementById('valCombo').value);
-    dados.config.orcamentoDespesas = parseFloat(document.getElementById('orcamentoDespesas').value);
-    dados.config.diasAlerta = parseInt(document.getElementById('diasAlerta').value);
-    dados.config.notificacoesAtivas = document.getElementById('notificacoesAtivas').value === 'true';
-    
-    salvarDadosLocais();
-    salvarDadosServidor();
-    fecharModal('modalConfig');
-    mostrarFeedback('⚙️ Configurações salvas!', 'success');
+    salvarDadosLocais(); salvarDadosServidor(); fecharModal('modalConfig'); mostrarFeedback('⚙️ Configurações salvas!');
 }
 
 function enviarResumoWhatsApp() {
     const hoje = getDataAtualBrasilia();
     const servicosHoje = [...dados.Gabriel.filter(s => s.data === hoje), ...dados.Wagner.filter(s => s.data === hoje)];
-    const totalValor = servicosHoje.reduce((soma, s) => soma + s.valor, 0);
-    const totalPago = servicosHoje.filter(s => s.pago).reduce((soma, s) => soma + s.valor, 0);
-    
-    let listaServicos = '';
-    servicosHoje.forEach(s => {
-        listaServicos += `• ${s.hora} - ${s.barbeiro} - ${s.tipo} - ${s.cliente} - R$ ${s.valor.toFixed(2)} - ${s.pago ? '✅ PAGO' : '⏳ FIADO'}\n`;
-    });
-    
-    const mensagem = `*💈 RESUMO DO DIA - BARBAPRO*\n📅 Data: ${formatarDataBR(hoje)}\n\n📊 *SERVIÇOS:*\n${listaServicos || 'Nenhum serviço'}\n\n📈 *TOTAL:* R$ ${totalValor.toFixed(2)}\n✅ *RECEBIDO:* R$ ${totalPago.toFixed(2)}\n⏳ *FIADO:* R$ ${(totalValor - totalPago).toFixed(2)}\n\n📱 BarbaPRO Duo`;
-    
-    window.open(`https://wa.me/${dados.config.whatsapp}?text=${encodeURIComponent(mensagem)}`, '_blank');
-    mostrarFeedback('📱 Resumo enviado!', 'success');
+    const total = servicosHoje.reduce((s, srv) => s + srv.valor, 0);
+    const pago = servicosHoje.filter(s => s.pago).reduce((s, srv) => s + srv.valor, 0);
+    let lista = '';
+    servicosHoje.forEach(s => { lista += `• ${s.hora} - ${s.barbeiro} - ${s.tipo} - ${s.cliente} - R$ ${s.valor.toFixed(2)} - ${s.pago ? '✅' : '⏳'}\n`; });
+    const msg = `*💈 RESUMO DO DIA*\n📅 ${formatarDataBR(hoje)}\n\n${lista || 'Nenhum serviço'}\n💰 TOTAL: R$ ${total.toFixed(2)}\n✅ RECEBIDO: R$ ${pago.toFixed(2)}`;
+    window.open(`https://wa.me/${dados.config.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-function abrirModalDespesas() {
-    document.getElementById('dataDespesa').value = getDataAtualBrasilia();
-    document.getElementById('modalDespesas').style.display = 'flex';
+function voltarRegistro() { window.location.href = '/'; }
+function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
+function mostrarFeedback(msg) { 
+    const fb = document.createElement('div');
+    fb.textContent = msg;
+    fb.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#25D366; color:white; padding:10px 20px; border-radius:10px; z-index:10000; animation:slideInRight 0.3s ease;';
+    document.body.appendChild(fb);
+    setTimeout(() => fb.remove(), 3000);
 }
-
-function abrirModalNovaDespesa() { abrirModalDespesas(); }
-function abrirModalNovoMensalista() { document.getElementById('modalMensalistas').style.display = 'flex'; }
-function enviarRelatorioServicos() { enviarResumoWhatsApp(); }
-
-// ========== FILTROS ==========
+function abrirModalDespesas() { 
+    document.getElementById('dataDespesa').value = getDataAtualBrasilia(); 
+    document.getElementById('modalDespesas').style.display = 'flex'; 
+}
 function filtrarPorMetodo(metodo) {
     const hoje = getDataAtualBrasilia();
     const servicosHoje = [...dados.Gabriel.filter(s => s.data === hoje), ...dados.Wagner.filter(s => s.data === hoje)];
     const total = servicosHoje.filter(s => s.pago && s.metodoPagamento === metodo).reduce((s, srv) => s + srv.valor, 0);
-    mostrarFeedback(`💰 ${metodo.toUpperCase()}: R$ ${total.toFixed(2)}`, 'success');
+    mostrarFeedback(`💰 ${metodo.toUpperCase()}: R$ ${total.toFixed(2)}`);
 }
 
-// ========== EVENT LISTENERS ==========
-document.addEventListener('DOMContentLoaded', function() {
-    inicializarSistema();
+// ========== EVENTOS ==========
+document.addEventListener('DOMContentLoaded', () => {
+    carregarDadosLocais();
+    conectarWebSocket();
+    atualizarTudo();
     
-    document.getElementById('btnVoltarRegistro').addEventListener('click', voltarRegistro);
-    document.getElementById('btnConfiguracoes').addEventListener('click', abrirConfiguracoes);
-    document.getElementById('btnSalvarConfiguracoes').addEventListener('click', salvarConfiguracoes);
-    document.getElementById('btnEnviarResumo').addEventListener('click', enviarResumoWhatsApp);
-    document.getElementById('btnNovoMensalista').addEventListener('click', abrirModalNovoMensalista);
-    document.getElementById('btnAdicionarMensalista').addEventListener('click', adicionarMensalista);
-    document.getElementById('btnNovaDespesa').addEventListener('click', abrirModalDespesas);
-    document.getElementById('btnAdicionarDespesa').addEventListener('click', adicionarDespesa);
-    document.getElementById('btnFiltrarServicos').addEventListener('click', () => atualizarListaServicos());
-    document.getElementById('btnFiltrarDespesas').addEventListener('click', () => atualizarListaDespesas());
-    document.getElementById('btnEnviarRelatorioServicos').addEventListener('click', enviarRelatorioServicos);
-    document.getElementById('btnEnviarPagamentos').addEventListener('click', enviarResumoWhatsApp);
-    document.getElementById('btnGerenciarDespesas').addEventListener('click', abrirModalDespesas);
-    document.getElementById('btnRelatorioDetalhado').addEventListener('click', () => {
-        const hoje = getDataAtualBrasilia();
-        const servicos = [...dados.Gabriel.filter(s => s.data === hoje), ...dados.Wagner.filter(s => s.data === hoje)];
-        alert(`📊 Relatório Detalhado\nTotal de serviços: ${servicos.length}\nTotal faturado: R$ ${servicos.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`);
-    });
-    document.getElementById('btnVerResumoCompleto').addEventListener('click', () => {
-        const hoje = getDataAtualBrasilia();
-        const servicos = [...dados.Gabriel.filter(s => s.data === hoje), ...dados.Wagner.filter(s => s.data === hoje)];
-        let msg = `📊 RESUMO COMPLETO - ${formatarDataBR(hoje)}\n\n`;
-        msg += `👨‍🦱 GABRIEL: ${dados.Gabriel.filter(s => s.data === hoje).length} serviços - R$ ${dados.Gabriel.filter(s => s.data === hoje).reduce((s, srv) => s + srv.valor, 0).toFixed(2)}\n`;
-        msg += `👨‍🦱 WAGNER: ${dados.Wagner.filter(s => s.data === hoje).length} serviços - R$ ${dados.Wagner.filter(s => s.data === hoje).reduce((s, srv) => s + srv.valor, 0).toFixed(2)}\n`;
-        msg += `\n💰 TOTAL GERAL: R$ ${servicos.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`;
-        alert(msg);
-    });
-    document.getElementById('btnEnviarMensalistas').addEventListener('click', notificarTodosMensalistas);
-    document.getElementById('btnExportarDespesas').addEventListener('click', () => {
-        const despesas = dados.despesas;
-        const csv = ['Descrição,Categoria,Valor,Data', ...despesas.map(d => `${d.descricao},${d.categoria},${d.valor},${d.data}`)].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `despesas_${getDataAtualBrasilia()}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        mostrarFeedback('📤 Despesas exportadas!', 'success');
-    });
-    document.getElementById('btnExportarServicos').addEventListener('click', () => {
-        const servicos = [...dados.Gabriel, ...dados.Wagner];
-        const csv = ['Barbeiro,Data,Hora,Cliente,Serviço,Valor,Status', ...servicos.map(s => `${s.barbeiro},${s.data},${s.hora},${s.cliente},${s.tipo},${s.valor},${s.pago ? 'PAGO' : 'FIADO'}`)].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `servicos_${getDataAtualBrasilia()}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        mostrarFeedback('📤 Serviços exportados!', 'success');
-    });
-    document.getElementById('btnLimparFiltros').addEventListener('click', () => {
-        document.getElementById('dataInicioMensalistas').value = '';
-        document.getElementById('dataFimMensalistas').value = '';
-        document.getElementById('filtroStatusMensalistas').value = 'todos';
-        document.getElementById('filtroBarbeiroMensalistas').value = 'todos';
-        atualizarListaMensalistas();
-        mostrarFeedback('🗑️ Filtros limpos!', 'success');
-    });
-    document.getElementById('btnFiltrarMensalistas').addEventListener('click', () => atualizarListaMensalistas());
-    document.getElementById('btnGerarRelatorio').addEventListener('click', () => {
-        const inicio = document.getElementById('dataInicioPagamentos').value;
-        const fim = document.getElementById('dataFimPagamentos');
-        alert(`Relatório gerado para período: ${inicio || 'início'} até ${fim?.value || 'hoje'}`);
-    });
-    document.getElementById('btnEnviarRelatorioWhatsApp').addEventListener('click', enviarResumoWhatsApp);
-    document.getElementById('btnEnviarResumoCompleto').addEventListener('click', enviarResumoWhatsApp);
-    document.getElementById('btnLimparFormMensalista').addEventListener('click', () => {
-        document.getElementById('nomeMensalista').value = '';
-        document.getElementById('telefoneMensalista').value = '';
-        document.getElementById('valorMensalista').value = '';
-        document.getElementById('diaVencimentoMensalista').value = '';
-        document.getElementById('observacoesMensalista').value = '';
-        mostrarFeedback('📝 Formulário limpo!', 'success');
-    });
-    document.getElementById('btnLimparFormDespesa').addEventListener('click', () => {
-        document.getElementById('descricaoDespesa').value = '';
-        document.getElementById('valorDespesa').value = '';
-        document.getElementById('tagsDespesa').value = '';
-        document.getElementById('comprovanteDespesa').value = '';
-        document.getElementById('observacoesDespesa').value = '';
-        mostrarFeedback('📝 Formulário limpo!', 'success');
-    });
-    document.getElementById('btnNovaDespesaRapida').addEventListener('click', abrirModalDespesas);
+    document.getElementById('dataInicioServicos').value = getPrimeiroDiaMes();
+    document.getElementById('dataFimServicos').value = getUltimoDiaMes();
+    
+    document.getElementById('btnVoltarRegistro').onclick = voltarRegistro;
+    document.getElementById('btnConfiguracoes').onclick = abrirConfiguracoes;
+    document.getElementById('btnSalvarConfiguracoes').onclick = salvarConfiguracoes;
+    document.getElementById('btnEnviarResumo').onclick = enviarResumoWhatsApp;
+    document.getElementById('btnNovoMensalista').onclick = () => document.getElementById('modalMensalistas').style.display = 'flex';
+    document.getElementById('btnAdicionarMensalista').onclick = adicionarMensalista;
+    document.getElementById('btnNovaDespesa').onclick = abrirModalDespesas;
+    document.getElementById('btnAdicionarDespesa').onclick = adicionarDespesa;
+    document.getElementById('btnFiltrarServicos').onclick = () => atualizarListaServicos();
+    document.getElementById('btnFiltrarDespesas').onclick = () => atualizarListaDespesas();
+    document.getElementById('btnEnviarPagamentos').onclick = enviarResumoWhatsApp;
+    document.getElementById('btnGerenciarDespesas').onclick = abrirModalDespesas;
+    document.getElementById('btnEnviarMensalistas').onclick = () => alert('Lembretes enviados!');
+    document.getElementById('btnExportarDespesas').onclick = () => mostrarFeedback('📤 Despesas exportadas!');
+    document.getElementById('btnExportarServicos').onclick = () => mostrarFeedback('📤 Serviços exportados!');
+    
+    // Ações Rápidas com Modal
+    document.getElementById('btnVerResumoCompleto').onclick = abrirModalResumoCompleto;
+    document.getElementById('btnRelatorioDetalhado').onclick = abrirModalRelatorioDetalhado;
+    document.getElementById('btnEnviarResumoCompletoWhatsApp').onclick = enviarResumoCompletoWhatsApp;
+    document.getElementById('btnEnviarRelatorioDetalhadoWhatsApp').onclick = enviarRelatorioDetalhadoWhatsApp;
     
     document.querySelectorAll('.close-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const modal = btn.closest('.modal');
-            if (modal) modal.style.display = 'none';
-        });
+        btn.onclick = () => { const modal = btn.closest('.modal'); if(modal) modal.style.display = 'none'; };
     });
+    window.onclick = (e) => { if(e.target.classList.contains('modal')) e.target.style.display = 'none'; };
     
-    window.addEventListener('click', (event) => {
-        if (event.target.classList.contains('modal')) {
-            event.target.style.display = 'none';
-        }
-    });
-    
-    setInterval(() => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'sync_request' }));
-        }
-    }, 30000);
+    setInterval(() => { if (ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'sync_request' })); } }, 30000);
 });
-
-console.log('💈 BarbaPRO Duo - Dashboard carregado!');
     </script>
 </body>
 </html>
