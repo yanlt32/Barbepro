@@ -6,1868 +6,232 @@
     <title>BarbaPRO Duo - Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ========== RESET E CONFIGURAÇÕES GERAIS ========== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        /* ========== HEADER ========== */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, rgba(255,170,0,0.1) 0%, rgba(51,102,255,0.1) 100%);
-            border-radius: 20px;
-            border: 1px solid rgba(255,170,0,0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            backdrop-filter: blur(10px);
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .logo-icon {
-            font-size: 40px;
-            background: linear-gradient(135deg, #ffaa00, #ff7733);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-        }
-        
-        .logo h1 {
-            background: linear-gradient(135deg, #ffaa00, #ff7733);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: 1px;
-        }
-        
-        .logo-subtitle {
-            color: #aaa;
-            font-size: 14px;
-            margin-top: 4px;
-            font-weight: 400;
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        /* ========== BOTÕES ========== */
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        
-        .btn:hover::after {
-            width: 300px;
-            height: 300px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #ffaa00 0%, #ff7733 100%);
-            color: #000;
-            box-shadow: 0 6px 20px rgba(255,170,0,0.3);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-        }
-        
-        .btn-whatsapp {
-            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-            color: white;
-            box-shadow: 0 6px 20px rgba(37,211,102,0.3);
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #00cc99 0%, #009973 100%);
-            color: white;
-            box-shadow: 0 6px 20px rgba(0,204,153,0.3);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #ff3366 0%, #cc0033 100%);
-            color: white;
-            box-shadow: 0 6px 20px rgba(255,51,102,0.3);
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-        }
-        
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        /* ========== DASHBOARD GRID ========== */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        /* ========== CARDS ========== */
-        .card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
-            border-radius: 20px;
-            padding: 25px;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(20px);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #ffaa00, #ff7733);
-        }
-        
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            border-color: rgba(255,170,0,0.3);
-        }
-        
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .card-title {
-            color: #ffaa00;
-            font-size: 18px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        /* ========== ESTATÍSTICAS ========== */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-        
-        .stat-item {
-            background: rgba(255,255,255,0.03);
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: all 0.3s ease;
-        }
-        
-        .stat-item:hover {
-            background: rgba(255,255,255,0.05);
-            transform: translateY(-3px);
-        }
-        
-        .stat-value {
-            font-size: 32px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #ffaa00, #ff7733);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .stat-label {
-            font-size: 13px;
-            color: #aaa;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-        
-        .stat-secondary .stat-value {
-            background: linear-gradient(135deg, #25D366, #128C7E);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .stat-warning .stat-value {
-            background: linear-gradient(135deg, #FF9500, #FF7733);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .stat-danger .stat-value {
-            background: linear-gradient(135deg, #ff3366, #cc0033);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        /* ========== TABELAS ========== */
-        .table-container {
-            overflow-x: auto;
-            border-radius: 15px;
-            margin-top: 20px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: 15px;
-            overflow: hidden;
-            background: rgba(255,255,255,0.03);
-        }
-        
-        th {
-            background: linear-gradient(135deg, rgba(255,170,0,0.1), rgba(255,170,0,0.05));
-            padding: 18px 15px;
-            text-align: left;
-            font-weight: 700;
-            color: #ffaa00;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 2px solid rgba(255,170,0,0.2);
-        }
-        
-        td {
-            padding: 16px 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            font-size: 14px;
-        }
-        
-        tr:hover {
-            background: rgba(255,255,255,0.03);
-        }
-        
-        tr:last-child td {
-            border-bottom: none;
-        }
-        
-        /* ========== BOTÃO DE EXCLUSÃO NA TABELA ========== */
-        .delete-service-btn {
-            background: rgba(255, 50, 50, 0.2);
-            color: #ff3366;
-            border: 1px solid rgba(255, 50, 50, 0.3);
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: bold;
-            font-size: 20px;
-            margin-left: 5px;
-        }
-        
-        .delete-service-btn:hover {
-            background: rgba(255, 50, 50, 0.3);
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 5px 15px rgba(255,50,50,0.3);
-        }
-        
-        /* ========== STATUS TAGS ========== */
-        .status-tag {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .status-pago {
-            background: linear-gradient(135deg, rgba(37,211,102,0.2), rgba(37,211,102,0.1));
-            color: #25D366;
-            border: 1px solid rgba(37,211,102,0.3);
-        }
-        
-        .status-pendente {
-            background: linear-gradient(135deg, rgba(255,149,0,0.2), rgba(255,149,0,0.1));
-            color: #FF9500;
-            border: 1px solid rgba(255,149,0,0.3);
-        }
-        
-        .status-vencido {
-            background: linear-gradient(135deg, rgba(255,51,102,0.2), rgba(255,51,102,0.1));
-            color: #ff3366;
-            border: 1px solid rgba(255,51,102,0.3);
-            animation: pulse 2s infinite;
-        }
-        
-        /* ========== MENSALISTAS ========== */
-        .mensalista-card {
-            background: linear-gradient(135deg, rgba(0,204,153,0.05), rgba(0,204,153,0.02));
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(0,204,153,0.1);
-            border-left: 4px solid #00cc99;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .mensalista-card.vencido {
-            background: linear-gradient(135deg, rgba(255,51,102,0.05), rgba(255,51,102,0.02));
-            border-left: 4px solid #ff3366;
-            animation: pulse-alert 2s infinite;
-        }
-        
-        .mensalista-card.pendente {
-            background: linear-gradient(135deg, rgba(255,149,0,0.05), rgba(255,149,0,0.02));
-            border-left: 4px solid #FF9500;
-        }
-        
-        .mensalista-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0,204,153,0.1);
-        }
-        
-        .mensalista-card.vencido:hover {
-            box-shadow: 0 10px 25px rgba(255,51,102,0.1);
-        }
-        
-        .mensalista-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .mensalista-nome {
-            font-weight: 700;
-            font-size: 16px;
-            color: #fff;
-        }
-        
-        .mensalista-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .mensalista-detalhes {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-        
-        .mensalista-detalhes-item {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        
-        .mensalista-detalhes-label {
-            color: #aaa;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .mensalista-detalhes-value {
-            color: #fff;
-            font-weight: 600;
-        }
-        
-        .mensalista-valor {
-            color: #00cc99;
-            font-weight: 700;
-            font-size: 18px;
-        }
-        
-        .mensalista-telefone {
-            color: #25D366;
-            font-weight: 600;
-        }
-        
-        .mensalista-vencimento {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 5px;
-        }
-        
-        .mensalista-vencimento.hoje {
-            background: rgba(255,149,0,0.2);
-            color: #FF9500;
-            border: 1px solid rgba(255,149,0,0.3);
-        }
-        
-        .mensalista-vencimento.vencido {
-            background: rgba(255,51,102,0.2);
-            color: #ff3366;
-            border: 1px solid rgba(255,51,102,0.3);
-            animation: pulse 2s infinite;
-        }
-        
-        .mensalista-vencimento.proximo {
-            background: rgba(255,170,0,0.2);
-            color: #ffaa00;
-            border: 1px solid rgba(255,170,0,0.3);
-        }
-        
-        /* ========== DESPESAS ========== */
-        .despesa-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-left: 4px solid #ff3366;
-            transition: all 0.3s ease;
-        }
-        
-        .despesa-card:hover {
-            background: rgba(255,255,255,0.08);
-            transform: translateY(-2px);
-        }
-        
-        .despesa-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .despesa-categoria {
-            background: rgba(255, 51, 102, 0.2);
-            color: #ff99bb;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .despesa-valor {
-            font-size: 24px;
-            font-weight: 700;
-            color: #ff3366;
-            text-align: right;
-        }
-        
-        .despesa-detalhes {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 13px;
-            color: #aaa;
-        }
-        
-        .despesa-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            justify-content: flex-end;
-        }
-        
-        .categoria-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: rgba(255,255,255,0.03);
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-        
-        .categoria-total {
-            font-weight: 700;
-            color: #ff3366;
-        }
-        
-        .progresso-despesa {
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
-        
-        .progresso-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #ff3366, #ff6699);
-            border-radius: 3px;
-            transition: width 0.5s ease;
-        }
-        
-        /* ========== FILTROS ========== */
-        .filtro-container {
-            background: rgba(255,255,255,0.03);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 25px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .filtro-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            align-items: end;
-        }
-        
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .input-group label {
-            font-size: 14px;
-            color: #ffaa00;
-            font-weight: 600;
-        }
-        
-        /* ========== INPUTS ========== */
-        input, select, textarea {
-            padding: 14px;
-            border: 1px solid rgba(255,255,255,0.15);
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
-            color: #fff;
-            font-size: 14px;
-            font-family: inherit;
-            transition: all 0.3s ease;
-        }
-        
-        select option {
-            background-color: #0a0a0a;
-            color: #fff;
-            padding: 12px;
-        }
-        
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #ffaa00;
-            box-shadow: 0 0 0 3px rgba(255,170,0,0.1);
-        }
-        
-        /* ========== MODAIS ========== */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            overflow-y: auto;
-            backdrop-filter: blur(10px);
-        }
-        
-        .modal-content {
-            background: linear-gradient(135deg, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.95) 100%);
-            border-radius: 25px;
-            padding: 35px;
-            max-width: 900px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            border: 1px solid rgba(255,170,0,0.3);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
-            position: relative;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(255,170,0,0.3);
-        }
-        
-        .modal-title {
-            color: #ffaa00;
-            font-size: 28px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #ffaa00, #ff7733);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .close-btn {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: #fff;
-            font-size: 28px;
-            cursor: pointer;
-            padding: 0;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        
-        .close-btn:hover {
-            background: rgba(255,170,0,0.2);
-            transform: rotate(90deg);
-        }
-        
-        /* ========== FORMULÁRIOS ========== */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .form-group label {
-            color: #ffaa00;
-            font-weight: 700;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .form-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-            margin-top: 30px;
-            padding-top: 25px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        /* ========== GRÁFICOS ========== */
-        .grafico-container {
-            height: 320px;
-            margin-top: 20px;
-            position: relative;
-        }
-        
-        /* ========== NOTIFICAÇÕES ========== */
-        .notificacao {
-            background: linear-gradient(135deg, rgba(255,51,102,0.1), rgba(255,51,102,0.05));
-            border: 2px solid rgba(255,51,102,0.3);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            animation: pulse-alert 2s infinite;
-        }
-        
-        .notificacao.sucesso {
-            background: linear-gradient(135deg, rgba(37,211,102,0.1), rgba(37,211,102,0.05));
-            border: 2px solid rgba(37,211,102,0.3);
-            animation: none;
-        }
-        
-        .notificacao-titulo {
-            color: #ff3366;
-            font-weight: 700;
-            font-size: 16px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .notificacao.sucesso .notificacao-titulo {
-            color: #25D366;
-        }
-        
-        .notificacao-mensalista {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: rgba(255,51,102,0.1);
-            border-radius: 8px;
-            margin-bottom: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .notificacao-mensalista:hover {
-            background: rgba(255,51,102,0.15);
-        }
-        
-        /* ========== BOTÕES DE AÇÃO ========== */
-        .action-btn {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: bold;
-            font-size: 16px;
-        }
-        
-        .action-btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: scale(1.1);
-        }
-        
-        .action-btn.success {
-            background: rgba(0, 204, 153, 0.2);
-            color: #00cc99;
-            border-color: rgba(0, 204, 153, 0.3);
-        }
-        
-        .action-btn.success:hover {
-            background: rgba(0, 204, 153, 0.3);
-            box-shadow: 0 5px 15px rgba(0,204,153,0.3);
-        }
-        
-        .action-btn.whatsapp {
-            background: rgba(37, 211, 102, 0.2);
-            color: #25D366;
-            border-color: rgba(37, 211, 102, 0.3);
-        }
-        
-        .action-btn.whatsapp:hover {
-            background: rgba(37, 211, 102, 0.3);
-            box-shadow: 0 5px 15px rgba(37,211,102,0.3);
-        }
-        
-        .action-btn.edit {
-            background: rgba(255, 170, 0, 0.2);
-            color: #ffaa00;
-            border-color: rgba(255, 170, 0, 0.3);
-        }
-        
-        .action-btn.edit:hover {
-            background: rgba(255, 170, 0, 0.3);
-            box-shadow: 0 5px 15px rgba(255,170,0,0.3);
-        }
-        
-        /* ========== BADGES ========== */
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-        
-        .badge-success {
-            background: linear-gradient(135deg, rgba(37,211,102,0.2), rgba(37,211,102,0.1));
-            color: #25D366;
-            border: 1px solid rgba(37,211,102,0.3);
-        }
-        
-        .badge-warning {
-            background: linear-gradient(135deg, rgba(255,149,0,0.2), rgba(255,149,0,0.1));
-            color: #FF9500;
-            border: 1px solid rgba(255,149,0,0.3);
-        }
-        
-        .badge-danger {
-            background: linear-gradient(135deg, rgba(255,51,102,0.2), rgba(255,51,102,0.1));
-            color: #ff3366;
-            border: 1px solid rgba(255,51,102,0.3);
-        }
-        
-        /* ========== ANIMAÇÕES ========== */
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.8; }
-            100% { opacity: 1; }
-        }
-        
-        @keyframes pulse-alert {
-            0% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 51, 102, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0); }
-        }
-        
-        /* ========== RESPONSIVIDADE PARA TABLET ========== */
-        @media (max-width: 1024px) {
-            .container {
-                padding: 15px;
-            }
-            
-            .dashboard-grid {
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: 15px;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .header {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .header-actions {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-            
-            .status-menu {
-                overflow-x: auto;
-                white-space: nowrap;
-                padding-bottom: 10px;
-            }
-            
-            .mensalista-detalhes {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .filtro-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .form-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .mensalista-detalhes {
-                grid-template-columns: 1fr;
-            }
-            
-            .filtro-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .btn {
-                padding: 12px 20px;
-            }
-            
-            .modal-content {
-                padding: 25px 20px;
-            }
-            
-            table {
-                display: block;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
-            
-            .form-actions {
-                flex-direction: column;
-            }
-            
-            .form-actions .btn {
-                width: 100%;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .card {
-                padding: 20px 15px;
-            }
-            
-            .btn {
-                padding: 10px 15px;
-                font-size: 13px;
-            }
-            
-            .stat-value {
-                font-size: 28px;
-            }
-            
-            .mensalista-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .mensalista-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            .action-btn {
-                width: 32px;
-                height: 32px;
-                font-size: 14px;
-            }
-            
-            .delete-service-btn {
-                width: 30px;
-                height: 30px;
-                font-size: 18px;
-            }
-        }
-        
-        /* ========== MENU DE STATUS ========== */
-        .status-menu {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .status-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.05);
-            color: #aaa;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .status-btn.active {
-            background: rgba(255,170,0,0.2);
-            color: #ffaa00;
-        }
-        
-        .status-btn:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        
-        /* ========== CONTADOR DE STATUS ========== */
-        .status-counter {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 24px;
-            height: 24px;
-            background: rgba(255,170,0,0.3);
-            border-radius: 50%;
-            font-size: 12px;
-            font-weight: 700;
-            margin-left: 8px;
-        }
-        
-        /* ========== CARDS RESUMO STATUS ========== */
-        .status-resumo {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .status-card {
-            background: rgba(255,255,255,0.03);
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .status-card.pago {
-            border-top: 4px solid #25D366;
-        }
-        
-        .status-card.pendente {
-            border-top: 4px solid #FF9500;
-        }
-        
-        .status-card.vencido {
-            border-top: 4px solid #ff3366;
-        }
-        
-        .status-card-total {
-            font-size: 28px;
-            font-weight: 800;
-            margin: 10px 0;
-        }
-        
-        .status-card.pago .status-card-total {
-            color: #25D366;
-        }
-        
-        .status-card.pendente .status-card-total {
-            color: #FF9500;
-        }
-        
-        .status-card.vencido .status-card-total {
-            color: #ff3366;
-        }
-        
-        .status-card-label {
-            font-size: 12px;
-            color: #aaa;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        /* ========== EMPTY STATE ========== */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-        }
-        
-        .empty-state-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        .empty-state-title {
-            color: #666;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-        
-        .empty-state-subtitle {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-        
-        /* ========== NOTIFICAÇÃO PUSH ========== */
-        .push-notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, rgba(255,51,102,0.9), rgba(204,0,51,0.9));
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            z-index: 10001;
-            max-width: 350px;
-            animation: slideInRight 0.5s ease;
-            display: none;
-        }
-        
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        .push-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .push-title {
-            font-weight: 700;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .push-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 0;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* ========== SCROLLBAR PERSONALIZADA ========== */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.05);
-            border-radius: 5px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #ffaa00, #ff7733);
-            border-radius: 5px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #ff7733, #ffaa00);
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 20px; padding: 20px 30px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; border: 1px solid rgba(255,170,0,0.2); }
+        .logo { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { font-size: 40px; }
+        .logo h1 { font-size: 24px; color: #ffaa00; }
+        .logo-subtitle { font-size: 12px; color: #aaa; }
+        .header-actions { display: flex; gap: 15px; flex-wrap: wrap; }
+        .btn { padding: 12px 24px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 14px; }
+        .btn-primary { background: linear-gradient(135deg, #ffaa00, #ff8800); color: #1a1a2e; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255,170,0,0.3); }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        .btn-success { background: linear-gradient(135deg, #00cc99, #009973); color: #fff; }
+        .btn-danger { background: linear-gradient(135deg, #ff3366, #cc0033); color: #fff; }
+        .btn-warning { background: linear-gradient(135deg, #ffaa00, #ff8800); color: #1a1a2e; }
+        .btn-whatsapp { background: linear-gradient(135deg, #25D366, #128C7E); color: #fff; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-bottom: 25px; }
+        .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); transition: transform 0.3s ease; }
+        .card:hover { transform: translateY(-5px); border-color: rgba(255,170,0,0.3); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .card-title { font-size: 18px; font-weight: 600; color: #ffaa00; }
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-success { background: rgba(37,211,102,0.2); color: #25D366; }
+        .badge-warning { background: rgba(255,170,0,0.2); color: #ffaa00; }
+        .badge-danger { background: rgba(255,51,102,0.2); color: #ff3366; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .stat-item { text-align: center; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; cursor: pointer; transition: all 0.3s ease; }
+        .stat-item:hover { background: rgba(255,170,0,0.1); transform: scale(1.02); }
+        .stat-value { font-size: 24px; font-weight: 700; color: #ffaa00; }
+        .stat-label { font-size: 12px; color: #aaa; margin-top: 5px; }
+        .stat-secondary .stat-value { color: #25D366; }
+        .stat-warning .stat-value { color: #ffaa00; }
+        .stat-danger .stat-value { color: #ff3366; }
+        .filtro-container { background: rgba(0,0,0,0.3); border-radius: 15px; padding: 15px; margin: 15px 0; }
+        .filtro-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 12px; color: #aaa; }
+        .input-group input, .input-group select { padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; }
+        .status-resumo { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; }
+        .status-menu { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; }
+        .status-btn { padding: 8px 16px; background: rgba(255,255,255,0.05); border: none; border-radius: 20px; color: #fff; cursor: pointer; transition: all 0.3s ease; }
+        .status-btn.active { background: #ffaa00; color: #1a1a2e; }
+        .status-btn:hover { background: rgba(255,170,0,0.3); }
+        .status-counter { background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+        .push-notification { display: none; position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #ff3366, #cc0033); border-radius: 15px; padding: 15px 20px; z-index: 10000; min-width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideInRight 0.3s ease; }
+        .push-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .push-title { font-weight: bold; font-size: 14px; }
+        .push-close { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { background: rgba(255,170,0,0.1); }
+        .action-btn { background: rgba(255,50,50,0.2); color: #ff3366; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 18px; transition: all 0.2s ease; }
+        .action-btn:hover { background: rgba(255,50,50,0.5); transform: scale(1.05); }
+        .servico-pago { color: #25D366; }
+        .servico-fiado { color: #FF9500; }
+        .grafico-container { padding: 20px; max-height: 300px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; border: 1px solid rgba(255,170,0,0.3); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { color: #ffaa00; font-size: 20px; }
+        .close-btn { background: none; border: none; color: #fff; font-size: 28px; cursor: pointer; transition: all 0.2s; }
+        .close-btn:hover { color: #ff3366; transform: scale(1.1); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #aaa; font-size: 12px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .form-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #ffaa00; border-radius: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header Moderno -->
         <header class="header">
             <div class="logo">
                 <div class="logo-icon">💈</div>
-                <div>
-                    <h1>BarbaPRO Duo</h1>
-                    <div class="logo-subtitle">Dashboard Profissional</div>
-                </div>
+                <div><h1>BarbaPRO Duo</h1><div class="logo-subtitle">Dashboard Profissional</div></div>
             </div>
             <div class="header-actions">
-                <button class="btn btn-primary" id="btnVoltarRegistro">
-                    ← Voltar ao Registro
-                </button>
-                <button class="btn btn-whatsapp" id="btnEnviarResumo">
-                    📱 Resumo WhatsApp
-                </button>
-                <button class="btn btn-secondary" id="btnConfiguracoes">
-                    ⚙️ Configurações
-                </button>
+                <button class="btn btn-primary" id="btnVoltarRegistro">← Voltar ao Registro</button>
+                <button class="btn btn-whatsapp" id="btnEnviarResumo">📱 Resumo WhatsApp</button>
+                <button class="btn btn-secondary" id="btnConfiguracoes">⚙️ Configurações</button>
             </div>
         </header>
 
-        <!-- Notificação Push -->
         <div class="push-notification" id="pushNotification">
-            <div class="push-header">
-                <div class="push-title" id="pushNotificationTitle">⚠️ ALERTA DE VENCIMENTO</div>
-                <button class="push-close" onclick="fecharNotificacao()">×</button>
-            </div>
+            <div class="push-header"><div class="push-title">⚠️ ALERTA DE VENCIMENTO</div><button class="push-close" onclick="fecharNotificacao()">×</button></div>
             <div id="pushNotificationMessage">Mensalistas vencidos detectados!</div>
         </div>
 
-        <!-- Alertas Sonoros (simulado) -->
-        <audio id="alertSound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" preload="auto"></audio>
+        <audio id="alertSound" preload="auto"></audio>
 
-        <!-- Dashboard Grid -->
         <div class="dashboard-grid">
-            <!-- Card: Estatísticas Gabriel -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-title">👨‍🦱 GABRIEL</div>
-                    <div class="badge badge-success">HOJE</div>
-                </div>
+                <div class="card-header"><div class="card-title">👨‍🦱 GABRIEL</div><div class="badge badge-success">HOJE</div></div>
                 <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="gabrielHoje">0</div>
-                        <div class="stat-label">Serviços Hoje</div>
-                    </div>
-                    <div class="stat-item stat-secondary">
-                        <div class="stat-value" id="gabrielTotalHoje">R$ 0</div>
-                        <div class="stat-label">Total Hoje</div>
-                    </div>
-                    <div class="stat-item stat-warning">
-                        <div class="stat-value" id="gabrielFiadoHoje">R$ 0</div>
-                        <div class="stat-label">Fiado Hoje</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="gabrielMedia">R$ 0</div>
-                        <div class="stat-label">Média/Serviço</div>
-                    </div>
+                    <div class="stat-item"><div class="stat-value" id="gabrielHoje">0</div><div class="stat-label">Serviços Hoje</div></div>
+                    <div class="stat-item stat-secondary"><div class="stat-value" id="gabrielTotalHoje">R$ 0</div><div class="stat-label">Total Hoje</div></div>
+                    <div class="stat-item stat-warning"><div class="stat-value" id="gabrielFiadoHoje">R$ 0</div><div class="stat-label">Fiado Hoje</div></div>
+                    <div class="stat-item"><div class="stat-value" id="gabrielMedia">R$ 0</div><div class="stat-label">Média/Serviço</div></div>
                 </div>
             </div>
-
-            <!-- Card: Estatísticas Wagner -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-title">👨‍🦱 WAGNER</div>
-                    <div class="badge badge-success">HOJE</div>
-                </div>
+                <div class="card-header"><div class="card-title">👨‍🦱 WAGNER</div><div class="badge badge-success">HOJE</div></div>
                 <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="wagnerHoje">0</div>
-                        <div class="stat-label">Serviços Hoje</div>
-                    </div>
-                    <div class="stat-item stat-secondary">
-                        <div class="stat-value" id="wagnerTotalHoje">R$ 0</div>
-                        <div class="stat-label">Total Hoje</div>
-                    </div>
-                    <div class="stat-item stat-warning">
-                        <div class="stat-value" id="wagnerFiadoHoje">R$ 0</div>
-                        <div class="stat-label">Fiado Hoje</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="wagnerMedia">R$ 0</div>
-                        <div class="stat-label">Média/Serviço</div>
-                    </div>
+                    <div class="stat-item"><div class="stat-value" id="wagnerHoje">0</div><div class="stat-label">Serviços Hoje</div></div>
+                    <div class="stat-item stat-secondary"><div class="stat-value" id="wagnerTotalHoje">R$ 0</div><div class="stat-label">Total Hoje</div></div>
+                    <div class="stat-item stat-warning"><div class="stat-value" id="wagnerFiadoHoje">R$ 0</div><div class="stat-label">Fiado Hoje</div></div>
+                    <div class="stat-item"><div class="stat-value" id="wagnerMedia">R$ 0</div><div class="stat-label">Média/Serviço</div></div>
                 </div>
             </div>
-
-            <!-- Card: Estatísticas Gerais -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-title">📊 ESTATÍSTICAS GERAIS</div>
-                    <div class="badge badge-warning">MÊS ATUAL</div>
-                </div>
+                <div class="card-header"><div class="card-title">📊 ESTATÍSTICAS GERAIS</div><div class="badge badge-warning">MÊS ATUAL</div></div>
                 <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalMes">R$ 0</div>
-                        <div class="stat-label">Total Mês</div>
-                    </div>
-                    <div class="stat-item stat-secondary">
-                        <div class="stat-value" id="servicosMes">0</div>
-                        <div class="stat-label">Serviços Mês</div>
-                    </div>
-                    <div class="stat-item stat-warning">
-                        <div class="stat-value" id="fiadoMes">R$ 0</div>
-                        <div class="stat-label">Fiado Total</div>
-                    </div>
-                    <div class="stat-item stat-danger">
-                        <div class="stat-value" id="despesasMes">R$ 0</div>
-                        <div class="stat-label">Despesas Mês</div>
-                    </div>
+                    <div class="stat-item"><div class="stat-value" id="totalMes">R$ 0</div><div class="stat-label">Total Mês</div></div>
+                    <div class="stat-item stat-secondary"><div class="stat-value" id="servicosMes">0</div><div class="stat-label">Serviços Mês</div></div>
+                    <div class="stat-item stat-warning"><div class="stat-value" id="fiadoMes">R$ 0</div><div class="stat-label">Fiado Total</div></div>
+                    <div class="stat-item stat-danger"><div class="stat-value" id="despesasMes">R$ 0</div><div class="stat-label">Despesas Mês</div></div>
                 </div>
             </div>
-
-            <!-- Card: Controle de Despesas -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-title">💸 CONTROLE DE DESPESAS</div>
-                    <div class="badge badge-danger">MÊS ATUAL</div>
-                </div>
+                <div class="card-header"><div class="card-title">💸 CONTROLE DE DESPESAS</div><div class="badge badge-danger">MÊS ATUAL</div></div>
                 <div class="stats-grid">
-                    <div class="stat-item" onclick="abrirModalDespesas()">
-                        <div class="stat-value" id="totalDespesasMes">R$ 0</div>
-                        <div class="stat-label">Total Despesas</div>
-                    </div>
-                    <div class="stat-item stat-secondary">
-                        <div class="stat-value" id="numDespesasMes">0</div>
-                        <div class="stat-label">Qtd Despesas</div>
-                    </div>
-                    <div class="stat-item stat-warning">
-                        <div class="stat-value" id="maiorDespesaMes">R$ 0</div>
-                        <div class="stat-label">Maior Despesa</div>
-                    </div>
-                    <div class="stat-item" onclick="abrirModalDespesas()">
-                        <div class="stat-value" id="lucroLiquido">R$ 0</div>
-                        <div class="stat-label">Lucro Líquido</div>
-                    </div>
+                    <div class="stat-item" onclick="abrirModalDespesas()"><div class="stat-value" id="totalDespesasMes">R$ 0</div><div class="stat-label">Total Despesas</div></div>
+                    <div class="stat-item stat-secondary"><div class="stat-value" id="numDespesasMes">0</div><div class="stat-label">Qtd Despesas</div></div>
+                    <div class="stat-item stat-warning"><div class="stat-value" id="maiorDespesaMes">R$ 0</div><div class="stat-label">Maior Despesa</div></div>
+                    <div class="stat-item" onclick="abrirModalDespesas()"><div class="stat-value" id="lucroLiquido">R$ 0</div><div class="stat-label">Lucro Líquido</div></div>
                 </div>
-                <div style="text-align: center; margin-top: 15px;">
-                    <button class="btn btn-danger" id="btnNovaDespesa" style="width: 100%;">
-                        + Nova Despesa
-                    </button>
-                </div>
+                <div style="text-align: center; margin-top: 15px;"><button class="btn btn-danger" id="btnNovaDespesa" style="width: 100%;">+ Nova Despesa</button></div>
             </div>
         </div>
 
-        <!-- Segunda Linha: Pagamentos e Métodos -->
         <div class="dashboard-grid">
-            <!-- Card: Resumo Pagamentos Hoje -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-title">💰 PAGAMENTOS - HOJE</div>
-                    <div class="badge badge-success">RESUMO</div>
-                </div>
+                <div class="card-header"><div class="card-title">💰 PAGAMENTOS - HOJE</div><div class="badge badge-success">RESUMO</div></div>
                 <div class="stats-grid">
-                    <div class="stat-item" onclick="filtrarPorMetodo('dinheiro')">
-                        <div class="stat-value" id="totalDinheiro">R$ 0</div>
-                        <div class="stat-label">💵 DINHEIRO</div>
-                    </div>
-                    <div class="stat-item" onclick="filtrarPorMetodo('pix')">
-                        <div class="stat-value" id="totalPix">R$ 0</div>
-                        <div class="stat-label">📱 PIX</div>
-                    </div>
-                    <div class="stat-item" onclick="filtrarPorMetodo('debito')">
-                        <div class="stat-value" id="totalDebito">R$ 0</div>
-                        <div class="stat-label">💳 DÉBITO</div>
-                    </div>
-                    <div class="stat-item" onclick="filtrarPorMetodo('credito')">
-                        <div class="stat-value" id="totalCredito">R$ 0</div>
-                        <div class="stat-label">💳 CRÉDITO</div>
-                    </div>
+                    <div class="stat-item" onclick="filtrarPorMetodo('dinheiro')"><div class="stat-value" id="totalDinheiro">R$ 0</div><div class="stat-label">💵 DINHEIRO</div></div>
+                    <div class="stat-item" onclick="filtrarPorMetodo('pix')"><div class="stat-value" id="totalPix">R$ 0</div><div class="stat-label">📱 PIX</div></div>
+                    <div class="stat-item" onclick="filtrarPorMetodo('debito')"><div class="stat-value" id="totalDebito">R$ 0</div><div class="stat-label">💳 DÉBITO</div></div>
+                    <div class="stat-item" onclick="filtrarPorMetodo('credito')"><div class="stat-value" id="totalCredito">R$ 0</div><div class="stat-label">💳 CRÉDITO</div></div>
                 </div>
-                <div style="text-align: center; margin-top: 15px;">
-                    <button class="btn btn-whatsapp" id="btnEnviarPagamentos" style="width: 100%;">
-                        📱 Enviar Relatório
-                    </button>
-                </div>
+                <div style="text-align: center; margin-top: 15px;"><button class="btn btn-whatsapp" id="btnEnviarPagamentos" style="width: 100%;">📱 Enviar Relatório</button></div>
             </div>
-
-            <!-- Card: Gráfico Distribuição -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-title">📈 DISTRIBUIÇÃO - HOJE</div>
-                    <div class="badge badge-warning">GRÁFICO</div>
-                </div>
-                <div class="grafico-container">
-                    <canvas id="graficoPizza"></canvas>
-                </div>
+                <div class="card-header"><div class="card-title">📈 DISTRIBUIÇÃO - HOJE</div><div class="badge badge-warning">GRÁFICO</div></div>
+                <div class="grafico-container"><canvas id="graficoPizza"></canvas></div>
             </div>
-
-            <!-- Card: Ações Rápidas -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-title">⚡ AÇÕES RÁPIDAS</div>
-                    <div class="badge badge-success">MENU</div>
-                </div>
+                <div class="card-header"><div class="card-title">⚡ AÇÕES RÁPIDAS</div><div class="badge badge-success">MENU</div></div>
                 <div style="display: grid; gap: 15px; padding: 10px;">
-                    <button class="btn btn-primary" id="btnVerResumoCompleto">
-                        📊 Ver Resumo Completo
-                    </button>
-                    <button class="btn btn-success" id="btnRelatorioDetalhado">
-                        📄 Relatório Detalhado
-                    </button>
-                    <button class="btn btn-whatsapp" id="btnEnviarMensalistas">
-                        👥 Enviar Lembretes
-                    </button>
-                    <button class="btn btn-danger" id="btnGerenciarDespesas">
-                        💸 Gerenciar Despesas
-                    </button>
+                    <button class="btn btn-primary" id="btnVerResumoCompleto">📊 Ver Resumo Completo</button>
+                    <button class="btn btn-success" id="btnRelatorioDetalhado">📄 Relatório Detalhado</button>
+                    <button class="btn btn-whatsapp" id="btnEnviarMensalistas">👥 Enviar Lembretes</button>
+                    <button class="btn btn-danger" id="btnGerenciarDespesas">💸 Gerenciar Despesas</button>
                 </div>
             </div>
         </div>
 
-        <!-- Terceira Linha: Mensalistas -->
         <div class="card">
-            <div class="card-header">
-                <div class="card-title">👥 MENSALISTAS - GERENCIAMENTO INTELIGENTE</div>
-                <div>
-                    <button class="btn btn-success" id="btnNovoMensalista" style="margin-right: 10px;">
-                        + Novo Mensalista
-                    </button>
-                    <button class="btn btn-whatsapp" id="btnNotificarTodos" onclick="notificarTodosMensalistas()">
-                        🔔 Notificar Todos
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Resumo de Status -->
-            <div class="status-resumo" id="resumoStatusMensalistas">
-                <!-- Dinâmico -->
-            </div>
-            
-            <!-- Filtros Rápidos -->
+            <div class="card-header"><div class="card-title">👥 MENSALISTAS - GERENCIAMENTO INTELIGENTE</div><div><button class="btn btn-success" id="btnNovoMensalista" style="margin-right: 10px;">+ Novo Mensalista</button><button class="btn btn-whatsapp" id="btnNotificarTodos" onclick="notificarTodosMensalistas()">🔔 Notificar Todos</button></div></div>
+            <div class="status-resumo" id="resumoStatusMensalistas"></div>
             <div class="status-menu">
-                <button class="status-btn active" onclick="filtrarMensalistasPorStatus('todos')">
-                    📋 Todos
-                    <span class="status-counter" id="counterTodos">0</span>
-                </button>
-                <button class="status-btn" onclick="filtrarMensalistasPorStatus('pago')">
-                    ✅ Pagos
-                    <span class="status-counter" id="counterPagos">0</span>
-                </button>
-                <button class="status-btn" onclick="filtrarMensalistasPorStatus('pendente')">
-                    ⏳ Pendentes
-                    <span class="status-counter" id="counterPendentes">0</span>
-                </button>
-                <button class="status-btn" onclick="filtrarMensalistasPorStatus('vencido')">
-                    ⚠️ Vencidos
-                    <span class="status-counter" id="counterVencidos">0</span>
-                </button>
-                <button class="status-btn" onclick="filtrarMensalistasPorStatus('hoje')">
-                    📅 Vence Hoje
-                    <span class="status-counter" id="counterHoje">0</span>
-                </button>
+                <button class="status-btn active" onclick="filtrarMensalistasPorStatus('todos')">📋 Todos <span class="status-counter" id="counterTodos">0</span></button>
+                <button class="status-btn" onclick="filtrarMensalistasPorStatus('pago')">✅ Pagos <span class="status-counter" id="counterPagos">0</span></button>
+                <button class="status-btn" onclick="filtrarMensalistasPorStatus('pendente')">⏳ Pendentes <span class="status-counter" id="counterPendentes">0</span></button>
+                <button class="status-btn" onclick="filtrarMensalistasPorStatus('vencido')">⚠️ Vencidos <span class="status-counter" id="counterVencidos">0</span></button>
+                <button class="status-btn" onclick="filtrarMensalistasPorStatus('hoje')">📅 Vence Hoje <span class="status-counter" id="counterHoje">0</span></button>
             </div>
-            
-            <!-- Filtros Avançados -->
             <div class="filtro-container">
                 <div class="filtro-grid">
-                    <div class="input-group">
-                        <label>📅 Data Início</label>
-                        <input type="date" id="dataInicioMensalistas">
-                    </div>
-                    <div class="input-group">
-                        <label>📅 Data Fim</label>
-                        <input type="date" id="dataFimMensalistas">
-                    </div>
-                    <div class="input-group">
-                        <label>📊 Status</label>
-                        <select id="filtroStatusMensalistas">
-                            <option value="todos">📋 Todos os Status</option>
-                            <option value="pago">✅ Pagos</option>
-                            <option value="pendente">⏳ Pendentes</option>
-                            <option value="vencido">⚠️ Vencidos</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>👤 Barbeiro</label>
-                        <select id="filtroBarbeiroMensalistas">
-                            <option value="todos">👥 Todos Barbeiros</option>
-                            <option value="Gabriel">👨‍🦱 Gabriel</option>
-                            <option value="Wagner">👨‍🦱 Wagner</option>
-                        </select>
-                    </div>
-                    <div style="display: flex; align-items: flex-end; gap: 10px;">
-                        <button class="btn btn-primary" id="btnFiltrarMensalistas" style="flex: 1;">
-                            🔍 Aplicar Filtros
-                        </button>
-                        <button class="btn btn-secondary" id="btnLimparFiltros" style="flex: 1;">
-                            🗑️ Limpar Filtros
-                        </button>
-                    </div>
+                    <div class="input-group"><label>📅 Data Início</label><input type="date" id="dataInicioMensalistas"></div>
+                    <div class="input-group"><label>📅 Data Fim</label><input type="date" id="dataFimMensalistas"></div>
+                    <div class="input-group"><label>📊 Status</label><select id="filtroStatusMensalistas"><option value="todos">📋 Todos os Status</option><option value="pago">✅ Pagos</option><option value="pendente">⏳ Pendentes</option><option value="vencido">⚠️ Vencidos</option></select></div>
+                    <div class="input-group"><label>👤 Barbeiro</label><select id="filtroBarbeiroMensalistas"><option value="todos">👥 Todos Barbeiros</option><option value="Gabriel">👨‍🦱 Gabriel</option><option value="Wagner">👨‍🦱 Wagner</option></select></div>
+                    <div style="display: flex; align-items: flex-end; gap: 10px;"><button class="btn btn-primary" id="btnFiltrarMensalistas" style="flex: 1;">🔍 Aplicar Filtros</button><button class="btn btn-secondary" id="btnLimparFiltros" style="flex: 1;">🗑️ Limpar Filtros</button></div>
                 </div>
             </div>
-            
-            <!-- Alertas de Vencimento -->
-            <div id="alertasVencimento">
-                <!-- Dinâmico -->
-            </div>
-            
-            <!-- Lista de Mensalistas -->
-            <div id="listaMensalistasDashboard">
-                <!-- Conteúdo dinâmico -->
-            </div>
+            <div id="alertasVencimento"></div>
+            <div id="listaMensalistasDashboard"></div>
         </div>
 
-        <!-- Quarta Linha: Despesas Recentes -->
         <div class="card">
-            <div class="card-header">
-                <div class="card-title">💸 DESPESAS RECENTES</div>
-                <button class="btn btn-secondary" id="btnExportarDespesas">
-                    📤 Exportar Dados
-                </button>
-            </div>
-            
-            <!-- Filtros Despesas -->
+            <div class="card-header"><div class="card-title">💸 DESPESAS RECENTES</div><button class="btn btn-secondary" id="btnExportarDespesas">📤 Exportar Dados</button></div>
             <div class="filtro-container">
                 <div class="filtro-grid">
-                    <div class="input-group">
-                        <label>📅 Data Início</label>
-                        <input type="date" id="dataInicioDespesas">
-                    </div>
-                    <div class="input-group">
-                        <label>📅 Data Fim</label>
-                        <input type="date" id="dataFimDespesas">
-                    </div>
-                    <div class="input-group">
-                        <label>📊 Categoria</label>
-                        <select id="filtroCategoriaDespesas">
-                            <option value="todos">📋 Todas Categorias</option>
-                            <option value="Suprimentos">🛒 Suprimentos</option>
-                            <option value="Aluguel">🏢 Aluguel</option>
-                            <option value="Energia">💡 Energia</option>
-                            <option value="Água">🚰 Água</option>
-                            <option value="Internet">🌐 Internet</option>
-                            <option value="Manutenção">🔧 Manutenção</option>
-                            <option value="Outros">📦 Outros</option>
-                        </select>
-                    </div>
-                    <div style="display: flex; align-items: flex-end; gap: 10px;">
-                        <button class="btn btn-primary" id="btnFiltrarDespesas" style="flex: 1;">
-                            🔍 Filtrar Despesas
-                        </button>
-                        <button class="btn btn-danger" id="btnNovaDespesaRapida" style="flex: 1;">
-                            + Nova Despesa
-                        </button>
-                    </div>
+                    <div class="input-group"><label>📅 Data Início</label><input type="date" id="dataInicioDespesas"></div>
+                    <div class="input-group"><label>📅 Data Fim</label><input type="date" id="dataFimDespesas"></div>
+                    <div class="input-group"><label>📊 Categoria</label><select id="filtroCategoriaDespesas"><option value="todos">📋 Todas Categorias</option><option value="Suprimentos">🛒 Suprimentos</option><option value="Aluguel">🏢 Aluguel</option><option value="Energia">💡 Energia</option><option value="Água">🚰 Água</option><option value="Internet">🌐 Internet</option><option value="Manutenção">🔧 Manutenção</option><option value="Outros">📦 Outros</option></select></div>
+                    <div style="display: flex; align-items: flex-end; gap: 10px;"><button class="btn btn-primary" id="btnFiltrarDespesas" style="flex: 1;">🔍 Filtrar Despesas</button><button class="btn btn-danger" id="btnNovaDespesaRapida" style="flex: 1;">+ Nova Despesa</button></div>
                 </div>
             </div>
-            
-            <!-- Lista de Despesas -->
-            <div id="listaDespesasRecentes">
-                <!-- Conteúdo dinâmico -->
-            </div>
+            <div id="listaDespesasRecentes"></div>
         </div>
 
-        <!-- Quinta Linha: Serviços Recentes (COM BOTÃO DE EXCLUSÃO) -->
         <div class="card">
-            <div class="card-header">
-                <div class="card-title">📝 SERVIÇOS RECENTES</div>
-                <button class="btn btn-secondary" id="btnExportarServicos">
-                    📤 Exportar Dados
-                </button>
-            </div>
-            
-            <!-- Filtros Serviços -->
+            <div class="card-header"><div class="card-title">📝 SERVIÇOS RECENTES</div><button class="btn btn-secondary" id="btnExportarServicos">📤 Exportar Dados</button></div>
             <div class="filtro-container">
                 <div class="filtro-grid">
-                    <div class="input-group">
-                        <label>📅 Data Início</label>
-                        <input type="date" id="dataInicioServicos">
-                    </div>
-                    <div class="input-group">
-                        <label>📅 Data Fim</label>
-                        <input type="date" id="dataFimServicos">
-                    </div>
-                    <div class="input-group">
-                        <label>👤 Barbeiro</label>
-                        <select id="filtroBarbeiroServicos">
-                            <option value="todos">👥 Todos Barbeiros</option>
-                            <option value="Gabriel">👨‍🦱 Gabriel</option>
-                            <option value="Wagner">👨‍🦱 Wagner</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>💰 Status Pagamento</label>
-                        <select id="filtroPagamentoServicos">
-                            <option value="todos">📋 Todos</option>
-                            <option value="pago">✅ Pagos</option>
-                            <option value="fiado">⏳ Fiados</option>
-                        </select>
-                    </div>
-                    <div style="display: flex; align-items: flex-end; gap: 10px;">
-                        <button class="btn btn-primary" id="btnFiltrarServicos" style="flex: 1;">
-                            🔍 Filtrar Serviços
-                        </button>
-                        <button class="btn btn-whatsapp" id="btnEnviarRelatorioServicos" style="flex: 1;">
-                            📱 Enviar Relatório
-                        </button>
-                    </div>
+                    <div class="input-group"><label>📅 Data Início</label><input type="date" id="dataInicioServicos"></div>
+                    <div class="input-group"><label>📅 Data Fim</label><input type="date" id="dataFimServicos"></div>
+                    <div class="input-group"><label>👤 Barbeiro</label><select id="filtroBarbeiroServicos"><option value="todos">👥 Todos Barbeiros</option><option value="Gabriel">👨‍🦱 Gabriel</option><option value="Wagner">👨‍🦱 Wagner</option></select></div>
+                    <div class="input-group"><label>💰 Status Pagamento</label><select id="filtroPagamentoServicos"><option value="todos">📋 Todos</option><option value="pago">✅ Pagos</option><option value="fiado">⏳ Fiados</option></select></div>
+                    <div style="display: flex; align-items: flex-end; gap: 10px;"><button class="btn btn-primary" id="btnFiltrarServicos" style="flex: 1;">🔍 Filtrar Serviços</button><button class="btn btn-whatsapp" id="btnEnviarRelatorioServicos" style="flex: 1;">📱 Enviar Relatório</button></div>
                 </div>
             </div>
-            
-            <!-- Tabela de Serviços -->
-            <div class="table-container">
-                <div id="listaServicosRecentes">
-                    <!-- Conteúdo dinâmico -->
-                </div>
-            </div>
+            <div class="table-container"><div id="listaServicosRecentes"></div></div>
         </div>
     </div>
 
-    <!-- ========== MODAIS ========== -->
+    <!-- MODAIS -->
+    <div id="modalResumo" class="modal"><div class="modal-content"><div class="modal-header"><h2 class="modal-title">📊 RESUMO COMPLETO - BARBEIROS</h2><button class="close-btn" data-modal="modalResumo">&times;</button></div><div id="conteudoResumo"></div><div class="form-actions"><button class="btn btn-secondary" data-modal="modalResumo">Fechar</button><button class="btn btn-whatsapp" id="btnEnviarResumoCompleto">📱 Enviar por WhatsApp</button></div></div></div>
 
-    <!-- Modal: Resumo Completo -->
-    <div class="modal" id="modalResumo">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">📊 RESUMO COMPLETO - BARBEIROS</h2>
-                <button class="close-btn" data-modal="modalResumo">&times;</button>
-            </div>
-            <div id="conteudoResumo">
-                <!-- Dinâmico -->
-            </div>
-            <div class="form-actions">
-                <button class="btn btn-secondary" data-modal="modalResumo">
-                    Fechar
-                </button>
-                <button class="btn btn-whatsapp" id="btnEnviarResumoCompleto">
-                    📱 Enviar por WhatsApp
-                </button>
-            </div>
-        </div>
-    </div>
+    <div id="modalPagamentos" class="modal"><div class="modal-content"><div class="modal-header"><h2 class="modal-title">💰 RELATÓRIO DE PAGAMENTOS DETALHADO</h2><button class="close-btn" data-modal="modalPagamentos">&times;</button></div><div class="filtro-container"><div class="filtro-grid"><div class="input-group"><label>📅 Data Início</label><input type="date" id="dataInicioPagamentos"></div><div class="input-group"><label>📅 Data Fim</label><input type="date" id="dataFimPagamentos"></div><div class="input-group"><label>👤 Barbeiro</label><select id="filtroBarbeiroPagamentos"><option value="todos">👥 Todos Barbeiros</option><option value="Gabriel">👨‍🦱 Gabriel</option><option value="Wagner">👨‍🦱 Wagner</option></select></div><div style="display: flex; align-items: flex-end; gap: 10px;"><button class="btn btn-primary" id="btnGerarRelatorio" style="flex: 1;">📈 Gerar Relatório</button><button class="btn btn-whatsapp" id="btnEnviarRelatorioWhatsApp" style="flex: 1;">📱 Enviar WhatsApp</button></div></div></div><div id="relatorioPagamentosDetalhado"></div></div></div>
 
-    <!-- Modal: Relatório Pagamentos -->
-    <div class="modal" id="modalPagamentos">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">💰 RELATÓRIO DE PAGAMENTOS DETALHADO</h2>
-                <button class="close-btn" data-modal="modalPagamentos">&times;</button>
-            </div>
-            <div class="filtro-container">
-                <div class="filtro-grid">
-                    <div class="input-group">
-                        <label>📅 Data Início</label>
-                        <input type="date" id="dataInicioPagamentos">
-                    </div>
-                    <div class="input-group">
-                        <label>📅 Data Fim</label>
-                        <input type="date" id="dataFimPagamentos">
-                    </div>
-                    <div class="input-group">
-                        <label>👤 Barbeiro</label>
-                        <select id="filtroBarbeiroPagamentos">
-                            <option value="todos">👥 Todos Barbeiros</option>
-                            <option value="Gabriel">👨‍🦱 Gabriel</option>
-                            <option value="Wagner">👨‍🦱 Wagner</option>
-                        </select>
-                    </div>
-                    <div style="display: flex; align-items: flex-end; gap: 10px;">
-                        <button class="btn btn-primary" id="btnGerarRelatorio" style="flex: 1;">
-                            📈 Gerar Relatório
-                        </button>
-                        <button class="btn btn-whatsapp" id="btnEnviarRelatorioWhatsApp" style="flex: 1;">
-                            📱 Enviar WhatsApp
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div id="relatorioPagamentosDetalhado">
-                <!-- Conteúdo dinâmico -->
-            </div>
-        </div>
-    </div>
+    <div id="modalMensalistas" class="modal"><div class="modal-content"><div class="modal-header"><h2 class="modal-title">👥 GERENCIAMENTO DE MENSALISTAS</h2><button class="close-btn" data-modal="modalMensalistas">&times;</button></div><div class="card" style="margin-bottom: 25px;"><div class="card-header"><div class="card-title">➕ NOVO MENSALISTA</div><div class="badge badge-success">CADASTRO</div></div><div class="form-grid"><div class="form-group"><label>👤 Nome do Cliente *</label><input type="text" id="nomeMensalista" placeholder="Nome completo do cliente"></div><div class="form-group"><label>📱 Telefone (WhatsApp)</label><input type="tel" id="telefoneMensalista" placeholder="(11) 99999-9999" maxlength="15"></div><div class="form-group"><label>👨‍🦱 Barbeiro *</label><select id="barbeiroMensalista"><option value="Gabriel">Gabriel</option><option value="Wagner">Wagner</option></select></div><div class="form-group"><label>💰 Valor Mensal (R$) *</label><input type="number" step="0.01" id="valorMensalista" placeholder="120.00"></div><div class="form-group"><label>📅 Data de Início *</label><input type="date" id="dataInicioMensalista"></div><div class="form-group"><label>📅 Dia de Vencimento (1-31) *</label><input type="number" min="1" max="31" id="diaVencimentoMensalista" placeholder="10"></div><div class="form-group"><label>📊 Status *</label><select id="statusMensalista"><option value="pago">✅ Pago</option><option value="pendente">⏳ Pendente</option><option value="vencido">⚠️ Vencido</option></select></div><div class="form-group"><label>📝 Observações</label><textarea id="observacoesMensalista" rows="2" placeholder="Observações importantes..."></textarea></div></div><div class="form-actions"><button class="btn btn-secondary" id="btnLimparFormMensalista">Limpar Formulário</button><button class="btn btn-success" id="btnAdicionarMensalista">✅ Cadastrar Mensalista</button></div></div><div id="listaMensalistasModal"></div></div></div>
 
-    <!-- Modal: Mensalistas Detalhado -->
-    <div class="modal" id="modalMensalistas">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">👥 GERENCIAMENTO DE MENSALISTAS</h2>
-                <button class="close-btn" data-modal="modalMensalistas">&times;</button>
-            </div>
-            
-            <!-- Formulário Novo Mensalista -->
-            <div class="card" style="margin-bottom: 25px;">
-                <div class="card-header">
-                    <div class="card-title">➕ NOVO MENSALISTA</div>
-                    <div class="badge badge-success">CADASTRO</div>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>👤 Nome do Cliente *</label>
-                        <input type="text" id="nomeMensalista" placeholder="Nome completo do cliente">
-                    </div>
-                    <div class="form-group">
-                        <label>📱 Telefone (WhatsApp)</label>
-                        <input type="tel" id="telefoneMensalista" placeholder="(11) 99999-9999" maxlength="15">
-                    </div>
-                    <div class="form-group">
-                        <label>👨‍🦱 Barbeiro *</label>
-                        <select id="barbeiroMensalista">
-                            <option value="Gabriel">Gabriel</option>
-                            <option value="Wagner">Wagner</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>💰 Valor Mensal (R$) *</label>
-                        <input type="number" step="0.01" id="valorMensalista" placeholder="120.00">
-                    </div>
-                    <div class="form-group">
-                        <label>📅 Data de Início *</label>
-                        <input type="date" id="dataInicioMensalista">
-                    </div>
-                    <div class="form-group">
-                        <label>📅 Dia de Vencimento (1-31) *</label>
-                        <input type="number" min="1" max="31" id="diaVencimentoMensalista" placeholder="10">
-                    </div>
-                    <div class="form-group">
-                        <label>📊 Status *</label>
-                        <select id="statusMensalista">
-                            <option value="pago">✅ Pago</option>
-                            <option value="pendente">⏳ Pendente</option>
-                            <option value="vencido">⚠️ Vencido</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>📝 Observações</label>
-                        <textarea id="observacoesMensalista" rows="2" placeholder="Observações importantes..."></textarea>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button class="btn btn-secondary" id="btnLimparFormMensalista">
-                        Limpar Formulário
-                    </button>
-                    <button class="btn btn-success" id="btnAdicionarMensalista">
-                        ✅ Cadastrar Mensalista
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Lista de Mensalistas -->
-            <div id="listaMensalistasModal">
-                <!-- Dinâmico -->
-            </div>
-        </div>
-    </div>
+    <div id="modalDespesas" class="modal"><div class="modal-content"><div class="modal-header"><h2 class="modal-title">💸 GERENCIAMENTO DE DESPESAS</h2><button class="close-btn" data-modal="modalDespesas">&times;</button></div><div class="card" style="margin-bottom: 25px;"><div class="card-header"><div class="card-title">➕ NOVA DESPESA</div><div class="badge badge-danger">REGISTRO</div></div><div class="form-grid"><div class="form-group"><label>📝 Descrição *</label><input type="text" id="descricaoDespesa" placeholder="Ex: Compra de produtos, Pagamento de conta..."></div><div class="form-group"><label>📊 Categoria *</label><select id="categoriaDespesa"><option value="Suprimentos">🛒 Suprimentos</option><option value="Aluguel">🏢 Aluguel</option><option value="Energia">💡 Energia</option><option value="Água">🚰 Água</option><option value="Internet">🌐 Internet</option><option value="Manutenção">🔧 Manutenção</option><option value="Salários">💼 Salários</option><option value="Marketing">📢 Marketing</option><option value="Outros">📦 Outros</option></select></div><div class="form-group"><label>💰 Valor (R$) *</label><input type="number" step="0.01" id="valorDespesa" placeholder="0.00"></div><div class="form-group"><label>📅 Data *</label><input type="date" id="dataDespesa"></div><div class="form-group"><label>🏷️ Tags (separadas por vírgula)</label><input type="text" id="tagsDespesa" placeholder="urgente, mensal, variável"></div><div class="form-group"><label>🧾 Comprovante (opcional)</label><input type="text" id="comprovanteDespesa" placeholder="Número ou descrição do comprovante"></div><div class="form-group"><label>📝 Observações</label><textarea id="observacoesDespesa" rows="2" placeholder="Detalhes adicionais..."></textarea></div></div><div class="form-actions"><button class="btn btn-secondary" id="btnLimparFormDespesa">Limpar Formulário</button><button class="btn btn-danger" id="btnAdicionarDespesa">💾 Registrar Despesa</button></div></div><div class="card" style="margin-bottom: 25px;"><div class="card-header"><div class="card-title">📈 RESUMO FINANCEIRO</div><div class="badge badge-warning">MÊS ATUAL</div></div><div id="resumoFinanceiroDespesas"></div></div><div id="listaDespesasModal"></div></div></div>
 
-    <!-- Modal: Gerenciamento de Despesas -->
-    <div class="modal" id="modalDespesas">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">💸 GERENCIAMENTO DE DESPESAS</h2>
-                <button class="close-btn" data-modal="modalDespesas">&times;</button>
-            </div>
-            
-            <!-- Formulário Nova Despesa -->
-            <div class="card" style="margin-bottom: 25px;">
-                <div class="card-header">
-                    <div class="card-title">➕ NOVA DESPESA</div>
-                    <div class="badge badge-danger">REGISTRO</div>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>📝 Descrição *</label>
-                        <input type="text" id="descricaoDespesa" placeholder="Ex: Compra de produtos, Pagamento de conta...">
-                    </div>
-                    <div class="form-group">
-                        <label>📊 Categoria *</label>
-                        <select id="categoriaDespesa">
-                            <option value="Suprimentos">🛒 Suprimentos</option>
-                            <option value="Aluguel">🏢 Aluguel</option>
-                            <option value="Energia">💡 Energia</option>
-                            <option value="Água">🚰 Água</option>
-                            <option value="Internet">🌐 Internet</option>
-                            <option value="Manutenção">🔧 Manutenção</option>
-                            <option value="Salários">💼 Salários</option>
-                            <option value="Marketing">📢 Marketing</option>
-                            <option value="Outros">📦 Outros</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>💰 Valor (R$) *</label>
-                        <input type="number" step="0.01" id="valorDespesa" placeholder="0.00">
-                    </div>
-                    <div class="form-group">
-                        <label>📅 Data *</label>
-                        <input type="date" id="dataDespesa">
-                    </div>
-                    <div class="form-group">
-                        <label>🏷️ Tags (separadas por vírgula)</label>
-                        <input type="text" id="tagsDespesa" placeholder="urgente, mensal, variável">
-                    </div>
-                    <div class="form-group">
-                        <label>🧾 Comprovante (opcional)</label>
-                        <input type="text" id="comprovanteDespesa" placeholder="Número ou descrição do comprovante">
-                    </div>
-                    <div class="form-group">
-                        <label>📝 Observações</label>
-                        <textarea id="observacoesDespesa" rows="2" placeholder="Detalhes adicionais..."></textarea>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button class="btn btn-secondary" id="btnLimparFormDespesa">
-                        Limpar Formulário
-                    </button>
-                    <button class="btn btn-danger" id="btnAdicionarDespesa">
-                        💾 Registrar Despesa
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Resumo de Despesas -->
-            <div class="card" style="margin-bottom: 25px;">
-                <div class="card-header">
-                    <div class="card-title">📈 RESUMO FINANCEIRO</div>
-                    <div class="badge badge-warning">MÊS ATUAL</div>
-                </div>
-                <div id="resumoFinanceiroDespesas">
-                    <!-- Dinâmico -->
-                </div>
-            </div>
-            
-            <!-- Lista de Despesas -->
-            <div id="listaDespesasModal">
-                <!-- Dinâmico -->
-            </div>
-        </div>
-    </div>
+    <div id="modalConfig" class="modal"><div class="modal-content"><div class="modal-header"><h2 class="modal-title">⚙️ CONFIGURAÇÕES DO SISTEMA</h2><button class="close-btn" data-modal="modalConfig">&times;</button></div><div class="form-grid"><div class="form-group"><label>📱 Número WhatsApp Relatórios</label><input type="tel" id="numWhats" placeholder="11974065186"></div><div class="form-group"><label>🔐 Novo PIN (4 dígitos)</label><input type="password" id="novoPin" maxlength="4" placeholder="****"></div><div class="form-group"><label>💰 Valor Corte</label><input type="number" step="0.01" id="valCorte" placeholder="Valor atual: R$ 28.00"></div><div class="form-group"><label>💰 Valor Barba</label><input type="number" step="0.01" id="valBarba" placeholder="Valor atual: R$ 15.00"></div><div class="form-group"><label>💰 Valor Combo</label><input type="number" step="0.01" id="valCombo" placeholder="Valor atual: R$ 40.00"></div><div class="form-group"><label>💸 Orçamento Mensal Despesas</label><input type="number" step="0.01" id="orcamentoDespesas" placeholder="R$ 1500.00"></div><div class="form-group"><label>🔔 Notificações de Vencimento</label><select id="notificacoesAtivas"><option value="true">✅ Ativas</option><option value="false">❌ Desativadas</option></select></div><div class="form-group"><label>⏰ Dias antes para alerta</label><input type="number" min="1" max="7" id="diasAlerta" placeholder="3"></div></div><div class="form-actions"><button class="btn btn-secondary" data-modal="modalConfig">Cancelar</button><button class="btn btn-primary" id="btnSalvarConfiguracoes">💾 Salvar Configurações</button></div></div></div>
 
-    <!-- Modal: Configurações -->
-    <div class="modal" id="modalConfig">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">⚙️ CONFIGURAÇÕES DO SISTEMA</h2>
-                <button class="close-btn" data-modal="modalConfig">&times;</button>
-            </div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>📱 Número WhatsApp Relatórios</label>
-                    <input type="tel" id="numWhats" placeholder="11974065186">
-                </div>
-                <div class="form-group">
-                    <label>🔐 Novo PIN (4 dígitos)</label>
-                    <input type="password" id="novoPin" maxlength="4" placeholder="****">
-                </div>
-                <div class="form-group">
-                    <label>💰 Valor Corte</label>
-                    <input type="number" step="0.01" id="valCorte" placeholder="Valor atual: R$ 28.00">
-                </div>
-                <div class="form-group">
-                    <label>💰 Valor Barba</label>
-                    <input type="number" step="0.01" id="valBarba" placeholder="Valor atual: R$ 15.00">
-                </div>
-                <div class="form-group">
-                    <label>💰 Valor Combo</label>
-                    <input type="number" step="0.01" id="valCombo" placeholder="Valor atual: R$ 40.00">
-                </div>
-                <div class="form-group">
-                    <label>💸 Orçamento Mensal Despesas</label>
-                    <input type="number" step="0.01" id="orcamentoDespesas" placeholder="R$ 1500.00">
-                </div>
-                <div class="form-group">
-                    <label>🔔 Notificações de Vencimento</label>
-                    <select id="notificacoesAtivas">
-                        <option value="true">✅ Ativas</option>
-                        <option value="false">❌ Desativadas</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>⏰ Dias antes para alerta</label>
-                    <input type="number" min="1" max="7" id="diasAlerta" placeholder="3">
-                </div>
-            </div>
-            <div class="form-actions">
-                <button class="btn btn-secondary" data-modal="modalConfig">
-                    Cancelar
-                </button>
-                <button class="btn btn-primary" id="btnSalvarConfiguracoes">
-                    💾 Salvar Configurações
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========== JAVASCRIPT ========== -->
     <script>
 // ========== VARIÁVEIS GLOBAIS ==========
 let usuarioAtual = 'Gabriel';
@@ -1878,7 +242,7 @@ let dados = {
     mensalistas: [],
     config: {
         pin: '1234',
-        whatsapp: '11962094589',
+        whatsapp: '5511974065186',
         corte: 30,
         barba: 20,
         combo: 40,
@@ -1946,7 +310,7 @@ function getUltimoDiaMes() {
 
 // ========== INICIALIZAÇÃO ==========
 function inicializarSistema() {
-    console.log('🚀 BarbaPRO - Sistema inicializando...');
+    console.log('🚀 BarbaPRO - Dashboard inicializando...');
     carregarDadosLocais();
     garantirConfiguracoesAtualizadas();
     verificarDatasServicos();
@@ -1954,39 +318,34 @@ function inicializarSistema() {
     const hoje = getDataAtualBrasilia();
     dataFiltroAtual = hoje;
     
-    // Configurar datas padrão dos filtros
     const dataInicioServicos = document.getElementById('dataInicioServicos');
     const dataFimServicos = document.getElementById('dataFimServicos');
-    const dataFiltro = document.getElementById('dataFiltro');
     
     if (dataInicioServicos) dataInicioServicos.value = getPrimeiroDiaMes();
     if (dataFimServicos) dataFimServicos.value = getUltimoDiaMes();
-    if (dataFiltro) dataFiltro.value = hoje;
-    
-    const dataHoje = document.getElementById('dataHoje');
-    if (dataHoje) dataHoje.textContent = formatarDataBR(hoje);
     
     console.log('📅 Data atual (Brasília):', hoje);
     console.log('⏰ Hora atual (Brasília):', getHoraAtualBrasilia());
     
     inicializarDadosExemplo();
-    atualizarInterface();
+    atualizarTudo();
     atualizarResumoStatusMensalistas();
     atualizarAlertasVencimento();
     atualizarGraficoPizza();
     iniciarVerificacaoVencimentos();
     conectarWebSocket();
     
-    console.log('✅ Sistema inicializado com sucesso!');
+    console.log('✅ Dashboard inicializado com sucesso!');
 }
 
 function garantirConfiguracoesAtualizadas() {
     if (!dados.config) {
-        dados.config = { pin: '1234', whatsapp: '11962094589', corte: 30, barba: 20, combo: 40, orcamentoDespesas: 1500, notificacoesAtivas: true, diasAlerta: 3 };
+        dados.config = { pin: '1234', whatsapp: '5511974065186', corte: 30, barba: 20, combo: 40, orcamentoDespesas: 1500, notificacoesAtivas: true, diasAlerta: 3 };
     }
     if (!dados.config.orcamentoDespesas) dados.config.orcamentoDespesas = 1500;
     if (dados.config.notificacoesAtivas === undefined) dados.config.notificacoesAtivas = true;
     if (!dados.config.diasAlerta) dados.config.diasAlerta = 3;
+    if (!dados.config.whatsapp) dados.config.whatsapp = '5511974065186';
     
     console.log('⚙️ Configurações atualizadas:', dados.config);
 }
@@ -2009,7 +368,7 @@ function inicializarDadosExemplo() {
     }
 }
 
-// ========== WEBSOCKET COM SINCRONIZAÇÃO CORRIGIDA ==========
+// ========== WEBSOCKET ==========
 function conectarWebSocket() {
     try {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -2019,6 +378,7 @@ function conectarWebSocket() {
             console.log('✅ WebSocket conectado!');
             isOnline = true;
             mostrarFeedback('✅ Conectado ao servidor', 'success');
+            sincronizarDados();
         };
         
         ws.onmessage = function(event) {
@@ -2032,7 +392,6 @@ function conectarWebSocket() {
                         processarDadosServidor(data.data);
                         break;
                     case 'servico_removido':
-                        // Processar exclusão remota
                         console.log('🗑️ Exclusão remota recebida:', data.servicoId, 'Barbeiro:', data.barbeiro);
                         removerServicoLocalmente(data.servicoId, data.barbeiro);
                         break;
@@ -2042,7 +401,7 @@ function conectarWebSocket() {
                         break;
                     case 'sync_required':
                         console.log('🔄 Sincronização solicitada');
-                        sincronizarDadosCompletos();
+                        sincronizarDados();
                         break;
                 }
             } catch (error) {
@@ -2095,9 +454,7 @@ function processarDadosServidor(dadosServidor) {
     
     if (recarregar) {
         salvarDadosLocais();
-        atualizarInterface();
-        atualizarListaMensalistas();
-        atualizarListaDespesas();
+        atualizarTudo();
         atualizarResumoStatusMensalistas();
         atualizarGraficoPizza();
         mostrarFeedback('🔄 Dados sincronizados!', 'success');
@@ -2122,7 +479,7 @@ function removerServicoLocalmente(servicoId, barbeiro) {
     }
     
     salvarDadosLocais();
-    atualizarInterface();
+    atualizarTudo();
     atualizarGraficoPizza();
 }
 
@@ -2130,7 +487,6 @@ function adicionarServicoLocalmente(servico) {
     console.log('➕ Adicionando serviço localmente:', servico);
     
     if (servico.barbeiro === 'Gabriel') {
-        // Verificar se já existe
         const existe = dados.Gabriel.some(s => s.id == servico.id);
         if (!existe) {
             dados.Gabriel.unshift(servico);
@@ -2145,19 +501,19 @@ function adicionarServicoLocalmente(servico) {
     }
     
     salvarDadosLocais();
-    atualizarInterface();
+    atualizarTudo();
     atualizarGraficoPizza();
 }
 
-async function sincronizarDadosCompletos() {
-    console.log('🔄 Sincronizando dados completos...');
+async function sincronizarDados() {
+    console.log('🔄 Sincronizando dados...');
     try {
         const response = await fetch('/api/data');
         if (response.ok) {
             const result = await response.json();
-            if (result.success) {
+            if (result.success && result.data) {
                 processarDadosServidor(result.data);
-                mostrarFeedback('✅ Sincronização completa!', 'success');
+                mostrarFeedback('✅ Dados sincronizados!', 'success');
             }
         }
     } catch (error) {
@@ -2165,11 +521,10 @@ async function sincronizarDadosCompletos() {
     }
 }
 
-// ========== FUNÇÃO DE EXCLUIR SERVIÇO CORRIGIDA COM SINCronização ==========
+// ========== FUNÇÃO DE EXCLUIR SERVIÇO ==========
 async function apagarServico(servicoId) {
     if (!confirm('⚠️ Tem certeza que deseja apagar este serviço?\nEsta ação será sincronizada com todos os dispositivos!')) return;
     
-    // Procurar em ambos os barbeiros
     let barbeiroEncontrado = null;
     let indexEncontrado = -1;
     let servicoRemovido = null;
@@ -2195,17 +550,12 @@ async function apagarServico(servicoId) {
     
     console.log(`🗑️ Removendo serviço:`, servicoRemovido);
     
-    // Remover localmente
     dados[barbeiroEncontrado].splice(indexEncontrado, 1);
     salvarDadosLocais();
-    
-    // Atualizar interface
-    atualizarInterface();
+    atualizarTudo();
     atualizarGraficoPizza();
     
-    // Sincronizar com servidor e outros clientes
     try {
-        // Salvar no servidor
         const response = await fetch('/api/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2213,7 +563,6 @@ async function apagarServico(servicoId) {
         });
         
         if (response.ok && ws && ws.readyState === WebSocket.OPEN) {
-            // Enviar mensagem de exclusão para todos os clientes
             ws.send(JSON.stringify({
                 type: 'servico_removido',
                 servicoId: servicoId,
@@ -2221,13 +570,9 @@ async function apagarServico(servicoId) {
                 timestamp: Date.now()
             }));
             
-            // Enviar dados completos para garantir sincronização
             setTimeout(() => {
                 if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        type: 'sync_completo',
-                        data: dados
-                    }));
+                    ws.send(JSON.stringify({ type: 'sync_completo', data: dados }));
                 }
             }, 100);
             
@@ -2241,188 +586,14 @@ async function apagarServico(servicoId) {
     }
 }
 
-// ========== FUNÇÃO DE ADICIONAR SERVIÇO COM SINCronização ==========
-async function adicionarServicoComSincronizacao(servico) {
-    dados[servico.barbeiro].unshift(servico);
-    salvarDadosLocais();
-    atualizarInterface();
-    atualizarGraficoPizza();
-    
-    try {
-        const response = await fetch('/api/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: dados })
-        });
-        
-        if (response.ok && ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-                type: 'servico_adicionado',
-                servico: servico
-            }));
-        }
-        
-        mostrarFeedback(`✅ ${servico.tipo} - ${servico.cliente} - R$ ${servico.valor.toFixed(2)}`, 'success');
-    } catch (error) {
-        console.error('Erro ao sincronizar:', error);
-        mostrarFeedback(`✅ Serviço adicionado (offline)`, 'success');
-    }
-}
-
-// ========== CRUD SERVIÇOS ==========
-function abrirModalPagamento(tipo) {
-    servicoSelecionado = tipo;
-    opcaoPagamentoSelecionada = null;
-    metodoPagamentoSelecionado = null;
-    
-    let nome, valor;
-    switch(tipo) {
-        case 'corte': nome = 'Corte'; valor = dados.config.corte; break;
-        case 'barba': nome = 'Barba'; valor = dados.config.barba; break;
-        case 'combo': nome = 'Corte + Barba'; valor = dados.config.combo; break;
-        default: nome = 'Serviço'; valor = 0;
-    }
-    
-    const servicoNome = document.getElementById('servicoSelecionadoNome');
-    const servicoValor = document.getElementById('servicoSelecionadoValor');
-    const nomeCliente = document.getElementById('nomeClientePagamento');
-    const erroNome = document.getElementById('erroNomeCliente');
-    
-    if (servicoNome) servicoNome.textContent = nome;
-    if (servicoValor) servicoValor.textContent = `R$ ${valor.toFixed(2)}`;
-    if (nomeCliente) nomeCliente.value = '';
-    if (erroNome) erroNome.style.display = 'none';
-    
-    document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-    document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-    
-    const metodosContainer = document.getElementById('metodosPagamentoContainer');
-    if (metodosContainer) metodosContainer.style.display = 'none';
-    
-    document.getElementById('modalPagamento').style.display = 'flex';
-}
-
-function selecionarOpcaoPagamento(opcao) {
-    opcaoPagamentoSelecionada = opcao;
-    document.querySelectorAll('#modalPagamento .opcao-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-    event.currentTarget.classList.add('selecionado');
-    
-    const metodosContainer = document.getElementById('metodosPagamentoContainer');
-    if (metodosContainer) {
-        metodosContainer.style.display = opcao === 'pago' ? 'block' : 'none';
-        if (opcao === 'pago') {
-            metodoPagamentoSelecionado = null;
-            document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-        }
-    }
-}
-
-function selecionarMetodoPagamento(metodo) {
-    if (opcaoPagamentoSelecionada !== 'pago') return;
-    metodoPagamentoSelecionado = metodo;
-    document.querySelectorAll('#modalPagamento .metodo-pagamento-btn').forEach(btn => btn.classList.remove('selecionado'));
-    event.currentTarget.classList.add('selecionado');
-}
-
-function confirmarServico() {
-    const nomeCliente = document.getElementById('nomeClientePagamento').value.trim();
-    const erroNome = document.getElementById('erroNomeCliente');
-    
-    if (!nomeCliente) {
-        if (erroNome) erroNome.style.display = 'block';
-        mostrarFeedback('❌ Nome do cliente é obrigatório!', 'warning');
-        return;
-    }
-    
-    if (!opcaoPagamentoSelecionada) {
-        alert('⚠️ Selecione PAGO ou FIADO!');
-        return;
-    }
-    
-    if (opcaoPagamentoSelecionada === 'pago' && !metodoPagamentoSelecionado) {
-        alert('⚠️ Selecione uma forma de pagamento!');
-        return;
-    }
-    
-    let valor, nome;
-    switch(servicoSelecionado) {
-        case 'corte': valor = dados.config.corte; nome = 'Corte'; break;
-        case 'barba': valor = dados.config.barba; nome = 'Barba'; break;
-        case 'combo': valor = dados.config.combo; nome = 'Corte + Barba'; break;
-        default: valor = 0; nome = 'Serviço';
-    }
-    
-    const servico = {
-        id: Date.now(),
-        hora: getHoraAtualBrasilia(),
-        data: getDataAtualBrasilia(),
-        tipo: nome,
-        valor: valor,
-        cliente: nomeCliente,
-        pago: opcaoPagamentoSelecionada === 'pago',
-        metodoPagamento: opcaoPagamentoSelecionada === 'pago' ? metodoPagamentoSelecionado : null,
-        barbeiro: usuarioAtual,
-        timestamp: Date.now()
-    };
-    
-    adicionarServicoComSincronizacao(servico);
-    fecharModal('modalPagamento');
-}
-
-function abrirModalOutro() {
-    const valorCustom = document.getElementById('valorCustom');
-    const nomeCliente = document.getElementById('nomeCliente');
-    if (valorCustom) valorCustom.value = '';
-    if (nomeCliente) nomeCliente.value = '';
-    
-    document.getElementById('modalOutro').style.display = 'flex';
-}
-
-function salvarServicoCustom() {
-    const valorInput = document.getElementById('valorCustom').value;
-    const valor = parseFloat(valorInput);
-    const nomeCliente = document.getElementById('nomeCliente').value.trim();
-    const erroNome = document.getElementById('erroNomeClienteCustom');
-    
-    if (!nomeCliente) {
-        if (erroNome) erroNome.style.display = 'block';
-        mostrarFeedback('❌ Nome do cliente é obrigatório!', 'warning');
-        return;
-    }
-    
-    if (!valorInput || isNaN(valor) || valor <= 0) {
-        alert('⚠️ Insira um valor válido!');
-        return;
-    }
-    
-    const servico = {
-        id: Date.now(),
-        hora: getHoraAtualBrasilia(),
-        data: getDataAtualBrasilia(),
-        tipo: 'Outro',
-        valor: valor,
-        cliente: nomeCliente,
-        pago: false,
-        metodoPagamento: null,
-        barbeiro: usuarioAtual,
-        timestamp: Date.now()
-    };
-    
-    adicionarServicoComSincronizacao(servico);
-    fecharModal('modalOutro');
-}
-
 // ========== ATUALIZAR INTERFACE ==========
-function atualizarInterface() {
+function atualizarTudo() {
     atualizarEstatisticas();
     atualizarListaServicos();
-    atualizarResumoDiario();
-    
-    const usuarioAtualSpan = document.getElementById('usuarioAtual');
-    if (usuarioAtualSpan) usuarioAtualSpan.textContent = usuarioAtual;
-    
-    const btnTrocar = document.getElementById('btnTrocarUsuario');
-    if (btnTrocar) btnTrocar.textContent = `🔄 ${usuarioAtual === 'Gabriel' ? 'Ir para Wagner' : 'Ir para Gabriel'}`;
+    atualizarListaMensalistas();
+    atualizarListaDespesas();
+    atualizarResumoStatusMensalistas();
+    atualizarGraficoPizza();
 }
 
 function atualizarEstatisticas() {
@@ -2509,6 +680,7 @@ function atualizarEstatisticas() {
     if (numDespesasMesEl) numDespesasMesEl.textContent = despesasMes.length;
     if (maiorDespesaMesEl) maiorDespesaMesEl.textContent = `R$ ${maiorDespesa.toFixed(2)}`;
     if (lucroLiquidoEl) lucroLiquidoEl.textContent = `R$ ${(totalMes - totalDespesas).toFixed(2)}`;
+    if (document.getElementById('despesasMes')) document.getElementById('despesasMes').textContent = `R$ ${totalDespesas.toFixed(2)}`;
 }
 
 function atualizarListaServicos() {
@@ -2518,129 +690,61 @@ function atualizarListaServicos() {
         return;
     }
     
+    const barbeiroFiltro = document.getElementById('filtroBarbeiroServicos').value;
+    const statusPgt = document.getElementById('filtroPagamentoServicos').value;
     const hoje = getDataAtualBrasilia();
-    const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
-    servicosHoje.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     
-    if (servicosHoje.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center; padding:60px 20px;">
-                <div style="font-size:48px; margin-bottom:15px;">📝</div>
-                <div style="color:#aaa;">Nenhum serviço registrado hoje</div>
-                <div style="color:#666; font-size:14px; margin-top:10px;">${formatarDataBR(hoje)}</div>
-            </div>
-        `;
+    let servicos = [];
+    if (barbeiroFiltro === 'todos') {
+        servicos = [...dados.Gabriel, ...dados.Wagner];
+    } else {
+        servicos = dados[barbeiroFiltro] || [];
+    }
+    
+    servicos = servicos.filter(s => s.data === hoje);
+    
+    if (statusPgt !== 'todos') {
+        servicos = servicos.filter(s => statusPgt === 'pago' ? s.pago : !s.pago);
+    }
+    
+    servicos.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    
+    if (servicos.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:60px 20px;"><div style="font-size:48px; margin-bottom:15px;">📝</div><div style="color:#aaa;">Nenhum serviço registrado hoje</div><div style="color:#666; font-size:14px; margin-top:10px;">${formatarDataBR(hoje)}</div></div>`;
         return;
     }
     
-    let html = `
-        <table style="width:100%; border-collapse:collapse;">
-            <thead>
-                <tr>
-                    <th style="text-align:left; padding:12px; background:rgba(255,170,0,0.1);">Hora</th>
-                    <th style="text-align:left; padding:12px; background:rgba(255,170,0,0.1);">Serviço</th>
-                    <th style="text-align:left; padding:12px; background:rgba(255,170,0,0.1);">Cliente</th>
-                    <th style="text-align:left; padding:12px; background:rgba(255,170,0,0.1);">Valor</th>
-                    <th style="text-align:left; padding:12px; background:rgba(255,170,0,0.1);">Status</th>
-                    <th style="text-align:center; padding:12px; background:rgba(255,170,0,0.1); width:60px;">Ação</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
+    let html = `<table><thead><tr><th>Hora</th><th>Barbeiro</th><th>Serviço</th><th>Cliente</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead><tbody>`;
     
-    servicosHoje.forEach(servico => {
+    servicos.forEach(servico => {
         const statusText = servico.pago ? `✅ PAGO ${servico.metodoPagamento ? `(${servico.metodoPagamento.toUpperCase()})` : ''}` : '⏳ FIADO';
         const statusColor = servico.pago ? '#25D366' : '#FF9500';
         
-        html += `
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <td style="padding: 12px;">${servico.hora}</td>
-                <td style="padding: 12px;"><strong>${servico.tipo}</strong></td>
-                <td style="padding: 12px;">${servico.cliente}</td>
-                <td style="padding: 12px;">R$ ${servico.valor.toFixed(2)}</td>
-                <td style="padding: 12px; color: ${statusColor};">${statusText}</td>
-                <td style="padding: 12px; text-align: center;">
-                    <button onclick="apagarServico(${servico.id})" 
-                            style="background: rgba(255,50,50,0.2); color:#ff3366; border:1px solid rgba(255,50,50,0.3); width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:18px; font-weight:bold;">
-                        ✕
-                    </button>
-                </td>
-            </tr>
-        `;
+        html += `<tr>
+            <td>${servico.hora}</td>
+            <td>${servico.barbeiro}</td>
+            <td><strong>${servico.tipo}</strong></td>
+            <td>${servico.cliente}</td>
+            <td>R$ ${servico.valor.toFixed(2)}</td>
+            <td style="color: ${statusColor};">${statusText}</td>
+            <td><button class="action-btn" onclick="apagarServico(${servico.id})">✕</button></td>
+        </tr>`;
     });
     
-    const totalHoje = servicosHoje.reduce((soma, s) => soma + s.valor, 0);
-    const totalPago = servicosHoje.filter(s => s.pago).reduce((soma, s) => soma + s.valor, 0);
+    const totalHoje = servicos.reduce((soma, s) => soma + s.valor, 0);
+    const totalPago = servicos.filter(s => s.pago).reduce((soma, s) => soma + s.valor, 0);
     const totalFiado = totalHoje - totalPago;
     
-    html += `
-            </tbody>
-        </table>
+    html += `</tbody></table>
         <div style="margin-top:15px; padding:12px; background:rgba(255,170,0,0.1); border-radius:10px; text-align:center;">
             <strong>💰 Total do dia:</strong> R$ ${totalHoje.toFixed(2)} | 
             <strong style="color:#25D366;">✅ Recebido:</strong> R$ ${totalPago.toFixed(2)} | 
             <strong style="color:#FF9500;">⏳ Fiado:</strong> R$ ${totalFiado.toFixed(2)}
-        </div>
-    `;
+        </div>`;
     
     container.innerHTML = html;
 }
 
-function atualizarResumoDiario() {
-    const hoje = getDataAtualBrasilia();
-    const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
-    const totalValor = servicosHoje.reduce((soma, s) => soma + s.valor, 0);
-    const totalFiado = servicosHoje.filter(s => !s.pago).reduce((soma, s) => soma + s.valor, 0);
-    
-    const servicosEl = document.getElementById('resumoServicosHoje');
-    const totalEl = document.getElementById('resumoTotalHoje');
-    const fiadoEl = document.getElementById('resumoFiadoHoje');
-    
-    if (servicosEl) servicosEl.textContent = servicosHoje.length;
-    if (totalEl) totalEl.textContent = `R$ ${totalValor.toFixed(2)}`;
-    if (fiadoEl) fiadoEl.textContent = `R$ ${totalFiado.toFixed(2)}`;
-}
-
-function atualizarGraficoPizza() {
-    const canvas = document.getElementById('graficoPizza');
-    if (!canvas) return;
-    
-    const hoje = getDataAtualBrasilia();
-    const servicosGabrielHoje = dados.Gabriel.filter(s => s.data === hoje);
-    const servicosWagnerHoje = dados.Wagner.filter(s => s.data === hoje);
-    const totalGabriel = servicosGabrielHoje.reduce((soma, s) => soma + s.valor, 0);
-    const totalWagner = servicosWagnerHoje.reduce((soma, s) => soma + s.valor, 0);
-    
-    if (graficoPizza) graficoPizza.destroy();
-    
-    graficoPizza = new Chart(canvas, {
-        type: 'pie',
-        data: {
-            labels: ['Gabriel', 'Wagner'],
-            datasets: [{
-                data: [totalGabriel, totalWagner],
-                backgroundColor: ['#ffaa00', '#25D366'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: { position: 'bottom', labels: { color: '#fff' } }
-            }
-        }
-    });
-}
-
-function trocarUsuario() {
-    usuarioAtual = usuarioAtual === 'Gabriel' ? 'Wagner' : 'Gabriel';
-    console.log('🔄 Usuário alterado para:', usuarioAtual);
-    atualizarInterface();
-    mostrarFeedback(`👤 Agora você está como ${usuarioAtual}`, 'success');
-}
-
-// ========== MENSALISTAS ==========
 function atualizarListaMensalistas() {
     const container = document.getElementById('listaMensalistasDashboard');
     if (!container) return;
@@ -2671,54 +775,70 @@ function atualizarListaMensalistas() {
             }
         }
         
-        html += `
-            <div style="background:rgba(255,255,255,0.05); border-radius:15px; padding:20px; border-left:4px solid ${statusClass};">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                    <div>
-                        <strong style="font-size:18px;">${m.nome}</strong>
-                        <span style="display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; margin-left:10px; background:rgba(0,0,0,0.3); color:${statusClass};">${statusText}</span>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        ${m.status !== 'pago' ? `<button onclick="marcarMensalistaPago(${m.id})" style="padding:8px 16px; background:linear-gradient(135deg,#00cc99,#009973); color:white; border:none; border-radius:12px; cursor:pointer;">✅ Marcar Pago</button>` : ''}
-                        <button onclick="excluirMensalista(${m.id})" style="padding:8px 16px; background:linear-gradient(135deg,#ff3366,#cc0033); color:white; border:none; border-radius:12px; cursor:pointer;">🗑️ Excluir</button>
-                    </div>
-                </div>
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:15px;">
-                    <div><span style="color:#aaa;">👤 Barbeiro:</span> ${m.barbeiro}</div>
-                    <div><span style="color:#aaa;">💰 Valor:</span> R$ ${m.valor.toFixed(2)}</div>
-                    <div><span style="color:#aaa;">📅 Vencimento:</span> Dia ${m.diaVencimento}</div>
-                    <div><span style="color:#aaa;">📱 Telefone:</span> ${m.telefone || 'Não informado'}</div>
+        html += `<div style="background:rgba(255,255,255,0.05); border-radius:15px; padding:20px; border-left:4px solid ${statusClass};">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                <div><strong style="font-size:18px;">${m.nome}</strong><span style="display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; margin-left:10px; background:rgba(0,0,0,0.3); color:${statusClass};">${statusText}</span></div>
+                <div style="display:flex; gap:10px;">
+                    ${m.status !== 'pago' ? `<button onclick="marcarMensalistaPago(${m.id})" style="padding:8px 16px; background:linear-gradient(135deg,#00cc99,#009973); color:white; border:none; border-radius:12px; cursor:pointer;">✅ Marcar Pago</button>` : ''}
+                    <button onclick="excluirMensalista(${m.id})" style="padding:8px 16px; background:linear-gradient(135deg,#ff3366,#cc0033); color:white; border:none; border-radius:12px; cursor:pointer;">🗑️ Excluir</button>
                 </div>
             </div>
-        `;
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:15px;">
+                <div><span style="color:#aaa;">👤 Barbeiro:</span> ${m.barbeiro}</div>
+                <div><span style="color:#aaa;">💰 Valor:</span> R$ ${m.valor.toFixed(2)}</div>
+                <div><span style="color:#aaa;">📅 Vencimento:</span> Dia ${m.diaVencimento}</div>
+                <div><span style="color:#aaa;">📱 Telefone:</span> ${m.telefone || 'Não informado'}</div>
+            </div>
+        </div>`;
     });
     
     html += '</div>';
     container.innerHTML = html;
 }
 
-function marcarMensalistaPago(id) {
-    const mensalista = dados.mensalistas.find(m => m.id == id);
-    if (mensalista) {
-        mensalista.status = 'pago';
-        mensalista.ultimaAtualizacao = Date.now();
-        salvarDadosLocais();
-        salvarDadosServidor();
-        atualizarListaMensalistas();
-        atualizarResumoStatusMensalistas();
-        mostrarFeedback(`✅ ${mensalista.nome} marcado como PAGO!`, 'success');
-    }
-}
-
-function excluirMensalista(id) {
-    if (!confirm('⚠️ Tem certeza que deseja excluir este mensalista?')) return;
+function atualizarListaDespesas() {
+    const container = document.getElementById('listaDespesasRecentes');
+    if (!container) return;
     
-    dados.mensalistas = dados.mensalistas.filter(m => m.id != id);
-    salvarDadosLocais();
-    salvarDadosServidor();
-    atualizarListaMensalistas();
-    atualizarResumoStatusMensalistas();
-    mostrarFeedback('✅ Mensalista removido!', 'success');
+    if (!dados.despesas || dados.despesas.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:40px;">💸 Nenhuma despesa registrada</div>`;
+        return;
+    }
+    
+    const primeiroDiaMes = getPrimeiroDiaMes();
+    const ultimoDiaMes = getUltimoDiaMes();
+    const despesasMes = dados.despesas.filter(d => d.data >= primeiroDiaMes && d.data <= ultimoDiaMes);
+    despesasMes.sort((a, b) => b.dataCriacao - a.dataCriacao);
+    
+    if (despesasMes.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:40px;">💸 Nenhuma despesa registrada este mês</div>`;
+        return;
+    }
+    
+    let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+    
+    despesasMes.forEach(d => {
+        html += `<div style="background:rgba(255,51,102,0.05); border-radius:12px; padding:15px; border-left:4px solid #ff3366;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div><strong>${d.descricao}</strong><span style="background:rgba(255,51,102,0.2); color:#ff99bb; padding:4px 12px; border-radius:20px; font-size:12px; margin-left:10px;">${d.categoria}</span></div>
+                <div style="font-size:24px; font-weight:700; color:#ff3366;">R$ ${d.valor.toFixed(2)}</div>
+            </div>
+            <div style="color:#aaa; font-size:13px; margin-top:10px;">📅 ${formatarDataBR(d.data)}</div>
+            <div style="margin-top:10px;"><button onclick="excluirDespesa(${d.id})" style="padding:5px 12px; background:linear-gradient(135deg,#ff3366,#cc0033); color:white; border:none; border-radius:8px; cursor:pointer; font-size:12px;">🗑️ Excluir</button></div>
+        </div>`;
+    });
+    
+    const totalDespesas = despesasMes.reduce((soma, d) => soma + d.valor, 0);
+    const orcamento = dados.config.orcamentoDespesas || 1500;
+    const percentual = (totalDespesas / orcamento) * 100;
+    
+    html += `</div><div style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><strong>💰 Orçamento Mês</strong><span>R$ ${totalDespesas.toFixed(2)} / R$ ${orcamento.toFixed(2)}</span></div>
+        <div style="height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;"><div style="height:100%; width:${Math.min(percentual, 100)}%; background:linear-gradient(90deg, #ff3366, #ff6699); border-radius:4px;"></div></div>
+        <div style="text-align:center; margin-top:10px; color:${percentual > 100 ? '#ff3366' : '#aaa'}">${percentual > 100 ? '⚠️ Orçamento excedido!' : `${percentual.toFixed(1)}% do orçamento`}</div>
+    </div>`;
+    
+    container.innerHTML = html;
 }
 
 function atualizarResumoStatusMensalistas() {
@@ -2765,42 +885,54 @@ function atualizarAlertasVencimento() {
         return;
     }
     
-    container.innerHTML = `
-        <div style="background:rgba(255,51,102,0.1); border:2px solid rgba(255,51,102,0.3); border-radius:15px; padding:20px; margin-bottom:20px;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
-                <span style="font-size:24px;">⚠️</span>
-                <strong style="color:#ff3366;">ALERTA DE VENCIMENTO</strong>
-            </div>
-            ${vencidos.map(m => `<div style="padding:10px; background:rgba(255,51,102,0.1); border-radius:10px; margin-bottom:10px;">
-                <strong>${m.nome}</strong> - ${m.barbeiro}<br>
-                <small>Vencimento: Dia ${m.diaVencimento} - Valor: R$ ${m.valor.toFixed(2)}</small>
-            </div>`).join('')}
-        </div>
-    `;
+    container.innerHTML = `<div style="background:rgba(255,51,102,0.1); border:2px solid rgba(255,51,102,0.3); border-radius:15px; padding:20px; margin-bottom:20px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><span style="font-size:24px;">⚠️</span><strong style="color:#ff3366;">ALERTA DE VENCIMENTO</strong></div>
+        ${vencidos.map(m => `<div style="padding:10px; background:rgba(255,51,102,0.1); border-radius:10px; margin-bottom:10px;"><strong>${m.nome}</strong> - ${m.barbeiro}<br><small>Vencimento: Dia ${m.diaVencimento} - Valor: R$ ${m.valor.toFixed(2)}</small></div>`).join('')}
+    </div>`;
 }
 
-function abrirModalNovoMensalista() {
-    const nomeInput = document.getElementById('nomeMensalista');
-    const telefoneInput = document.getElementById('telefoneMensalista');
-    const valorInput = document.getElementById('valorMensalista');
-    const diaVencimentoInput = document.getElementById('diaVencimentoMensalista');
+function atualizarGraficoPizza() {
+    const canvas = document.getElementById('graficoPizza');
+    if (!canvas) return;
     
-    if (nomeInput) nomeInput.value = '';
-    if (telefoneInput) telefoneInput.value = '';
-    if (valorInput) valorInput.value = '';
-    if (diaVencimentoInput) diaVencimentoInput.value = '';
+    const hoje = getDataAtualBrasilia();
+    const servicosGabrielHoje = dados.Gabriel.filter(s => s.data === hoje);
+    const servicosWagnerHoje = dados.Wagner.filter(s => s.data === hoje);
+    const totalGabriel = servicosGabrielHoje.reduce((soma, s) => soma + s.valor, 0);
+    const totalWagner = servicosWagnerHoje.reduce((soma, s) => soma + s.valor, 0);
     
-    const barbeiroSelect = document.getElementById('barbeiroMensalista');
-    if (barbeiroSelect) barbeiroSelect.value = 'Gabriel';
+    if (graficoPizza) graficoPizza.destroy();
     
-    const statusSelect = document.getElementById('statusMensalista');
-    if (statusSelect) statusSelect.value = 'pendente';
+    graficoPizza = new Chart(canvas, {
+        type: 'pie',
+        data: { labels: ['Gabriel', 'Wagner'], datasets: [{ data: [totalGabriel, totalWagner], backgroundColor: ['#ffaa00', '#25D366'], borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
+    });
+}
+
+// ========== MENSALISTAS CRUD ==========
+function marcarMensalistaPago(id) {
+    const mensalista = dados.mensalistas.find(m => m.id == id);
+    if (mensalista) {
+        mensalista.status = 'pago';
+        mensalista.ultimaAtualizacao = Date.now();
+        salvarDadosLocais();
+        salvarDadosServidor();
+        atualizarListaMensalistas();
+        atualizarResumoStatusMensalistas();
+        mostrarFeedback(`✅ ${mensalista.nome} marcado como PAGO!`, 'success');
+    }
+}
+
+function excluirMensalista(id) {
+    if (!confirm('⚠️ Tem certeza que deseja excluir este mensalista?')) return;
     
-    const observacoesTextarea = document.getElementById('observacoesMensalista');
-    if (observacoesTextarea) observacoesTextarea.value = '';
-    
-    const modal = document.getElementById('modalMensalistas');
-    if (modal) modal.style.display = 'flex';
+    dados.mensalistas = dados.mensalistas.filter(m => m.id != id);
+    salvarDadosLocais();
+    salvarDadosServidor();
+    atualizarListaMensalistas();
+    atualizarResumoStatusMensalistas();
+    mostrarFeedback('✅ Mensalista removido!', 'success');
 }
 
 function adicionarMensalista() {
@@ -2812,20 +944,9 @@ function adicionarMensalista() {
     const status = document.getElementById('statusMensalista').value;
     const observacoes = document.getElementById('observacoesMensalista').value;
     
-    if (!nome) {
-        mostrarFeedback('❌ Nome é obrigatório!', 'warning');
-        return;
-    }
-    
-    if (isNaN(valor) || valor <= 0) {
-        mostrarFeedback('❌ Valor inválido!', 'warning');
-        return;
-    }
-    
-    if (isNaN(diaVencimento) || diaVencimento < 1 || diaVencimento > 31) {
-        mostrarFeedback('❌ Dia de vencimento inválido (1-31)!', 'warning');
-        return;
-    }
+    if (!nome) { mostrarFeedback('❌ Nome é obrigatório!', 'warning'); return; }
+    if (isNaN(valor) || valor <= 0) { mostrarFeedback('❌ Valor inválido!', 'warning'); return; }
+    if (isNaN(diaVencimento) || diaVencimento < 1 || diaVencimento > 31) { mostrarFeedback('❌ Dia de vencimento inválido (1-31)!', 'warning'); return; }
     
     const novoMensalista = {
         id: Date.now(),
@@ -2860,69 +981,7 @@ function filtrarMensalistasPorStatus(status) {
     atualizarListaMensalistas();
 }
 
-// ========== DESPESAS ==========
-function atualizarListaDespesas() {
-    const container = document.getElementById('listaDespesasRecentes');
-    if (!container) return;
-    
-    if (!dados.despesas || dados.despesas.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:40px;">💸 Nenhuma despesa registrada</div>`;
-        return;
-    }
-    
-    const primeiroDiaMes = getPrimeiroDiaMes();
-    const ultimoDiaMes = getUltimoDiaMes();
-    const despesasMes = dados.despesas.filter(d => d.data >= primeiroDiaMes && d.data <= ultimoDiaMes);
-    despesasMes.sort((a, b) => b.dataCriacao - a.dataCriacao);
-    
-    if (despesasMes.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:40px;">💸 Nenhuma despesa registrada este mês</div>`;
-        return;
-    }
-    
-    let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
-    
-    despesasMes.forEach(d => {
-        html += `
-            <div style="background:rgba(255,51,102,0.05); border-radius:12px; padding:15px; border-left:4px solid #ff3366;">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <div>
-                        <strong>${d.descricao}</strong>
-                        <span style="background:rgba(255,51,102,0.2); color:#ff99bb; padding:4px 12px; border-radius:20px; font-size:12px; margin-left:10px;">${d.categoria}</span>
-                    </div>
-                    <div style="font-size:24px; font-weight:700; color:#ff3366;">R$ ${d.valor.toFixed(2)}</div>
-                </div>
-                <div style="color:#aaa; font-size:13px; margin-top:10px;">📅 ${formatarDataBR(d.data)}</div>
-                <div style="margin-top:10px;">
-                    <button onclick="excluirDespesa(${d.id})" style="padding:5px 12px; background:linear-gradient(135deg,#ff3366,#cc0033); color:white; border:none; border-radius:8px; cursor:pointer; font-size:12px;">🗑️ Excluir</button>
-                </div>
-            </div>
-        `;
-    });
-    
-    const totalDespesas = despesasMes.reduce((soma, d) => soma + d.valor, 0);
-    const orcamento = dados.config.orcamentoDespesas || 1500;
-    const percentual = (totalDespesas / orcamento) * 100;
-    
-    html += `
-        </div>
-        <div style="margin-top:20px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <strong>💰 Orçamento Mês</strong>
-                <span>R$ ${totalDespesas.toFixed(2)} / R$ ${orcamento.toFixed(2)}</span>
-            </div>
-            <div style="height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
-                <div style="height:100%; width:${Math.min(percentual, 100)}%; background:linear-gradient(90deg, #ff3366, #ff6699); border-radius:4px;"></div>
-            </div>
-            <div style="text-align:center; margin-top:10px; color:${percentual > 100 ? '#ff3366' : '#aaa'}">
-                ${percentual > 100 ? '⚠️ Orçamento excedido!' : `${percentual.toFixed(1)}% do orçamento`}
-            </div>
-        </div>
-    `;
-    
-    container.innerHTML = html;
-}
-
+// ========== DESPESAS CRUD ==========
 function excluirDespesa(id) {
     if (!confirm('⚠️ Tem certeza que deseja excluir esta despesa?')) return;
     
@@ -2934,30 +993,6 @@ function excluirDespesa(id) {
     mostrarFeedback('✅ Despesa removida!', 'success');
 }
 
-function abrirModalNovaDespesa() {
-    const descricaoInput = document.getElementById('descricaoDespesa');
-    const valorInput = document.getElementById('valorDespesa');
-    const dataInput = document.getElementById('dataDespesa');
-    
-    if (descricaoInput) descricaoInput.value = '';
-    if (valorInput) valorInput.value = '';
-    if (dataInput) dataInput.value = getDataAtualBrasilia();
-    
-    const categoriaSelect = document.getElementById('categoriaDespesa');
-    if (categoriaSelect) categoriaSelect.value = 'Suprimentos';
-    
-    const tagsInput = document.getElementById('tagsDespesa');
-    const comprovanteInput = document.getElementById('comprovanteDespesa');
-    const observacoesTextarea = document.getElementById('observacoesDespesa');
-    
-    if (tagsInput) tagsInput.value = '';
-    if (comprovanteInput) comprovanteInput.value = '';
-    if (observacoesTextarea) observacoesTextarea.value = '';
-    
-    const modal = document.getElementById('modalDespesas');
-    if (modal) modal.style.display = 'flex';
-}
-
 function adicionarDespesa() {
     const descricao = document.getElementById('descricaoDespesa').value.trim();
     const categoria = document.getElementById('categoriaDespesa').value;
@@ -2967,20 +1002,9 @@ function adicionarDespesa() {
     const comprovante = document.getElementById('comprovanteDespesa').value;
     const observacoes = document.getElementById('observacoesDespesa').value;
     
-    if (!descricao) {
-        mostrarFeedback('❌ Descrição é obrigatória!', 'warning');
-        return;
-    }
-    
-    if (isNaN(valor) || valor <= 0) {
-        mostrarFeedback('❌ Valor inválido!', 'warning');
-        return;
-    }
-    
-    if (!data) {
-        mostrarFeedback('❌ Data é obrigatória!', 'warning');
-        return;
-    }
+    if (!descricao) { mostrarFeedback('❌ Descrição é obrigatória!', 'warning'); return; }
+    if (isNaN(valor) || valor <= 0) { mostrarFeedback('❌ Valor inválido!', 'warning'); return; }
+    if (!data) { mostrarFeedback('❌ Data é obrigatória!', 'warning'); return; }
     
     const novaDespesa = {
         id: Date.now(),
@@ -3049,19 +1073,8 @@ function verificarDatasServicos() {
     const hoje = getDataAtualBrasilia();
     let corrigidos = 0;
     
-    dados.Gabriel.forEach(s => {
-        if (s.data > hoje) {
-            s.data = hoje;
-            corrigidos++;
-        }
-    });
-    
-    dados.Wagner.forEach(s => {
-        if (s.data > hoje) {
-            s.data = hoje;
-            corrigidos++;
-        }
-    });
+    dados.Gabriel.forEach(s => { if (s.data > hoje) { s.data = hoje; corrigidos++; } });
+    dados.Wagner.forEach(s => { if (s.data > hoje) { s.data = hoje; corrigidos++; } });
     
     if (corrigidos > 0) {
         salvarDadosLocais();
@@ -3110,14 +1123,19 @@ function mostrarFeedback(mensagem, tipo = 'success') {
     setTimeout(() => feedback.remove(), 3000);
 }
 
-function recarregarSistema() {
-    carregarDadosLocais();
-    atualizarInterface();
-    atualizarListaMensalistas();
-    atualizarListaDespesas();
-    atualizarResumoStatusMensalistas();
-    atualizarGraficoPizza();
-    mostrarFeedback('🔄 Sistema recarregado!', 'success');
+function fecharNotificacao() {
+    document.getElementById('pushNotification').style.display = 'none';
+}
+
+function notificarTodosMensalistas() {
+    const vencidos = dados.mensalistas.filter(m => m.status !== 'pago');
+    if (vencidos.length === 0) {
+        mostrarFeedback('✅ Todos os mensalistas estão em dia!', 'success');
+    } else {
+        let msg = `⚠️ MENSALISTAS PENDENTES:\n`;
+        vencidos.forEach(m => { msg += `${m.nome} - R$ ${m.valor.toFixed(2)}\n`; });
+        alert(msg);
+    }
 }
 
 function voltarRegistro() {
@@ -3125,113 +1143,155 @@ function voltarRegistro() {
 }
 
 function abrirConfiguracoes() {
-    const numWhats = document.getElementById('numWhats');
-    const valCorte = document.getElementById('valCorte');
-    const valBarba = document.getElementById('valBarba');
-    const valCombo = document.getElementById('valCombo');
-    const orcamentoDespesas = document.getElementById('orcamentoDespesas');
-    const diasAlerta = document.getElementById('diasAlerta');
-    
-    if (numWhats) numWhats.value = dados.config.whatsapp;
-    if (valCorte) valCorte.value = dados.config.corte;
-    if (valBarba) valBarba.value = dados.config.barba;
-    if (valCombo) valCombo.value = dados.config.combo;
-    if (orcamentoDespesas) orcamentoDespesas.value = dados.config.orcamentoDespesas || 1500;
-    if (diasAlerta) diasAlerta.value = dados.config.diasAlerta || 3;
-    
-    const notificacoesAtivas = document.getElementById('notificacoesAtivas');
-    if (notificacoesAtivas) notificacoesAtivas.value = dados.config.notificacoesAtivas ? 'true' : 'false';
-    
-    const modal = document.getElementById('modalConfig');
-    if (modal) modal.style.display = 'flex';
+    document.getElementById('numWhats').value = dados.config.whatsapp;
+    document.getElementById('valCorte').value = dados.config.corte;
+    document.getElementById('valBarba').value = dados.config.barba;
+    document.getElementById('valCombo').value = dados.config.combo;
+    document.getElementById('orcamentoDespesas').value = dados.config.orcamentoDespesas;
+    document.getElementById('diasAlerta').value = dados.config.diasAlerta;
+    document.getElementById('notificacoesAtivas').value = dados.config.notificacoesAtivas ? 'true' : 'false';
+    document.getElementById('modalConfig').style.display = 'flex';
 }
 
 function salvarConfiguracoes() {
-    const numWhats = document.getElementById('numWhats');
-    const valCorte = document.getElementById('valCorte');
-    const valBarba = document.getElementById('valBarba');
-    const valCombo = document.getElementById('valCombo');
-    const orcamentoDespesas = document.getElementById('orcamentoDespesas');
-    const notificacoesAtivas = document.getElementById('notificacoesAtivas');
-    const diasAlerta = document.getElementById('diasAlerta');
-    
-    if (numWhats) dados.config.whatsapp = numWhats.value;
-    if (valCorte) dados.config.corte = parseFloat(valCorte.value);
-    if (valBarba) dados.config.barba = parseFloat(valBarba.value);
-    if (valCombo) dados.config.combo = parseFloat(valCombo.value);
-    if (orcamentoDespesas) dados.config.orcamentoDespesas = parseFloat(orcamentoDespesas.value);
-    if (notificacoesAtivas) dados.config.notificacoesAtivas = notificacoesAtivas.value === 'true';
-    if (diasAlerta) dados.config.diasAlerta = parseInt(diasAlerta.value);
+    dados.config.whatsapp = document.getElementById('numWhats').value;
+    dados.config.corte = parseFloat(document.getElementById('valCorte').value);
+    dados.config.barba = parseFloat(document.getElementById('valBarba').value);
+    dados.config.combo = parseFloat(document.getElementById('valCombo').value);
+    dados.config.orcamentoDespesas = parseFloat(document.getElementById('orcamentoDespesas').value);
+    dados.config.diasAlerta = parseInt(document.getElementById('diasAlerta').value);
+    dados.config.notificacoesAtivas = document.getElementById('notificacoesAtivas').value === 'true';
     
     salvarDadosLocais();
     salvarDadosServidor();
     fecharModal('modalConfig');
-    atualizarInterface();
     mostrarFeedback('⚙️ Configurações salvas!', 'success');
 }
 
 function enviarResumoWhatsApp() {
     const hoje = getDataAtualBrasilia();
-    const servicosHoje = dados[usuarioAtual].filter(s => s.data === hoje);
+    const servicosHoje = [...dados.Gabriel.filter(s => s.data === hoje), ...dados.Wagner.filter(s => s.data === hoje)];
     const totalValor = servicosHoje.reduce((soma, s) => soma + s.valor, 0);
     const totalPago = servicosHoje.filter(s => s.pago).reduce((soma, s) => soma + s.valor, 0);
-    const totalFiado = totalValor - totalPago;
     
     let listaServicos = '';
     servicosHoje.forEach(s => {
-        listaServicos += `• ${s.hora} - ${s.tipo} - ${s.cliente} - R$ ${s.valor.toFixed(2)} - ${s.pago ? '✅ PAGO' : '⏳ FIADO'}\n`;
+        listaServicos += `• ${s.hora} - ${s.barbeiro} - ${s.tipo} - ${s.cliente} - R$ ${s.valor.toFixed(2)} - ${s.pago ? '✅ PAGO' : '⏳ FIADO'}\n`;
     });
     
-    const mensagem = `*💈 RESUMO DO DIA - ${usuarioAtual.toUpperCase()}*\n📅 Data: ${formatarDataBR(hoje)}\n\n📊 *SERVIÇOS:*\n${listaServicos || 'Nenhum serviço'}\n\n📈 *TOTAL:* R$ ${totalValor.toFixed(2)}\n✅ *RECEBIDO:* R$ ${totalPago.toFixed(2)}\n⏳ *FIADO:* R$ ${totalFiado.toFixed(2)}\n\n📱 BarbaPRO Duo`;
+    const mensagem = `*💈 RESUMO DO DIA - BARBAPRO*\n📅 Data: ${formatarDataBR(hoje)}\n\n📊 *SERVIÇOS:*\n${listaServicos || 'Nenhum serviço'}\n\n📈 *TOTAL:* R$ ${totalValor.toFixed(2)}\n✅ *RECEBIDO:* R$ ${totalPago.toFixed(2)}\n⏳ *FIADO:* R$ ${(totalValor - totalPago).toFixed(2)}\n\n📱 BarbaPRO Duo`;
     
     window.open(`https://wa.me/${dados.config.whatsapp}?text=${encodeURIComponent(mensagem)}`, '_blank');
     mostrarFeedback('📱 Resumo enviado!', 'success');
+}
+
+function abrirModalDespesas() {
+    document.getElementById('dataDespesa').value = getDataAtualBrasilia();
+    document.getElementById('modalDespesas').style.display = 'flex';
+}
+
+function abrirModalNovaDespesa() { abrirModalDespesas(); }
+function abrirModalNovoMensalista() { document.getElementById('modalMensalistas').style.display = 'flex'; }
+function enviarRelatorioServicos() { enviarResumoWhatsApp(); }
+
+// ========== FILTROS ==========
+function filtrarPorMetodo(metodo) {
+    const hoje = getDataAtualBrasilia();
+    const servicosHoje = [...dados.Gabriel.filter(s => s.data === hoje), ...dados.Wagner.filter(s => s.data === hoje)];
+    const total = servicosHoje.filter(s => s.pago && s.metodoPagamento === metodo).reduce((s, srv) => s + srv.valor, 0);
+    mostrarFeedback(`💰 ${metodo.toUpperCase()}: R$ ${total.toFixed(2)}`, 'success');
 }
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener('DOMContentLoaded', function() {
     inicializarSistema();
     
-    // Botões
-    const btnTrocarUsuario = document.getElementById('btnTrocarUsuario');
-    const btnRecarregar = document.getElementById('btnRecarregar');
-    const btnVoltarRegistro = document.getElementById('btnVoltarRegistro');
-    const btnConfiguracoes = document.getElementById('btnConfiguracoes');
-    const btnSalvarConfiguracoes = document.getElementById('btnSalvarConfiguracoes');
-    const btnEnviarResumo = document.getElementById('btnEnviarResumo');
-    const btnNovoMensalista = document.getElementById('btnNovoMensalista');
-    const btnAdicionarMensalista = document.getElementById('btnAdicionarMensalista');
-    const btnNovaDespesa = document.getElementById('btnNovaDespesa');
-    const btnAdicionarDespesa = document.getElementById('btnAdicionarDespesa');
-    const btnFiltrarServicos = document.getElementById('btnFiltrarServicos');
-    const btnLimparFiltrosMensalistas = document.getElementById('btnLimparFiltros');
-    
-    if (btnTrocarUsuario) btnTrocarUsuario.addEventListener('click', trocarUsuario);
-    if (btnRecarregar) btnRecarregar.addEventListener('click', recarregarSistema);
-    if (btnVoltarRegistro) btnVoltarRegistro.addEventListener('click', voltarRegistro);
-    if (btnConfiguracoes) btnConfiguracoes.addEventListener('click', abrirConfiguracoes);
-    if (btnSalvarConfiguracoes) btnSalvarConfiguracoes.addEventListener('click', salvarConfiguracoes);
-    if (btnEnviarResumo) btnEnviarResumo.addEventListener('click', enviarResumoWhatsApp);
-    if (btnNovoMensalista) btnNovoMensalista.addEventListener('click', abrirModalNovoMensalista);
-    if (btnAdicionarMensalista) btnAdicionarMensalista.addEventListener('click', adicionarMensalista);
-    if (btnNovaDespesa) btnNovaDespesa.addEventListener('click', abrirModalNovaDespesa);
-    if (btnAdicionarDespesa) btnAdicionarDespesa.addEventListener('click', adicionarDespesa);
-    if (btnFiltrarServicos) btnFiltrarServicos.addEventListener('click', () => atualizarListaServicos());
-    if (btnLimparFiltrosMensalistas) btnLimparFiltrosMensalistas.addEventListener('click', () => {
-        const dataInicio = document.getElementById('dataInicioMensalistas');
-        const dataFim = document.getElementById('dataFimMensalistas');
-        const filtroStatus = document.getElementById('filtroStatusMensalistas');
-        const filtroBarbeiro = document.getElementById('filtroBarbeiroMensalistas');
-        
-        if (dataInicio) dataInicio.value = '';
-        if (dataFim) dataFim.value = '';
-        if (filtroStatus) filtroStatus.value = 'todos';
-        if (filtroBarbeiro) filtroBarbeiro.value = 'todos';
-        
-        atualizarListaMensalistas();
+    document.getElementById('btnVoltarRegistro').addEventListener('click', voltarRegistro);
+    document.getElementById('btnConfiguracoes').addEventListener('click', abrirConfiguracoes);
+    document.getElementById('btnSalvarConfiguracoes').addEventListener('click', salvarConfiguracoes);
+    document.getElementById('btnEnviarResumo').addEventListener('click', enviarResumoWhatsApp);
+    document.getElementById('btnNovoMensalista').addEventListener('click', abrirModalNovoMensalista);
+    document.getElementById('btnAdicionarMensalista').addEventListener('click', adicionarMensalista);
+    document.getElementById('btnNovaDespesa').addEventListener('click', abrirModalDespesas);
+    document.getElementById('btnAdicionarDespesa').addEventListener('click', adicionarDespesa);
+    document.getElementById('btnFiltrarServicos').addEventListener('click', () => atualizarListaServicos());
+    document.getElementById('btnFiltrarDespesas').addEventListener('click', () => atualizarListaDespesas());
+    document.getElementById('btnEnviarRelatorioServicos').addEventListener('click', enviarRelatorioServicos);
+    document.getElementById('btnEnviarPagamentos').addEventListener('click', enviarResumoWhatsApp);
+    document.getElementById('btnGerenciarDespesas').addEventListener('click', abrirModalDespesas);
+    document.getElementById('btnRelatorioDetalhado').addEventListener('click', () => {
+        const hoje = getDataAtualBrasilia();
+        const servicos = [...dados.Gabriel.filter(s => s.data === hoje), ...dados.Wagner.filter(s => s.data === hoje)];
+        alert(`📊 Relatório Detalhado\nTotal de serviços: ${servicos.length}\nTotal faturado: R$ ${servicos.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`);
     });
+    document.getElementById('btnVerResumoCompleto').addEventListener('click', () => {
+        const hoje = getDataAtualBrasilia();
+        const servicos = [...dados.Gabriel.filter(s => s.data === hoje), ...dados.Wagner.filter(s => s.data === hoje)];
+        let msg = `📊 RESUMO COMPLETO - ${formatarDataBR(hoje)}\n\n`;
+        msg += `👨‍🦱 GABRIEL: ${dados.Gabriel.filter(s => s.data === hoje).length} serviços - R$ ${dados.Gabriel.filter(s => s.data === hoje).reduce((s, srv) => s + srv.valor, 0).toFixed(2)}\n`;
+        msg += `👨‍🦱 WAGNER: ${dados.Wagner.filter(s => s.data === hoje).length} serviços - R$ ${dados.Wagner.filter(s => s.data === hoje).reduce((s, srv) => s + srv.valor, 0).toFixed(2)}\n`;
+        msg += `\n💰 TOTAL GERAL: R$ ${servicos.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}`;
+        alert(msg);
+    });
+    document.getElementById('btnEnviarMensalistas').addEventListener('click', notificarTodosMensalistas);
+    document.getElementById('btnExportarDespesas').addEventListener('click', () => {
+        const despesas = dados.despesas;
+        const csv = ['Descrição,Categoria,Valor,Data', ...despesas.map(d => `${d.descricao},${d.categoria},${d.valor},${d.data}`)].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `despesas_${getDataAtualBrasilia()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        mostrarFeedback('📤 Despesas exportadas!', 'success');
+    });
+    document.getElementById('btnExportarServicos').addEventListener('click', () => {
+        const servicos = [...dados.Gabriel, ...dados.Wagner];
+        const csv = ['Barbeiro,Data,Hora,Cliente,Serviço,Valor,Status', ...servicos.map(s => `${s.barbeiro},${s.data},${s.hora},${s.cliente},${s.tipo},${s.valor},${s.pago ? 'PAGO' : 'FIADO'}`)].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `servicos_${getDataAtualBrasilia()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        mostrarFeedback('📤 Serviços exportados!', 'success');
+    });
+    document.getElementById('btnLimparFiltros').addEventListener('click', () => {
+        document.getElementById('dataInicioMensalistas').value = '';
+        document.getElementById('dataFimMensalistas').value = '';
+        document.getElementById('filtroStatusMensalistas').value = 'todos';
+        document.getElementById('filtroBarbeiroMensalistas').value = 'todos';
+        atualizarListaMensalistas();
+        mostrarFeedback('🗑️ Filtros limpos!', 'success');
+    });
+    document.getElementById('btnFiltrarMensalistas').addEventListener('click', () => atualizarListaMensalistas());
+    document.getElementById('btnGerarRelatorio').addEventListener('click', () => {
+        const inicio = document.getElementById('dataInicioPagamentos').value;
+        const fim = document.getElementById('dataFimPagamentos');
+        alert(`Relatório gerado para período: ${inicio || 'início'} até ${fim?.value || 'hoje'}`);
+    });
+    document.getElementById('btnEnviarRelatorioWhatsApp').addEventListener('click', enviarResumoWhatsApp);
+    document.getElementById('btnEnviarResumoCompleto').addEventListener('click', enviarResumoWhatsApp);
+    document.getElementById('btnLimparFormMensalista').addEventListener('click', () => {
+        document.getElementById('nomeMensalista').value = '';
+        document.getElementById('telefoneMensalista').value = '';
+        document.getElementById('valorMensalista').value = '';
+        document.getElementById('diaVencimentoMensalista').value = '';
+        document.getElementById('observacoesMensalista').value = '';
+        mostrarFeedback('📝 Formulário limpo!', 'success');
+    });
+    document.getElementById('btnLimparFormDespesa').addEventListener('click', () => {
+        document.getElementById('descricaoDespesa').value = '';
+        document.getElementById('valorDespesa').value = '';
+        document.getElementById('tagsDespesa').value = '';
+        document.getElementById('comprovanteDespesa').value = '';
+        document.getElementById('observacoesDespesa').value = '';
+        mostrarFeedback('📝 Formulário limpo!', 'success');
+    });
+    document.getElementById('btnNovaDespesaRapida').addEventListener('click', abrirModalDespesas);
     
-    // Fechar modais
     document.querySelectorAll('.close-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const modal = btn.closest('.modal');
@@ -3244,19 +1304,15 @@ document.addEventListener('DOMContentLoaded', function() {
             event.target.style.display = 'none';
         }
     });
+    
+    setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'sync_request' }));
+        }
+    }, 30000);
 });
 
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-`;
-document.head.appendChild(style);
-
-console.log('💈 BarbaPRO Duo - Sistema carregado!');
-console.log('💰 Valores: Corte R$30 | Barba R$20 | Combo R$40');
+console.log('💈 BarbaPRO Duo - Dashboard carregado!');
     </script>
 </body>
 </html>

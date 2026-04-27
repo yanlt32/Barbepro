@@ -1,5 +1,4 @@
-
-        /* Reset e Configurações Gerais */
+        /* ========== RESET E CONFIGURAÇÕES GERAIS ========== */
         * {
             margin: 0;
             padding: 0;
@@ -20,7 +19,7 @@
             margin: 0 auto;
         }
         
-        /* Header Profissional */
+        /* ========== HEADER ========== */
         .header {
             display: flex;
             justify-content: space-between;
@@ -70,7 +69,7 @@
             flex-wrap: wrap;
         }
         
-        /* Botões Modernos */
+        /* ========== BOTÕES ========== */
         .btn {
             padding: 12px 24px;
             border: none;
@@ -144,7 +143,7 @@
             transform: translateY(0);
         }
         
-        /* Dashboard Grid Moderno */
+        /* ========== DASHBOARD GRID ========== */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -152,7 +151,7 @@
             margin-bottom: 30px;
         }
         
-        /* Cards Modernos */
+        /* ========== CARDS ========== */
         .card {
             background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
             border-radius: 20px;
@@ -198,7 +197,7 @@
             gap: 10px;
         }
         
-        /* Estatísticas Profissionais */
+        /* ========== ESTATÍSTICAS ========== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -254,7 +253,7 @@
             -webkit-text-fill-color: transparent;
         }
         
-        /* Tabelas Modernas */
+        /* ========== TABELAS ========== */
         .table-container {
             overflow-x: auto;
             border-radius: 15px;
@@ -296,7 +295,31 @@
             border-bottom: none;
         }
         
-        /* Status Tags */
+        /* ========== BOTÃO DE EXCLUSÃO NA TABELA ========== */
+        .delete-service-btn {
+            background: rgba(255, 50, 50, 0.2);
+            color: #ff3366;
+            border: 1px solid rgba(255, 50, 50, 0.3);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: bold;
+            font-size: 20px;
+            margin-left: 5px;
+        }
+        
+        .delete-service-btn:hover {
+            background: rgba(255, 50, 50, 0.3);
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 5px 15px rgba(255,50,50,0.3);
+        }
+        
+        /* ========== STATUS TAGS ========== */
         .status-tag {
             display: inline-block;
             padding: 6px 12px;
@@ -326,7 +349,7 @@
             animation: pulse 2s infinite;
         }
         
-        /* Mensalistas Cards */
+        /* ========== MENSALISTAS ========== */
         .mensalista-card {
             background: linear-gradient(135deg, rgba(0,204,153,0.05), rgba(0,204,153,0.02));
             border-radius: 15px;
@@ -441,7 +464,90 @@
             border: 1px solid rgba(255,170,0,0.3);
         }
         
-        /* Filtros Modernos */
+        /* ========== DESPESAS ========== */
+        .despesa-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ff3366;
+            transition: all 0.3s ease;
+        }
+        
+        .despesa-card:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateY(-2px);
+        }
+        
+        .despesa-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .despesa-categoria {
+            background: rgba(255, 51, 102, 0.2);
+            color: #ff99bb;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .despesa-valor {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ff3366;
+            text-align: right;
+        }
+        
+        .despesa-detalhes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 13px;
+            color: #aaa;
+        }
+        
+        .despesa-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            justify-content: flex-end;
+        }
+        
+        .categoria-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .categoria-total {
+            font-weight: 700;
+            color: #ff3366;
+        }
+        
+        .progresso-despesa {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progresso-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff3366, #ff6699);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        /* ========== FILTROS ========== */
         .filtro-container {
             background: rgba(255,255,255,0.03);
             border-radius: 15px;
@@ -469,7 +575,7 @@
             font-weight: 600;
         }
         
-        /* Inputs */
+        /* ========== INPUTS ========== */
         input, select, textarea {
             padding: 14px;
             border: 1px solid rgba(255,255,255,0.15);
@@ -493,7 +599,7 @@
             box-shadow: 0 0 0 3px rgba(255,170,0,0.1);
         }
         
-        /* Modais Modernos */
+        /* ========== MODAIS ========== */
         .modal {
             display: none;
             position: fixed;
@@ -562,7 +668,7 @@
             transform: rotate(90deg);
         }
         
-        /* Formulários Modernos */
+        /* ========== FORMULÁRIOS ========== */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -594,14 +700,14 @@
             border-top: 1px solid rgba(255,255,255,0.1);
         }
         
-        /* Gráficos */
+        /* ========== GRÁFICOS ========== */
         .grafico-container {
             height: 320px;
             margin-top: 20px;
             position: relative;
         }
         
-        /* Notificações */
+        /* ========== NOTIFICAÇÕES ========== */
         .notificacao {
             background: linear-gradient(135deg, rgba(255,51,102,0.1), rgba(255,51,102,0.05));
             border: 2px solid rgba(255,51,102,0.3);
@@ -646,11 +752,11 @@
             background: rgba(255,51,102,0.15);
         }
         
-        /* Ações */
+        /* ========== BOTÕES DE AÇÃO ========== */
         .action-btn {
-            background: rgba(255, 50, 50, 0.2);
-            color: #ff3366;
-            border: 1px solid rgba(255, 50, 50, 0.3);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
             width: 36px;
             height: 36px;
             border-radius: 10px;
@@ -660,13 +766,12 @@
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: bold;
-            font-size: 18px;
+            font-size: 16px;
         }
         
         .action-btn:hover {
-            background: rgba(255, 50, 50, 0.3);
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 5px 15px rgba(255,50,50,0.3);
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
         }
         
         .action-btn.success {
@@ -702,7 +807,7 @@
             box-shadow: 0 5px 15px rgba(255,170,0,0.3);
         }
         
-        /* Badges */
+        /* ========== BADGES ========== */
         .badge {
             display: inline-block;
             padding: 4px 10px;
@@ -729,13 +834,7 @@
             border: 1px solid rgba(255,51,102,0.3);
         }
         
-        .badge-info {
-            background: linear-gradient(135deg, rgba(51,102,255,0.2), rgba(51,102,255,0.1));
-            color: #3366ff;
-            border: 1px solid rgba(51,102,255,0.3);
-        }
-        
-        /* Animações */
+        /* ========== ANIMAÇÕES ========== */
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.8; }
@@ -748,18 +847,44 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0); }
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* ========== MELHORIAS DE RESPONSIVIDADE ========== */
-        @media (max-width: 1200px) {
+        /* ========== RESPONSIVIDADE PARA TABLET ========== */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 15px;
+            }
+            
             .dashboard-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 15px;
+            }
+            
+            .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
             
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .status-menu {
+                overflow-x: auto;
+                white-space: nowrap;
+                padding-bottom: 10px;
+            }
+            
             .mensalista-detalhes {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .filtro-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
             
@@ -774,23 +899,7 @@
             }
             
             .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                padding: 15px;
-            }
-            
-            .header-actions {
-                width: 100%;
-                justify-content: stretch;
-            }
-            
-            .header-actions .btn {
-                flex: 1;
-                justify-content: center;
+                grid-template-columns: 1fr;
             }
             
             .mensalista-detalhes {
@@ -860,53 +969,17 @@
             .action-btn {
                 width: 32px;
                 height: 32px;
-                font-size: 16px;
+                font-size: 14px;
+            }
+            
+            .delete-service-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 18px;
             }
         }
         
-        /* Scrollbar Personalizada */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.05);
-            border-radius: 5px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #ffaa00, #ff7733);
-            border-radius: 5px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #ff7733, #ffaa00);
-        }
-        
-        /* Tooltips */
-        [data-tooltip] {
-            position: relative;
-        }
-        
-        [data-tooltip]:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.9);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            white-space: nowrap;
-            z-index: 1000;
-            margin-bottom: 8px;
-            border: 1px solid rgba(255,170,0,0.3);
-        }
-        
-        /* Menu de Status */
+        /* ========== MENU DE STATUS ========== */
         .status-menu {
             display: flex;
             gap: 10px;
@@ -924,6 +997,8 @@
             transition: all 0.3s ease;
             font-weight: 600;
             font-size: 14px;
+            display: flex;
+            align-items: center;
         }
         
         .status-btn.active {
@@ -935,7 +1010,7 @@
             background: rgba(255,255,255,0.1);
         }
         
-        /* Contador de Status */
+        /* ========== CONTADOR DE STATUS ========== */
         .status-counter {
             display: inline-flex;
             align-items: center;
@@ -949,7 +1024,7 @@
             margin-left: 8px;
         }
         
-        /* Cards Resumo Status */
+        /* ========== CARDS RESUMO STATUS ========== */
         .status-resumo {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1002,7 +1077,7 @@
             letter-spacing: 1px;
         }
         
-        /* Empty State */
+        /* ========== EMPTY STATE ========== */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -1026,7 +1101,7 @@
             margin-bottom: 20px;
         }
         
-        /* Notificação Push Simulada */
+        /* ========== NOTIFICAÇÃO PUSH ========== */
         .push-notification {
             position: fixed;
             top: 20px;
@@ -1076,7 +1151,22 @@
             justify-content: center;
         }
         
-        /* Alertas de Som (simulado) */
-        .sound-alert {
-            display: none;
+        /* ========== SCROLLBAR PERSONALIZADA ========== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #ffaa00, #ff7733);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #ff7733, #ffaa00);
         }

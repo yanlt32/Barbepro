@@ -11,17 +11,15 @@ const wss = new WebSocket.Server({ server });
 
 const PORT = process.env.PORT || 3000;
 
-// ========== MIDDLEWARE - COM AUMENTO DE LIMITE ==========
+// ========== MIDDLEWARE ==========
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// ========== USAR O DISCO PERSISTENTE DO RENDER ==========
-// O Render monta o disco em /var/data
+// ========== DISCO PERSISTENTE ==========
 const DATA_DIR = process.env.RENDER ? '/var/data' : __dirname;
 const DATA_FILE = path.join(DATA_DIR, 'data.json');
 
-// Garantir que o diretório existe
 if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
 }
@@ -36,10 +34,7 @@ const EMAIL_WAGNER = 'ladeiatortelli8@gmail.com';
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: {
-        user: SEU_EMAIL,
-        pass: SUA_SENHA_APP
-    }
+    auth: { user: SEU_EMAIL, pass: SUA_SENHA_APP }
 });
 
 transporter.verify(function(error, success) {
@@ -59,7 +54,6 @@ async function enviarEmailParaWagner(assunto, mensagem) {
             text: mensagem,
             html: mensagem.replace(/\n/g, '<br>')
         };
-        
         const info = await transporter.sendMail(mailOptions);
         console.log(`✅ Email enviado! ID: ${info.messageId}`);
         return { success: true, messageId: info.messageId };
@@ -69,7 +63,7 @@ async function enviarEmailParaWagner(assunto, mensagem) {
     }
 }
 
-// ========== DADOS COM PERSISTÊNCIA EM DISCO ==========
+// ========== FUNÇÕES DE PERSISTÊNCIA ==========
 function criarDadosNovos() {
     return {
         Gabriel: [],
@@ -82,7 +76,10 @@ function criarDadosNovos() {
             corte: 30,
             barba: 20,
             combo: 40,
-            notificacoesEmail: true
+            orcamentoDespesas: 1500,
+            notificacoesEmail: true,
+            notificacoesAtivas: true,
+            diasAlerta: 3
         }
     };
 }
@@ -93,7 +90,7 @@ function loadData() {
             const conteudo = fs.readFileSync(DATA_FILE, 'utf8');
             if (conteudo && conteudo.trim() !== '') {
                 const dados = JSON.parse(conteudo);
-                console.log(`📂 Dados carregados do disco: ${dados.Wagner?.length || 0} Wagner, ${dados.Gabriel?.length || 0} Gabriel`);
+                console.log(`📂 Dados carregados do disco: Wagner: ${dados.Wagner?.length || 0}, Gabriel: ${dados.Gabriel?.length || 0}`);
                 return dados;
             }
         }
@@ -133,7 +130,7 @@ wss.on('connection', function connection(ws) {
                 ws.send(JSON.stringify({ type: 'sync_completo', data: dadosAtuais }));
             }
             
-            if (message.type === 'update_data') {
+            if (message.type === 'update_data' || message.type === 'sync_completo') {
                 if (saveData(message.data)) {
                     wss.clients.forEach(client => {
                         if (client !== ws && client.readyState === WebSocket.OPEN) {
@@ -143,26 +140,33 @@ wss.on('connection', function connection(ws) {
                 }
             }
             
+            if (message.type === 'servico_removido') {
+                console.log(`🗑️ Serviço removido: ${message.servicoId} - ${message.barbeiro}`);
+                const dadosAtuais = loadData();
+                wss.clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({ type: 'servico_removido', servicoId: message.servicoId, barbeiro: message.barbeiro }));
+                    }
+                });
+            }
+            
             if (message.type === 'novo_servico') {
                 console.log(`✂️ NOVO SERVIÇO - ${message.barbeiro}: ${message.cliente} - R$ ${message.valor}`);
                 
                 const assunto = `💈 NOVO SERVIÇO - ${message.barbeiro}`;
                 const mensagem = `
 💈 BARBAPRO DUO - NOVO SERVIÇO
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 👤 BARBEIRO: ${message.barbeiro}
 ✂️ SERVIÇO: ${message.servico}
 👤 CLIENTE: ${message.cliente}
 💰 VALOR: R$ ${message.valor}
 📊 STATUS: ${message.status === 'PAGO' ? '✅ PAGO' : '⏳ FIADO'}
-⏰ HORA: ${message.hora}
-📅 DATA: ${message.data}
+⏰ HORA: ${message.hora || new Date().toLocaleTimeString('pt-BR')}
+📅 DATA: ${message.data || new Date().toLocaleDateString('pt-BR')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 📱 Sistema BarbaPRO Duo
                 `;
-                
                 await enviarEmailParaWagner(assunto, mensagem);
             }
             
@@ -286,6 +290,7 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('║   ✅ LIMITE DE PAYLOAD: 50MB                               ║');
     console.log('║   ✅ DISCO PERSISTENTE ATIVO                               ║');
     console.log('║   ✅ WEBSOCKET ATIVO                                       ║');
+    console.log('║   ✅ EMAIL NOTIFICATIONS ATIVO                             ║');
     console.log('╚════════════════════════════════════════════════════════════╝');
     console.log('');
 });
