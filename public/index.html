@@ -22,40 +22,6 @@
       </button>
     </div>
 
-    <button class="resultados-btn" onclick="toggleResultados()" id="btnToggleResultados">
-      👁️ Ver meus resultados do dia
-    </button>
-
-    <button class="resultados-btn" onclick="abrirModalResumoSemanal()" style="margin-top: 5px; background: rgba(255,170,0,0.1); color: var(--primary);">
-      📊 Ver minha semana (segunda a sábado)
-    </button>
-
-    <div class="resultados-container" id="resultadosContainer">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <div style="font-weight: 600; color: var(--primary);">SEU RESUMO HOJE</div>
-        <div style="font-size: 12px; color: var(--gray);" id="dataHoje"></div>
-      </div>
-      
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
-        <div style="text-align: center;">
-          <div style="font-size: 20px; font-weight: 700; color: var(--primary);" id="resumoServicosHoje">0</div>
-          <div style="font-size: 11px; color: var(--gray);">SERVIÇOS</div>
-        </div>
-        <div style="text-align: center;">
-          <div style="font-size: 20px; font-weight: 700; color: var(--success);" id="resumoTotalHoje">R$ 0,00</div>
-          <div style="font-size: 11px; color: var(--gray);">TOTAL</div>
-        </div>
-        <div style="text-align: center;">
-          <div style="font-size: 20px; font-weight: 700; color: var(--warning);" id="resumoFiadoHoje">R$ 0,00</div>
-          <div style="font-size: 11px; color: var(--gray);">FIADO</div>
-        </div>
-      </div>
-      
-      <button class="btn btn-whatsapp" onclick="abrirModalEnviarWhatsApp()" style="padding: 10px; font-size: 14px; background: linear-gradient(45deg, #25D366, #128C7E);">
-        📱 Enviar meu resumo
-      </button>
-    </div>
-
     <div class="card">
       <h3 style="font-size:clamp(18px, 4.5vw, 20px); margin:18px 0 12px; color: var(--primary); font-weight:700;">Registrar Serviço</h3>
       <div class="servicos-grid">
@@ -82,6 +48,58 @@
       </div>
       
       <button class="btn dashboard" onclick="irParaDashboard()">ACESSAR DASHBOARD</button>
+    </div>
+
+    <!-- BOTÕES DE RESUMO -->
+    <button class="resultados-btn" onclick="toggleResultados()" id="btnToggleResultados" style="margin-top:10px;">
+      👁️ Ver meus resultados do dia
+    </button>
+    <button class="resultados-btn" onclick="abrirModalResumoSemanal()" style="margin-top: 5px; background: rgba(255,170,0,0.1); color: var(--primary);">
+      📊 Ver minha semana (terça a domingo)
+    </button>
+
+    <div class="resultados-container" id="resultadosContainer">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div style="font-weight: 600; color: var(--primary);">SEU RESUMO HOJE</div>
+        <div style="font-size: 12px; color: var(--gray);" id="dataHoje"></div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
+        <div style="text-align: center;">
+          <div style="font-size: 20px; font-weight: 700; color: var(--primary);" id="resumoServicosHoje">0</div>
+          <div style="font-size: 11px; color: var(--gray);">SERVIÇOS</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 20px; font-weight: 700; color: var(--success);" id="resumoTotalHoje">R$ 0,00</div>
+          <div style="font-size: 11px; color: var(--gray);">TOTAL</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 20px; font-weight: 700; color: var(--warning);" id="resumoFiadoHoje">R$ 0,00</div>
+          <div style="font-size: 11px; color: var(--gray);">FIADO</div>
+        </div>
+      </div>
+      <button class="btn btn-whatsapp" onclick="abrirModalEnviarWhatsApp()" style="padding: 10px; font-size: 14px; background: linear-gradient(45deg, #25D366, #128C7E);">
+        📱 Enviar meu resumo
+      </button>
+    </div>
+
+    <!-- CARD CLIENTES FIADOS / PAGOS -->
+    <div class="card" style="margin-top: 12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="font-size:clamp(16px,4vw,18px); color:var(--primary); font-weight:700; margin:0;">👥 Meus Clientes</h3>
+        <button onclick="atualizarCardClientes()" style="background:rgba(255,170,0,0.1); border:none; color:var(--primary); padding:6px 12px; border-radius:10px; cursor:pointer; font-size:12px; font-weight:600;">↻ Atualizar</button>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:14px;">
+        <button id="tabBtnFiados" onclick="mostrarTabClientes('fiados')"
+          style="flex:1; padding:10px; border:none; border-radius:12px; cursor:pointer; font-weight:700; font-size:13px; background:rgba(255,149,0,0.25); color:#ff9500; transition:all 0.2s;">
+          ⏳ FIADOS
+        </button>
+        <button id="tabBtnPagos" onclick="mostrarTabClientes('pagos')"
+          style="flex:1; padding:10px; border:none; border-radius:12px; cursor:pointer; font-weight:700; font-size:13px; background:rgba(255,255,255,0.07); color:#aaa; transition:all 0.2s;">
+          ✅ PAGOS HOJE
+        </button>
+      </div>
+      <div id="clientesFiadosContainer"></div>
+      <div id="clientesPagosContainer" style="display:none;"></div>
     </div>
 
     <div class="card">
@@ -586,6 +604,108 @@ function atualizarInterface() {
     if (usuarioAtualSpan) usuarioAtualSpan.textContent = usuarioAtual;
     if (nomeUsuarioSpan) nomeUsuarioSpan.textContent = usuarioAtual;
     aplicarConfiguracoes();
+    atualizarCardClientes();
+}
+
+let tabClienteAtual = 'fiados';
+
+function mostrarTabClientes(tab) {
+    tabClienteAtual = tab;
+    const fiados = document.getElementById('clientesFiadosContainer');
+    const pagos = document.getElementById('clientesPagosContainer');
+    const btnFiados = document.getElementById('tabBtnFiados');
+    const btnPagos = document.getElementById('tabBtnPagos');
+    if (tab === 'fiados') {
+        fiados.style.display = '';
+        pagos.style.display = 'none';
+        if (btnFiados) { btnFiados.style.background = 'rgba(255,149,0,0.25)'; btnFiados.style.color = '#ff9500'; }
+        if (btnPagos) { btnPagos.style.background = 'rgba(255,255,255,0.07)'; btnPagos.style.color = '#aaa'; }
+        renderizarClientesFiados();
+    } else {
+        fiados.style.display = 'none';
+        pagos.style.display = '';
+        if (btnPagos) { btnPagos.style.background = 'rgba(37,211,102,0.2)'; btnPagos.style.color = '#25D366'; }
+        if (btnFiados) { btnFiados.style.background = 'rgba(255,255,255,0.07)'; btnFiados.style.color = '#aaa'; }
+        renderizarClientesPagos();
+    }
+}
+
+function atualizarCardClientes() {
+    if (tabClienteAtual === 'fiados') renderizarClientesFiados();
+    else renderizarClientesPagos();
+}
+
+function renderizarClientesFiados() {
+    const container = document.getElementById('clientesFiadosContainer');
+    if (!container) return;
+    const servicosFiados = dados[usuarioAtual].filter(s => !s.pago);
+    if (servicosFiados.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">
+            <div style="font-size:40px; margin-bottom:8px;">🎉</div>
+            <div style="font-weight:600;">Nenhum cliente com fiado!</div>
+            <div style="font-size:12px; margin-top:4px;">Todos os serviços foram pagos.</div>
+        </div>`;
+        return;
+    }
+    const porCliente = new Map();
+    servicosFiados.forEach(s => {
+        if (!porCliente.has(s.cliente)) porCliente.set(s.cliente, { total: 0, servicos: [], ultimaData: s.data });
+        const info = porCliente.get(s.cliente);
+        info.total += s.valor;
+        info.servicos.push(s);
+        if (s.data > info.ultimaData) info.ultimaData = s.data;
+    });
+    const totalFiado = servicosFiados.reduce((sum, s) => sum + s.valor, 0);
+    let html = `<div style="background:rgba(255,149,0,0.1); border-radius:10px; padding:10px 14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; color:#aaa;">${porCliente.size} cliente(s) com fiado</span>
+        <span style="font-weight:700; color:#ff9500; font-size:16px;">R$ ${totalFiado.toFixed(2)}</span>
+    </div>`;
+    const clientesOrdenados = Array.from(porCliente.entries()).sort((a, b) => b[1].total - a[1].total);
+    clientesOrdenados.forEach(([nome, info]) => {
+        html += `<div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:13px 14px; margin-bottom:8px; border-left:3px solid #ff9500;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="font-size:14px;">${nome}</strong>
+                <span style="font-size:16px; font-weight:700; color:#ff9500;">R$ ${info.total.toFixed(2)}</span>
+            </div>
+            <div style="font-size:11px; color:#aaa;">${info.servicos.length} serviço(s) em aberto | Último: ${formatarDataBR(info.ultimaData)}</div>
+            <div style="margin-top:8px; font-size:11px; color:#888;">
+                ${info.servicos.map(s => `${s.tipo} ${s.hora} (${formatarDataBR(s.data)})`).join(' • ')}
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function renderizarClientesPagos() {
+    const container = document.getElementById('clientesPagosContainer');
+    if (!container) return;
+    const hoje = getDataAtualBrasilia();
+    const servicosPagosHoje = dados[usuarioAtual].filter(s => s.pago && s.data === hoje);
+    if (servicosPagosHoje.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:30px; color:#aaa;">
+            <div style="font-size:40px; margin-bottom:8px;">📋</div>
+            <div style="font-weight:600;">Nenhum cliente pago hoje</div>
+            <div style="font-size:12px; margin-top:4px;">Registre um serviço para ver aqui.</div>
+        </div>`;
+        return;
+    }
+    const totalPago = servicosPagosHoje.reduce((sum, s) => sum + s.valor, 0);
+    const metodoIcon = { dinheiro: '💵', pix: '📱', debito: '💳', credito: '💳' };
+    let html = `<div style="background:rgba(37,211,102,0.1); border-radius:10px; padding:10px 14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; color:#aaa;">${servicosPagosHoje.length} serviço(s) pagos hoje</span>
+        <span style="font-weight:700; color:#25D366; font-size:16px;">R$ ${totalPago.toFixed(2)}</span>
+    </div>`;
+    servicosPagosHoje.forEach(s => {
+        const icon = metodoIcon[s.metodoPagamento] || '✅';
+        html += `<div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:13px 14px; margin-bottom:8px; border-left:3px solid #25D366;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <strong style="font-size:14px;">${s.cliente}</strong>
+                <span style="font-size:15px; font-weight:700; color:#25D366;">R$ ${s.valor.toFixed(2)}</span>
+            </div>
+            <div style="font-size:11px; color:#aaa;">${icon} ${(s.metodoPagamento || '').toUpperCase() || 'PAGO'} | ${s.tipo} | ${s.hora}</div>
+        </div>`;
+    });
+    container.innerHTML = html;
 }
 
 function toggleResultados() {

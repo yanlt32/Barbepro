@@ -70,10 +70,22 @@
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
         .form-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
-        .pagamento-semanal { background: linear-gradient(135deg, rgba(0,204,153,0.1), rgba(0,153,115,0.05)); border: 2px solid #00cc99; border-radius: 15px; padding: 20px; margin-bottom: 20px; text-align: center; }
-        .pagamento-semanal h3 { color: #00cc99; margin-bottom: 15px; }
-        .pagamento-valor { font-size: 36px; font-weight: bold; color: #00cc99; margin: 10px 0; }
-        .pagamento-detalhes { font-size: 12px; color: #aaa; margin-top: 10px; }
+        .pagamento-semanal { background: linear-gradient(135deg, rgba(0,204,153,0.12), rgba(0,153,115,0.06)); border: 2px solid #00cc99; border-radius: 20px; padding: 25px; margin-bottom: 25px; }
+        .pagamento-semanal h3 { color: #00cc99; margin-bottom: 5px; font-size: 18px; }
+        .pagamento-semanal-periodo { font-size: 12px; color: #aaa; margin-bottom: 15px; }
+        .pagamento-valor { font-size: 48px; font-weight: bold; color: #00cc99; margin: 10px 0; text-align: center; }
+        .pagamento-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 15px 0; }
+        .pagamento-stat { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; text-align: center; }
+        .pagamento-stat-valor { font-size: 18px; font-weight: 700; color: #00cc99; }
+        .pagamento-stat-label { font-size: 11px; color: #aaa; margin-top: 4px; }
+        .pagamento-detalhes { font-size: 12px; color: #aaa; margin-top: 10px; line-height: 1.7; }
+        .pagamento-actions { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .mensalista-resumo-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 15px; }
+        .mensalista-resumo-item { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; text-align: center; }
+        .mensalista-resumo-valor { font-size: 18px; font-weight: 700; }
+        .mensalista-resumo-label { font-size: 11px; color: #aaa; margin-top: 4px; }
+        .mensalista-card { background: rgba(255,255,255,0.05); border-radius: 14px; padding: 15px; margin-bottom: 10px; transition: all 0.2s; }
+        .mensalista-card:hover { background: rgba(255,255,255,0.08); }
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
@@ -91,12 +103,30 @@
             </div>
         </header>
 
-        <!-- PAGAMENTO SEMANAL - NOVO -->
+        <!-- PAGAMENTO SEMANAL - TERÇA A DOMINGO -->
         <div class="pagamento-semanal" id="pagamentoSemanal">
-            <h3>💰 PAGAMENTO SEMANAL DO GABRIEL</h3>
+            <h3>💰 PAGAMENTO SEMANAL — GABRIEL</h3>
+            <div class="pagamento-semanal-periodo" id="periodoSemanal">Carregando período...</div>
             <div class="pagamento-valor" id="valorPagamentoSemanal">R$ 0,00</div>
-            <div class="pagamento-detalhes" id="detalhesPagamentoSemanal">Carregando...</div>
-            <button class="btn btn-whatsapp" onclick="enviarPagamentoSemanalWhatsApp()" style="margin-top: 15px; padding: 10px 20px;">📱 Enviar Comprovante</button>
+            <div class="pagamento-grid">
+                <div class="pagamento-stat">
+                    <div class="pagamento-stat-valor" id="semServicosGabriel">0</div>
+                    <div class="pagamento-stat-label">SERVIÇOS</div>
+                </div>
+                <div class="pagamento-stat">
+                    <div class="pagamento-stat-valor" id="semTotalBruto">R$ 0,00</div>
+                    <div class="pagamento-stat-label">TOTAL BRUTO</div>
+                </div>
+                <div class="pagamento-stat">
+                    <div class="pagamento-stat-valor" id="semFiado" style="color:#ff9500;">R$ 0,00</div>
+                    <div class="pagamento-stat-label">FIADO</div>
+                </div>
+            </div>
+            <div class="pagamento-detalhes" id="detalhesPagamentoSemanal"></div>
+            <div class="pagamento-actions">
+                <button class="btn btn-whatsapp" onclick="enviarPagamentoSemanalWhatsApp()" style="flex:1; padding:10px 20px;">📱 Enviar Comprovante</button>
+                <button class="btn btn-secondary" onclick="sincronizarDados()" style="padding:10px 20px;">🔄 Atualizar</button>
+            </div>
         </div>
 
         <div class="dashboard-grid">
@@ -167,8 +197,25 @@
 
         <div class="card">
             <div class="card-header"><div class="card-title">👥 MENSALISTAS</div><div><button class="btn btn-success" id="btnNovoMensalista">+ Novo Mensalista</button></div></div>
+
+            <!-- Resumo financeiro mensalistas -->
+            <div class="mensalista-resumo-row">
+                <div class="mensalista-resumo-item">
+                    <div class="mensalista-resumo-valor" style="color:#ffaa00;" id="msTotalCount">0</div>
+                    <div class="mensalista-resumo-label">TOTAL</div>
+                </div>
+                <div class="mensalista-resumo-item">
+                    <div class="mensalista-resumo-valor" style="color:#25D366;" id="msTotalRecebido">R$ 0,00</div>
+                    <div class="mensalista-resumo-label">RECEBIDO</div>
+                </div>
+                <div class="mensalista-resumo-item">
+                    <div class="mensalista-resumo-valor" style="color:#ff3366;" id="msTotalPendente">R$ 0,00</div>
+                    <div class="mensalista-resumo-label">PENDENTE</div>
+                </div>
+            </div>
+
             <div class="status-menu">
-                <button class="status-btn" onclick="filtrarMensalistasPorStatus('todos')">📋 Todos <span class="status-counter" id="counterTodos">0</span></button>
+                <button class="status-btn active" onclick="filtrarMensalistasPorStatus('todos')">📋 Todos <span class="status-counter" id="counterTodos">0</span></button>
                 <button class="status-btn" onclick="filtrarMensalistasPorStatus('pago')">✅ Pagos <span class="status-counter" id="counterPagos">0</span></button>
                 <button class="status-btn" onclick="filtrarMensalistasPorStatus('pendente')">⏳ Pendentes <span class="status-counter" id="counterPendentes">0</span></button>
                 <button class="status-btn" onclick="filtrarMensalistasPorStatus('vencido')">⚠️ Vencidos <span class="status-counter" id="counterVencidos">0</span></button>
@@ -264,6 +311,7 @@ let dados = {
 };
 let ws = null;
 let graficoPizza = null;
+let filtroStatusMensalistas = 'todos';
 
 // ========== FUNÇÕES AUXILIARES ==========
 function getDataAtualBrasilia() {
@@ -290,44 +338,50 @@ function getUltimoDiaMes() {
     return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate()}`;
 }
 
-function getDataSegunda() {
+function getDataTerca() {
     const hoje = new Date();
-    const dia = hoje.getDay();
-    const diff = hoje.getDate() - dia + (dia === 0 ? -6 : 1);
-    const segunda = new Date(hoje.setDate(diff));
-    return `${segunda.getFullYear()}-${String(segunda.getMonth() + 1).padStart(2, '0')}-${String(segunda.getDate()).padStart(2, '0')}`;
+    // 0=Dom, 1=Seg, 2=Ter ... dias desde a última terça
+    const diff = (hoje.getDay() - 2 + 7) % 7;
+    const terca = new Date(hoje);
+    terca.setDate(hoje.getDate() - diff);
+    return `${terca.getFullYear()}-${String(terca.getMonth() + 1).padStart(2, '0')}-${String(terca.getDate()).padStart(2, '0')}`;
 }
 
-function getDataSabado() {
-    const segunda = new Date(getDataSegunda());
-    const sabado = new Date(segunda);
-    sabado.setDate(segunda.getDate() + 5);
-    return `${sabado.getFullYear()}-${String(sabado.getMonth() + 1).padStart(2, '0')}-${String(sabado.getDate()).padStart(2, '0')}`;
+function getDataDomingo() {
+    const terca = new Date(getDataTerca() + 'T12:00:00');
+    const domingo = new Date(terca);
+    domingo.setDate(terca.getDate() + 5);
+    return `${domingo.getFullYear()}-${String(domingo.getMonth() + 1).padStart(2, '0')}-${String(domingo.getDate()).padStart(2, '0')}`;
 }
 
-// ========== CALCULAR PAGAMENTO SEMANAL ==========
+// ========== CALCULAR PAGAMENTO SEMANAL (TERÇA A DOMINGO) ==========
 function calcularPagamentoSemanal() {
-    const dataInicio = getDataSegunda();
-    const dataFim = getDataSabado();
-    
+    const dataInicio = getDataTerca();
+    const dataFim = getDataDomingo();
+
     const servicosGabriel = dados.Gabriel.filter(s => s.data >= dataInicio && s.data <= dataFim);
     const totalSemanal = servicosGabriel.reduce((sum, s) => sum + s.valor, 0);
-    const valorPagar = totalSemanal / 2; // 50% para o Gabriel
-    
-    document.getElementById('valorPagamentoSemanal').textContent = `R$ ${valorPagar.toFixed(2)}`;
-    document.getElementById('detalhesPagamentoSemanal').innerHTML = `
-        Período: ${formatarDataBR(dataInicio)} a ${formatarDataBR(dataFim)}<br>
-        Total de serviços do Gabriel: ${servicosGabriel.length} serviços<br>
-        Valor total: R$ ${totalSemanal.toFixed(2)}<br>
-        <strong>50% para Gabriel: R$ ${valorPagar.toFixed(2)}</strong>
-    `;
-    
-    return { totalSemanal, valorPagar, servicos: servicosGabriel.length, dataInicio, dataFim };
+    const totalFiado = servicosGabriel.filter(s => !s.pago).reduce((sum, s) => sum + s.valor, 0);
+    const totalPago = servicosGabriel.filter(s => s.pago).reduce((sum, s) => sum + s.valor, 0);
+    const valorPagar = totalSemanal / 2;
+
+    const el = (id) => document.getElementById(id);
+    if (el('valorPagamentoSemanal')) el('valorPagamentoSemanal').textContent = `R$ ${valorPagar.toFixed(2)}`;
+    if (el('periodoSemanal')) el('periodoSemanal').textContent = `📅 ${formatarDataBR(dataInicio)} a ${formatarDataBR(dataFim)} (terça a domingo)`;
+    if (el('semServicosGabriel')) el('semServicosGabriel').textContent = servicosGabriel.length;
+    if (el('semTotalBruto')) el('semTotalBruto').textContent = `R$ ${totalSemanal.toFixed(2)}`;
+    if (el('semFiado')) el('semFiado').textContent = `R$ ${totalFiado.toFixed(2)}`;
+    if (el('detalhesPagamentoSemanal')) el('detalhesPagamentoSemanal').innerHTML =
+        `Pago: <strong style="color:#25D366;">R$ ${totalPago.toFixed(2)}</strong> &nbsp;|&nbsp; ` +
+        `Fiado: <strong style="color:#ff9500;">R$ ${totalFiado.toFixed(2)}</strong><br>` +
+        `<strong style="color:#00cc99;">50% do total = R$ ${valorPagar.toFixed(2)}</strong>`;
+
+    return { totalSemanal, totalPago, totalFiado, valorPagar, servicos: servicosGabriel.length, dataInicio, dataFim };
 }
 
 function enviarPagamentoSemanalWhatsApp() {
-    const { totalSemanal, valorPagar, servicos, dataInicio, dataFim } = calcularPagamentoSemanal();
-    const mensagem = `*💈 PAGAMENTO SEMANAL - GABRIEL*\n\n📅 Período: ${formatarDataBR(dataInicio)} a ${formatarDataBR(dataFim)}\n✂️ Serviços realizados: ${servicos}\n💰 Valor total: R$ ${totalSemanal.toFixed(2)}\n✅ 50% para Gabriel: *R$ ${valorPagar.toFixed(2)}*\n\n📱 BarbaPRO Duo`;
+    const { totalSemanal, totalPago, totalFiado, valorPagar, servicos, dataInicio, dataFim } = calcularPagamentoSemanal();
+    const mensagem = `*💈 PAGAMENTO SEMANAL - GABRIEL*\n\n📅 Período: ${formatarDataBR(dataInicio)} a ${formatarDataBR(dataFim)} (terça a domingo)\n✂️ Serviços realizados: ${servicos}\n💰 Valor total: R$ ${totalSemanal.toFixed(2)}\n✅ Recebido: R$ ${totalPago.toFixed(2)}\n⏳ Fiado: R$ ${totalFiado.toFixed(2)}\n\n💵 *50% para Gabriel: R$ ${valorPagar.toFixed(2)}*\n\n📱 BarbaPRO Duo`;
     window.open(`https://wa.me/${dados.config.whatsapp}?text=${encodeURIComponent(mensagem)}`, '_blank');
 }
 
@@ -533,30 +587,77 @@ function atualizarListaServicos() {
     container.innerHTML = html;
 }
 
+function calcularStatusMensalista(m) {
+    const hoje = new Date();
+    const diaHoje = hoje.getDate();
+    const dataVenc = new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento);
+    const diffDias = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
+    if (m.status === 'pago') return { cor: '#25D366', bg: 'rgba(37,211,102,0.15)', texto: '✅ PAGO', diasParaVencer: null };
+    if (diaHoje === m.diaVencimento) return { cor: '#ffaa00', bg: 'rgba(255,170,0,0.15)', texto: '📅 VENCE HOJE', diasParaVencer: 0 };
+    if (dataVenc < hoje) return { cor: '#ff3366', bg: 'rgba(255,51,102,0.15)', texto: '⚠️ VENCIDO', diasParaVencer: diffDias };
+    if (diffDias <= 3) return { cor: '#ff9500', bg: 'rgba(255,149,0,0.15)', texto: '⏳ VENCE EM BREVE', diasParaVencer: diffDias };
+    return { cor: '#FF9500', bg: 'rgba(255,149,0,0.1)', texto: '⏳ PENDENTE', diasParaVencer: diffDias };
+}
+
 function atualizarListaMensalistas() {
     const container = document.getElementById('listaMensalistasDashboard');
     if (!dados.mensalistas || dados.mensalistas.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px;">👥 Nenhum mensalista cadastrado</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;"><div style="font-size:48px; margin-bottom:10px;">👥</div>Nenhum mensalista cadastrado<br><span style="font-size:12px;">Clique em "+ Novo Mensalista" para adicionar</span></div>';
         return;
     }
-    
-    let html = '<div style="display:flex; flex-direction:column; gap:15px;">';
-    dados.mensalistas.forEach(m => {
-        const hoje = new Date();
-        const dataVenc = new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento);
-        let statusCor = m.status === 'pago' ? '#25D366' : (dataVenc < hoje ? '#ff3366' : '#FF9500');
-        let statusText = m.status === 'pago' ? '✅ PAGO' : (dataVenc < hoje ? '⚠️ VENCIDO' : '⏳ PENDENTE');
-        
-        html += `<div style="background:rgba(255,255,255,0.05); border-radius:10px; padding:15px; margin-bottom:10px; border-left:4px solid ${statusCor}">
-            <div style="display:flex; justify-content:space-between;"><strong>${m.nome}</strong> <span style="color:${statusCor}">${statusText}</span></div>
-            <div>👤 ${m.barbeiro} | 💰 R$ ${m.valor.toFixed(2)} | 📅 Dia ${m.diaVencimento}</div>
-            <div style="margin-top:10px;">
-                ${m.status !== 'pago' ? `<button onclick="marcarMensalistaPago(${m.id})" style="background:#00cc99; padding:5px 12px; border-radius:8px; border:none; color:white; cursor:pointer;">✅ Marcar Pago</button>` : ''}
-                <button onclick="excluirMensalista(${m.id})" style="background:#ff3366; padding:5px 12px; border-radius:8px; border:none; color:white; cursor:pointer; margin-left:10px;">🗑️ Excluir</button>
+
+    const hoje = new Date();
+    const diaHoje = hoje.getDate();
+
+    let lista = dados.mensalistas.filter(m => {
+        if (filtroStatusMensalistas === 'todos') return true;
+        if (filtroStatusMensalistas === 'pago') return m.status === 'pago';
+        if (filtroStatusMensalistas === 'pendente') return m.status !== 'pago' && new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento) >= hoje && m.diaVencimento !== diaHoje;
+        if (filtroStatusMensalistas === 'vencido') return m.status !== 'pago' && new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento) < hoje && m.diaVencimento !== diaHoje;
+        if (filtroStatusMensalistas === 'hoje') return m.status !== 'pago' && m.diaVencimento === diaHoje;
+        return true;
+    });
+
+    if (lista.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:#aaa;">Nenhum mensalista nesta categoria</div>';
+        return;
+    }
+
+    lista.sort((a, b) => {
+        if (a.status !== 'pago' && b.status === 'pago') return -1;
+        if (a.status === 'pago' && b.status !== 'pago') return 1;
+        return a.diaVencimento - b.diaVencimento;
+    });
+
+    let html = '';
+    lista.forEach(m => {
+        const st = calcularStatusMensalista(m);
+        let infoVenc = '';
+        if (st.diasParaVencer !== null) {
+            if (st.diasParaVencer === 0) infoVenc = ' • <strong style="color:#ffaa00;">VENCE HOJE</strong>';
+            else if (st.diasParaVencer > 0) infoVenc = ` • vence em ${st.diasParaVencer} dia(s)`;
+            else infoVenc = ` • <strong style="color:#ff3366;">vencido há ${Math.abs(st.diasParaVencer)} dia(s)</strong>`;
+        }
+
+        html += `<div class="mensalista-card" style="border-left:4px solid ${st.cor};">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                <div>
+                    <div style="font-size:16px; font-weight:700;">${m.nome}</div>
+                    <div style="font-size:12px; color:#aaa; margin-top:2px;">👤 ${m.barbeiro}${m.telefone ? ' | 📞 ' + m.telefone : ''}</div>
+                </div>
+                <div style="text-align:right;">
+                    <span style="background:${st.bg}; color:${st.cor}; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700;">${st.texto}</span>
+                    <div style="font-size:22px; font-weight:700; color:#ffaa00; margin-top:6px;">R$ ${m.valor.toFixed(2)}</div>
+                </div>
+            </div>
+            <div style="font-size:12px; color:#888; margin-bottom:12px;">📅 Vence dia <strong>${m.diaVencimento}</strong>${infoVenc}</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                ${m.status !== 'pago' ? `<button onclick="marcarMensalistaPago(${m.id})" style="flex:1; min-width:90px; background:linear-gradient(135deg,#00cc99,#009973); padding:9px 12px; border-radius:10px; border:none; color:white; cursor:pointer; font-size:13px; font-weight:700;">✅ PAGO</button>` : `<button onclick="renovarMensalista(${m.id})" style="flex:1; min-width:90px; background:rgba(37,211,102,0.15); padding:9px 12px; border-radius:10px; border:1px solid #25D366; color:#25D366; cursor:pointer; font-size:12px; font-weight:600;">🔄 Renovar</button>`}
+                ${m.telefone ? `<button onclick="cobrarMensalistaWhatsApp(${m.id})" style="flex:1; min-width:90px; background:linear-gradient(135deg,#25D366,#128C7E); padding:9px 12px; border-radius:10px; border:none; color:white; cursor:pointer; font-size:13px; font-weight:700;">📱 COBRAR</button>` : ''}
+                <button onclick="excluirMensalista(${m.id})" style="background:rgba(255,51,102,0.15); padding:9px 14px; border-radius:10px; border:1px solid #ff3366; color:#ff3366; cursor:pointer; font-size:13px;" title="Excluir">🗑️</button>
             </div>
         </div>`;
     });
-    html += '</div>';
     container.innerHTML = html;
 }
 
@@ -583,14 +684,27 @@ function atualizarListaDespesas() {
 }
 
 function atualizarResumoStatusMensalistas() {
+    const hoje = new Date();
+    const diaHoje = hoje.getDate();
     const total = dados.mensalistas.length;
     const pagos = dados.mensalistas.filter(m => m.status === 'pago').length;
-    const pendentes = dados.mensalistas.filter(m => m.status === 'pendente').length;
-    const vencidos = dados.mensalistas.filter(m => m.status === 'vencido').length;
-    document.getElementById('counterTodos').textContent = total;
-    document.getElementById('counterPagos').textContent = pagos;
-    document.getElementById('counterPendentes').textContent = pendentes;
-    document.getElementById('counterVencidos').textContent = vencidos;
+    const hoje2 = dados.mensalistas.filter(m => m.status !== 'pago' && m.diaVencimento === diaHoje).length;
+    const vencidos = dados.mensalistas.filter(m => m.status !== 'pago' && m.diaVencimento !== diaHoje && new Date(hoje.getFullYear(), hoje.getMonth(), m.diaVencimento) < hoje).length;
+    const pendentes = total - pagos - hoje2 - vencidos;
+
+    const el = (id) => document.getElementById(id);
+    if (el('counterTodos')) el('counterTodos').textContent = total;
+    if (el('counterPagos')) el('counterPagos').textContent = pagos;
+    if (el('counterPendentes')) el('counterPendentes').textContent = Math.max(0, pendentes);
+    if (el('counterVencidos')) el('counterVencidos').textContent = vencidos;
+    if (el('counterHoje')) el('counterHoje').textContent = hoje2;
+
+    // Resumo financeiro
+    const totalRecebido = dados.mensalistas.filter(m => m.status === 'pago').reduce((s, m) => s + m.valor, 0);
+    const totalPendente = dados.mensalistas.filter(m => m.status !== 'pago').reduce((s, m) => s + m.valor, 0);
+    if (el('msTotalCount')) el('msTotalCount').textContent = total;
+    if (el('msTotalRecebido')) el('msTotalRecebido').textContent = `R$ ${totalRecebido.toFixed(2)}`;
+    if (el('msTotalPendente')) el('msTotalPendente').textContent = `R$ ${totalPendente.toFixed(2)}`;
 }
 
 function atualizarGraficoPizza() {
@@ -614,8 +728,8 @@ function abrirModalResumoCompleto() {
     const totalMes = [...servicosGabrielMes, ...servicosWagnerMes].reduce((s, srv) => s + srv.valor, 0);
     const totalPago = [...servicosGabrielMes, ...servicosWagnerMes].filter(s => s.pago).reduce((s, srv) => s + srv.valor, 0);
     
-    const { totalSemanal, valorPagar } = calcularPagamentoSemanal();
-    
+    const { totalSemanal, totalFiado: semFiado, valorPagar, dataInicio: semInicio, dataFim: semFim } = calcularPagamentoSemanal();
+
     const html = `
         <div style="padding: 10px;">
             <div style="background:rgba(255,170,0,0.1); border-radius:15px; padding:20px; margin-bottom:20px;">
@@ -629,8 +743,10 @@ function abrirModalResumoCompleto() {
                 </div>
             </div>
             <div style="background:rgba(0,204,153,0.1); border-radius:15px; padding:20px; margin-bottom:20px;">
-                <h3 style="color:#00cc99; margin-bottom:15px;">💰 PAGAMENTO SEMANAL DO GABRIEL</h3>
-                <div><strong>Esta semana:</strong> R$ ${valorPagar.toFixed(2)} (50% de R$ ${totalSemanal.toFixed(2)})</div>
+                <h3 style="color:#00cc99; margin-bottom:15px;">💰 PAGAMENTO SEMANAL DO GABRIEL (terça a domingo)</h3>
+                <div>📅 ${formatarDataBR(semInicio)} a ${formatarDataBR(semFim)}</div>
+                <div>Total bruto: R$ ${totalSemanal.toFixed(2)} | Fiado: R$ ${(semFiado||0).toFixed(2)}</div>
+                <div style="font-size:20px; font-weight:700; color:#00cc99; margin-top:8px;">✅ 50% = R$ ${valorPagar.toFixed(2)}</div>
             </div>
             <div style="background:rgba(37,211,102,0.1); border-radius:15px; padding:20px;">
                 <h3 style="color:#25D366; margin-bottom:15px;">📋 SERVIÇOS DE HOJE</h3>
@@ -693,9 +809,9 @@ function enviarResumoCompletoWhatsApp() {
     const servicosGabrielMes = dados.Gabriel.filter(s => s.data >= primeiroDia && s.data <= ultimoDia);
     const servicosWagnerMes = dados.Wagner.filter(s => s.data >= primeiroDia && s.data <= ultimoDia);
     const totalMes = [...servicosGabrielMes, ...servicosWagnerMes].reduce((s, srv) => s + srv.valor, 0);
-    const { totalSemanal, valorPagar, servicos: servicosSemana } = calcularPagamentoSemanal();
-    
-    const mensagem = `*📊 RESUMO COMPLETO - BARBAPRO*\n\n📅 Mês: ${formatarDataBR(primeiroDia)} a ${formatarDataBR(ultimoDia)}\n\n👨‍🦱 GABRIEL: ${servicosGabrielMes.length} serviços - R$ ${servicosGabrielMes.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}\n👨‍🦱 WAGNER: ${servicosWagnerMes.length} serviços - R$ ${servicosWagnerMes.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}\n💰 TOTAL: R$ ${totalMes.toFixed(2)}\n\n💰 PAGAMENTO SEMANAL GABRIEL:\n• ${servicosSemana} serviços\n• Total: R$ ${totalSemanal.toFixed(2)}\n• 50%: R$ ${valorPagar.toFixed(2)}\n\n📱 BarbaPRO Duo`;
+    const { totalSemanal, totalFiado: semFiado, valorPagar, servicos: servicosSemana, dataInicio: semInicio, dataFim: semFim } = calcularPagamentoSemanal();
+
+    const mensagem = `*📊 RESUMO COMPLETO - BARBAPRO*\n\n📅 Mês: ${formatarDataBR(primeiroDia)} a ${formatarDataBR(ultimoDia)}\n\n👨‍🦱 GABRIEL: ${servicosGabrielMes.length} serviços - R$ ${servicosGabrielMes.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}\n👨‍🦱 WAGNER: ${servicosWagnerMes.length} serviços - R$ ${servicosWagnerMes.reduce((s, srv) => s + srv.valor, 0).toFixed(2)}\n💰 TOTAL: R$ ${totalMes.toFixed(2)}\n\n💰 PAGAMENTO GABRIEL (terça a domingo):\n📅 ${formatarDataBR(semInicio)} a ${formatarDataBR(semFim)}\n• ${servicosSemana} serviços\n• Total: R$ ${totalSemanal.toFixed(2)}\n• Fiado: R$ ${(semFiado||0).toFixed(2)}\n• *50% = R$ ${valorPagar.toFixed(2)}*\n\n📱 BarbaPRO Duo`;
     window.open(`https://wa.me/${dados.config.whatsapp}?text=${encodeURIComponent(mensagem)}`, '_blank');
 }
 
@@ -731,9 +847,26 @@ function adicionarMensalista() {
 }
 
 function filtrarMensalistasPorStatus(status) {
+    filtroStatusMensalistas = status;
     document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
     if (event && event.currentTarget) event.currentTarget.classList.add('active');
     atualizarListaMensalistas();
+}
+
+function cobrarMensalistaWhatsApp(id) {
+    const m = dados.mensalistas.find(m => m.id == id);
+    if (!m || !m.telefone) return;
+    const tel = m.telefone.replace(/\D/g, '');
+    const msg = `Olá ${m.nome}! 👋\n\nPassando para lembrar que sua mensalidade da barbearia está ${m.status === 'pago' ? 'em dia' : 'pendente'}.\n💰 Valor: R$ ${m.valor.toFixed(2)}\n📅 Vencimento: dia ${m.diaVencimento} de cada mês\n\n✂️ BarbaPRO`;
+    window.open(`https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function renovarMensalista(id) {
+    const m = dados.mensalistas.find(m => m.id == id);
+    if (!m) return;
+    if (!confirm(`Renovar mensalidade de ${m.nome}?\nIsso irá marcar como pendente para o próximo mês.`)) return;
+    m.status = 'pendente';
+    salvarDadosLocais(); salvarDadosServidor(); atualizarTudo(); mostrarFeedback(`🔄 ${m.nome} renovado para próximo mês!`);
 }
 
 // ========== DESPESAS CRUD ==========
