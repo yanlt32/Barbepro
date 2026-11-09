@@ -4,7 +4,8 @@
     else root.Barba = factory();
 })(typeof self !== 'undefined' ? self : this, function () {
 
-    const COLECOES = ['Gabriel', 'Wagner', 'despesas', 'mensalistas'];
+    // "clientes" guarda só dados extras do cliente (telefone), com id = nome normalizado
+    const COLECOES = ['Gabriel', 'Wagner', 'despesas', 'mensalistas', 'clientes'];
     const BARBEIROS = ['Gabriel', 'Wagner'];
     const CHAVE_LOCAL = 'barbapro_duo';
 
@@ -55,6 +56,15 @@
     }
 
     function diaDaSemana(iso) { return new Date(iso + 'T12:00:00Z').getUTCDay(); }
+
+    function diasEntre(a, b) {
+        return Math.round((new Date(b + 'T12:00:00Z') - new Date(a + 'T12:00:00Z')) / 86400000);
+    }
+
+    function minutosDe(hora) {
+        const [h, m] = String(hora || '0:0').split(':').map(Number);
+        return (h || 0) * 60 + (m || 0);
+    }
 
     // Semana de pagamento: terça a domingo
     function semanaTercaDomingo(iso) {
@@ -180,6 +190,81 @@
         if (dias < 0) return { codigo: 'vencido', texto: 'Vencido', dias, vencimento: venc };
         if (dias <= 3) return { codigo: 'breve', texto: 'Vence em breve', dias, vencimento: venc };
         return { codigo: 'pendente', texto: 'Pendente', dias, vencimento: venc };
+    }
+
+    // ========== CLIENTES ==========
+    const NOMES_GENERICOS = new Set(['cliente', 'clientes', 'sem nome', 'nao sei', 'não sei', 'x', 'xx', '-', '.', '?', 'avulso']);
+    const JANELA_MESMA_PESSOA = 7;
+    const MINUTOS_MESMA_VISITA = 40;
+
+    function mediana(lista) {
+        if (!lista.length) return null;
+        const o = lista.slice().sort((a, b) => a - b);
+        const meio = Math.floor(o.length / 2);
+        return o.length % 2 ? o[meio] : (o[meio - 1] + o[meio]) / 2;
+    }
+
+    // Agrupa os serviços por nome e estima quantas pessoas diferentes usam o mesmo nome:
+    // - serviços do mesmo nome, mesmo dia, mesmo barbeiro e até 40 min de diferença = 1 visita
+    // - o mesmo nome voltando em menos de 7 dias = outra pessoa
+    // O número de pessoas é o máximo de visitas desse nome em qualquer janela de 7 dias.
+    function analisarClientes(dados, filtro) {
+        const grupos = new Map();
+        BARBEIROS.forEach(b => (dados[b] || []).forEach(s => {
+            const chave = chaveCliente(s.cliente);
+            if (!chave || !/^\d{4}-\d{2}-\d{2}$/.test(s.data || '') || s.data < '2015') return;
+            if (filtro && !filtro(s)) return;
+            if (!grupos.has(chave)) grupos.set(chave, { chave, nome: String(s.cliente).trim(), servicos: [] });
+            grupos.get(chave).servicos.push(s);
+        }));
+        const extras = new Map((dados.clientes || []).map(c => [String(c.id), c]));
+
+        return [...grupos.values()].map(g => {
+            g.servicos.sort((a, b) => (a.data + (a.hora || '')).localeCompare(b.data + (b.hora || '')));
+            const visitas = [];
+            g.servicos.forEach(s => {
+                const ultima = visitas[visitas.length - 1];
+                if (ultima && ultima.data === s.data && ultima.barbeiro === s.barbeiro &&
+                    minutosDe(s.hora) - ultima.fimMin <= MINUTOS_MESMA_VISITA) {
+                    ultima.valor += s.valor;
+                    ultima.fimMin = minutosDe(s.hora);
+                } else {
+                    visitas.push({ data: s.data, barbeiro: s.barbeiro, valor: s.valor, fimMin: minutosDe(s.hora) });
+                }
+            });
+
+            const extra = extras.get(g.chave) || {};
+            let pessoas = 1;
+            for (let i = 0, ini = 0; i < visitas.length; i++) {
+                while (diasEntre(visitas[ini].data, visitas[i].data) >= JANELA_MESMA_PESSOA) ini++;
+                pessoas = Math.max(pessoas, i - ini + 1);
+            }
+            // Marcado à mão como "é uma pessoa só"
+            if (extra.pessoaUnica) pessoas = 1;
+            const generico = NOMES_GENERICOS.has(g.chave);
+            const intervalos = visitas.slice(1).map((v, i) => diasEntre(visitas[i].data, v.data));
+            const total = soma(g.servicos);
+            const barbeiros = {};
+            g.servicos.forEach(s => { barbeiros[s.barbeiro] = (barbeiros[s.barbeiro] || 0) + 1; });
+
+            return {
+                chave: g.chave,
+                nome: g.nome,
+                servicos: g.servicos,
+                visitas,
+                pessoas,
+                generico,
+                ambiguo: generico || pessoas > 1,
+                total,
+                porPessoa: total / pessoas,
+                primeira: visitas[0].data,
+                ultima: visitas[visitas.length - 1].data,
+                intervalo: pessoas === 1 ? mediana(intervalos) : null,
+                barbeiro: Object.entries(barbeiros).sort((a, b) => b[1] - a[1])[0][0],
+                pessoaUnica: !!extra.pessoaUnica,
+                telefone: extra.telefone || ''
+            };
+        });
     }
 
     function telefoneWhats(tel) {
@@ -517,6 +602,7 @@
 
     return {
         COLECOES, BARBEIROS, METODOS, CONFIG_PADRAO,
+        analisarClientes, diasEntre, minutosDe, diaDaSemana,
         hoje, horaAgora, mesDe, somarDias, somarMeses, semanaTercaDomingo, diasNoMes, nomeMes, formatarData,
         moeda, esc, chaveCliente, soma,
         normalizarDados, mesclarDados, totalServicos, totalRegistros,

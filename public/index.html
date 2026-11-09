@@ -120,6 +120,7 @@
         <input id="nomeCliente" list="clientesConhecidos" maxlength="30" placeholder="Nome do cliente" autocomplete="off">
         <datalist id="clientesConhecidos"></datalist>
         <span class="erro">O nome do cliente é obrigatório</span>
+        <div class="aviso-mini" id="dicaNome" hidden></div>
       </div>
 
       <div class="grade-2">
@@ -233,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('#modalRegistro [data-metodo]').forEach(b => b.onclick = () => escolherMetodo(b.dataset.metodo));
     document.getElementById('pin').addEventListener('keydown', e => { if (e.key === 'Enter') verificarPin(); });
     document.getElementById('nomeCliente').addEventListener('keydown', e => { if (e.key === 'Enter') confirmarRegistro(); });
+    document.getElementById('nomeCliente').addEventListener('input', mostrarDicaNome);
     renderizar();
     store.conectar();
 });
@@ -264,11 +266,12 @@ function agruparFiados() {
     const grupos = new Map();
     servicosDoUsuario().filter(s => !s.pago).forEach(s => {
         const chave = chaveCliente(s.cliente);
-        if (!grupos.has(chave)) grupos.set(chave, { chave, nome: s.cliente, total: 0, servicos: [], ultima: s.data });
+        if (!grupos.has(chave)) grupos.set(chave, { chave, nome: s.cliente, total: 0, servicos: [], ultima: s.data, primeira: s.data });
         const g = grupos.get(chave);
         g.total += s.valor;
         g.servicos.push(s);
         if (s.data > g.ultima) g.ultima = s.data;
+        if (s.data < g.primeira) g.primeira = s.data;
     });
     return [...grupos.values()].sort((a, b) => b.total - a.total);
 }
@@ -301,7 +304,10 @@ function renderizarClientes() {
                             <div class="item-nome">${esc(g.nome)}</div>
                             <div class="item-meta">${g.servicos.length} serviço(s) em aberto · último em ${formatarData(g.ultima)}</div>
                         </div>
-                        <div class="item-valor txt-alerta">${moeda(g.total)}</div>
+                        <div style="text-align: right;">
+                            <div class="item-valor txt-alerta">${moeda(g.total)}</div>
+                            ${(() => { const dias = Barba.diasEntre(g.primeira, hoje()); return `<span class="tag ${dias > 30 ? 'tag-perigo' : 'tag-alerta'}">${dias ? `há ${dias} dia(s)` : 'hoje'}</span>`; })()}
+                        </div>
                     </div>
                     <div class="item-detalhe">${g.servicos.slice().sort((a, b) => b.data.localeCompare(a.data)).slice(0, 3)
                         .map(s => `<span>${esc(s.tipo)} · ${formatarData(s.data).substring(0, 5)}</span>`).join('')}${g.servicos.length > 3 ? `<span>+${g.servicos.length - 3}</span>` : ''}</div>
@@ -384,11 +390,25 @@ function abrirRegistro(tipo) {
     document.querySelectorAll('#modalRegistro .campo').forEach(c => c.classList.remove('invalido'));
     document.querySelectorAll('#modalRegistro .opcao').forEach(b => b.classList.remove('selecionado'));
     document.getElementById('metodos').hidden = true;
-    const nomes = new Set();
-    Barba.BARBEIROS.forEach(b => store.dados[b].forEach(s => s.cliente && nomes.add(s.cliente.trim())));
-    document.getElementById('clientesConhecidos').innerHTML = [...nomes].sort().map(n => `<option value="${esc(n)}">`).join('');
+    const analise = Barba.analisarClientes(store.dados);
+    nomesRepetidos = new Map(analise.filter(c => c.ambiguo).map(c => [c.chave, c]));
+    document.getElementById('dicaNome').hidden = true;
+    document.getElementById('clientesConhecidos').innerHTML = analise.map(c => c.nome).sort()
+        .map(n => `<option value="${esc(n)}">`).join('');
     Barba.abrirModal('modalRegistro');
     setTimeout(() => document.getElementById(livre ? 'valorLivre' : 'nomeCliente').focus(), 50);
+}
+
+let nomesRepetidos = new Map();
+
+function mostrarDicaNome() {
+    const c = nomesRepetidos.get(chaveCliente(document.getElementById('nomeCliente').value));
+    const dica = document.getElementById('dicaNome');
+    dica.hidden = !c;
+    if (!c) return;
+    dica.textContent = c.generico
+        ? 'Nome genérico não entra no ranking nem na cobrança. Se souber, coloque o nome do cliente.'
+        : `Já existem ~${c.pessoas} pessoas diferentes chamadas "${c.nome}". Coloque sobrenome ou apelido (ex.: "${c.nome} do bar") pra não misturar.`;
 }
 
 function escolherStatus(status) {

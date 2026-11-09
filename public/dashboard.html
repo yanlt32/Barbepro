@@ -64,6 +64,20 @@
     </div>
   </section>
 
+  <!-- FIADOS -->
+  <section class="secao">
+    <div class="secao-topo">
+      <h2 class="secao-titulo">Fiados em aberto <small id="fiadosResumo"></small></h2>
+      <div class="chips" id="fiadosFiltro">
+        <button class="chip ativo" data-fiado="todos">Todos</button>
+        <button class="chip" data-fiado="antigos">Mais de 30 dias</button>
+      </div>
+    </div>
+    <div class="painel">
+      <div id="listaFiados" class="grade-dash" style="gap: 10px;"></div>
+    </div>
+  </section>
+
   <!-- RESUMO MENSAL -->
   <section class="secao">
     <div class="secao-topo">
@@ -97,6 +111,40 @@
         </table>
       </div>
       <div id="detalheMes"></div>
+    </div>
+  </section>
+
+  <!-- CLIENTES -->
+  <section class="secao">
+    <div class="secao-topo">
+      <h2 class="secao-titulo">Clientes</h2>
+      <div class="chips" id="clientesPeriodo">
+        <button class="chip" data-dias="90">90 dias</button>
+        <button class="chip ativo" data-dias="365">12 meses</button>
+        <button class="chip" data-dias="0">Tudo</button>
+      </div>
+    </div>
+    <div class="painel">
+      <div class="abas">
+        <button id="abaRanking" class="ativo" onclick="mostrarAbaClientes('ranking')">Ranking</button>
+        <button id="abaSumidos" onclick="mostrarAbaClientes('sumidos')">Sumidos <span class="cont" id="contSumidos">0</span></button>
+      </div>
+      <div id="conteudoClientes"></div>
+    </div>
+  </section>
+
+  <!-- MOVIMENTO -->
+  <section class="secao">
+    <div class="secao-topo">
+      <h2 class="secao-titulo">Movimento por dia e horário <small>últimos 90 dias</small></h2>
+    </div>
+    <div class="painel">
+      <div id="mapaResumo" class="mapa-resumo"></div>
+      <div id="mapaMovimento" class="mapa" role="grid" aria-label="Média de serviços por dia da semana e hora"></div>
+      <div class="mapa-rodape">
+        <div class="mapa-escala"><span>menos</span><i></i><span>mais</span></div>
+        <div id="mapaDetalhe" class="txt-mudo">Toque num quadrado para ver o detalhe</div>
+      </div>
     </div>
   </section>
 
@@ -197,6 +245,22 @@
   <div id="listaLembretes"></div>
 </div></div>
 
+<!-- MODAL CLIENTE -->
+<div id="modalCliente" class="modal"><div class="modal-box">
+  <div class="modal-topo"><h2 id="clTitulo">Cliente</h2><button class="icon-btn" data-fechar aria-label="Fechar">✕</button></div>
+  <input type="hidden" id="clChave">
+  <p class="modal-sub" id="clInfo"></p>
+  <div class="campo"><label>Telefone (WhatsApp)</label><input type="tel" id="clTelefone" placeholder="(11) 99999-9999"></div>
+  <div class="campo" id="clCampoUnico">
+    <label>Esse nome é de quantas pessoas?</label>
+    <select id="clUnico">
+      <option value="auto">Calcular pela data (padrão)</option>
+      <option value="sim">É uma pessoa só</option>
+    </select>
+  </div>
+  <div class="acoes"><button class="btn btn-ghost" data-fechar>Cancelar</button><button class="btn btn-primario" onclick="salvarCliente()">Salvar</button></div>
+</div></div>
+
 <!-- MODAL DESPESA -->
 <div id="modalDespesa" class="modal"><div class="modal-box">
   <div class="modal-topo"><h2>Nova despesa</h2><button class="icon-btn" data-fechar aria-label="Fechar">✕</button></div>
@@ -217,6 +281,16 @@ let periodoMeses = 6;
 let mesSelecionado = null;
 let filtroMs = 'todos';
 let grafico = null;
+let filtroFiado = 'todos';
+let fiadosExpandido = false;
+let rankingExpandido = false;
+let clientesDias = 365;
+let abaClientes = 'ranking';
+let ordemRanking = 'gasto';
+let celulaSelecionada = null;
+
+// Nomes de cliente vão em onclick="...('x')": codifica para não quebrar com apóstrofo
+const arg = (s) => encodeURIComponent(s).replace(/'/g, '%27');
 
 const store = Barba.criarStore({
     onChange: (tipo) => { if (tipo !== 'local') renderizar(); },
@@ -258,6 +332,16 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('#periodoChips [data-meses]').forEach(x => x.classList.toggle('ativo', x === b));
         renderizarMeses();
     });
+    document.querySelectorAll('#fiadosFiltro [data-fiado]').forEach(b => b.onclick = () => {
+        filtroFiado = b.dataset.fiado;
+        document.querySelectorAll('#fiadosFiltro [data-fiado]').forEach(x => x.classList.toggle('ativo', x === b));
+        renderizarFiados();
+    });
+    document.querySelectorAll('#clientesPeriodo [data-dias]').forEach(b => b.onclick = () => {
+        clientesDias = Number(b.dataset.dias);
+        document.querySelectorAll('#clientesPeriodo [data-dias]').forEach(x => x.classList.toggle('ativo', x === b));
+        renderizarClientes();
+    });
 
     renderizar();
     store.conectar();
@@ -266,7 +350,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderizar() {
     renderizarHoje();
     renderizarSemana();
+    renderizarFiados();
     renderizarMeses();
+    renderizarClientes();
+    renderizarMovimento();
     renderizarMensalistas();
     renderizarServicos();
     renderizarDespesas();
@@ -478,6 +565,264 @@ function enviarResumoMeses() {
         `*${nomeMes(r.mes)}*\n  Gabriel: ${moeda(r.gabriel)} (${r.g.length}) · Wagner: ${moeda(r.wagner)} (${r.w.length})\n  Total: ${moeda(r.total)} · Mensalistas: ${moeda(r.mensalistas)}\n  Despesas: ${moeda(r.totalDespesas)} · Lucro: ${moeda(r.lucro)}`).join('\n\n');
     const lucro = resumos.reduce((t, r) => t + r.lucro, 0);
     abrirWhats(`*📊 RESUMO POR MÊS - BARBAPRO*\n\n${linhas}\n\n💰 *Lucro no período: ${moeda(lucro)}*\n\n📱 BarbaPRO`);
+}
+
+// ========== CLIENTES (telefone / pessoa única) ==========
+function extraCliente(chave) { return d().clientes.find(c => String(c.id) === chave); }
+
+function abrirCliente(chaveCod) {
+    const chave = decodeURIComponent(chaveCod);
+    const info = Barba.analisarClientes(d()).find(c => c.chave === chave);
+    const extra = extraCliente(chave) || {};
+    document.getElementById('clChave').value = chave;
+    document.getElementById('clTitulo').textContent = info ? info.nome : chave;
+    document.getElementById('clInfo').innerHTML = info
+        ? `${info.visitas.length} visita(s) · ${moeda(info.total)} no total · última em ${formatarData(info.ultima)}` +
+          (info.ambiguo && !info.generico ? `<br>Pelas datas, esse nome parece ser de <strong>~${info.pessoas} pessoas</strong> diferentes.` : '')
+        : '';
+    document.getElementById('clTelefone').value = extra.telefone || '';
+    document.getElementById('clUnico').value = extra.pessoaUnica ? 'sim' : 'auto';
+    document.getElementById('clCampoUnico').hidden = !!(info && info.generico);
+    Barba.abrirModal('modalCliente');
+}
+
+async function salvarCliente() {
+    const chave = document.getElementById('clChave').value;
+    const campos = {
+        nome: document.getElementById('clTitulo').textContent,
+        telefone: document.getElementById('clTelefone').value.trim(),
+        pessoaUnica: document.getElementById('clUnico').value === 'sim'
+    };
+    if (extraCliente(chave)) store.atualizar('clientes', chave, campos);
+    else store.adicionar('clientes', { id: chave, ...campos });
+    Barba.fecharModal('modalCliente');
+    renderizar();
+    await store.salvar();
+    Barba.toast(`${campos.nome} atualizado`, 'sucesso');
+}
+
+function botaoContato(c, rotulo, mensagem) {
+    return c.telefone
+        ? `<button class="btn btn-whats btn-sm" onclick="abrirWhats(decodeURIComponent('${arg(mensagem)}'), decodeURIComponent('${arg(c.telefone)}'))">${rotulo}</button>`
+        : `<button class="btn btn-ghost btn-sm" onclick="abrirCliente('${arg(c.chave)}')">+ Telefone</button>`;
+}
+
+// ========== FIADOS ==========
+function renderizarFiados() {
+    const h = hoje();
+    const todos = Barba.analisarClientes(d(), s => !s.pago)
+        .map(c => ({ ...c, dias: Barba.diasEntre(c.primeira, h) }))
+        .sort((a, b) => b.dias - a.dias);
+    const lista = filtroFiado === 'antigos' ? todos.filter(c => c.dias > 30) : todos;
+    const antigos = todos.filter(c => c.dias > 30);
+    document.getElementById('fiadosResumo').textContent =
+        `${moeda(soma(todos, 'total'))} · ${todos.length} nome(s)${antigos.length ? ` · ${moeda(soma(antigos, 'total'))} há mais de 30 dias` : ''}`;
+
+    const alvo = document.getElementById('listaFiados');
+    if (!lista.length) {
+        alvo.innerHTML = `<div class="vazio col-12"><strong>Nenhum fiado ${filtroFiado === 'antigos' ? 'antigo' : 'em aberto'}</strong>Tudo em dia.</div>`;
+        return;
+    }
+    const LIMITE = 6;
+    const mostrar = fiadosExpandido ? lista : lista.slice(0, LIMITE);
+    alvo.innerHTML = mostrar.map(c => {
+        const marca = c.dias > 30 ? 'marca-perigo' : 'marca-alerta';
+        const servicos = c.servicos.map(s => `
+            <div class="fiado-linha">
+                <span>${formatarData(s.data).substring(0, 5)} · ${esc(s.tipo)} · <span class="txt-mudo">${esc(s.barbeiro)}</span></span>
+                <strong>${moeda(s.valor)}</strong>
+                <button class="icon-btn" title="Quitar só este" onclick="quitarServico('${s.barbeiro}','${s.id}')">✓</button>
+            </div>`).join('');
+        const msg = `Olá ${c.nome}! Tudo bem? Passando pra lembrar do valor de ${moeda(c.total)} que ficou pendente aqui na barbearia (desde ${formatarData(c.primeira)}). Quando puder acertar, pode ser no PIX ou na próxima vinda. Valeu! ✂️`;
+        return `<div class="item col-6 ${marca}" style="margin: 0;">
+            <div class="item-topo">
+                <div>
+                    <div class="item-nome">${esc(c.nome)}</div>
+                    <div class="item-meta">${c.servicos.length} serviço(s) · em aberto desde ${formatarData(c.primeira)}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="item-valor txt-alerta">${moeda(c.total)}</div>
+                    <span class="tag ${c.dias > 30 ? 'tag-perigo' : 'tag-alerta'}">${c.dias === 0 ? 'hoje' : `há ${c.dias} dia(s)`}</span>
+                </div>
+            </div>
+            ${c.ambiguo ? `<div class="aviso-mini">Pelas datas, pode ser mais de uma pessoa (~${c.pessoas}). Quite um por um.</div>` : ''}
+            <div class="fiado-lista">${servicos}</div>
+            <div class="item-acoes">
+                ${c.ambiguo ? '' : `<button class="btn btn-sucesso btn-sm" onclick="quitarTudo('${arg(c.chave)}')">✓ Já pagou tudo</button>`}
+                ${botaoContato(c, 'Cobrar', msg)}
+            </div>
+        </div>`;
+    }).join('') + (lista.length > LIMITE
+        ? `<button class="btn btn-ghost btn-sm col-12" onclick="fiadosExpandido = !fiadosExpandido; renderizarFiados()">${fiadosExpandido ? 'Mostrar menos' : `Ver todos (${lista.length})`}</button>`
+        : '');
+}
+
+async function quitarTudo(chaveCod) {
+    const chave = decodeURIComponent(chaveCod);
+    const abertos = todosServicos().filter(s => !s.pago && Barba.chaveCliente(s.cliente) === chave);
+    if (!abertos.length) return;
+    const metodo = await Barba.escolherMetodo(`${abertos[0].cliente.trim()} pagou`, `Quitar ${abertos.length} serviço(s) — <strong>${moeda(soma(abertos))}</strong>`);
+    if (!metodo) return;
+    abertos.forEach(s => store.atualizar(s.barbeiro, s.id, { pago: true, metodoPagamento: metodo, dataPagamento: hoje() }));
+    renderizar();
+    await store.salvar();
+    Barba.toast('Fiado quitado', 'sucesso');
+}
+
+// ========== RANKING / SUMIDOS ==========
+function mostrarAbaClientes(aba) { abaClientes = aba; renderizarClientes(); }
+function ordenarRanking(o) { ordemRanking = o; renderizarClientes(); }
+
+function calcularSumidos() {
+    const h = hoje();
+    return Barba.analisarClientes(d())
+        .filter(c => !c.ambiguo && c.visitas.length >= 3 && c.intervalo)
+        .map(c => ({ ...c, semVir: Barba.diasEntre(c.ultima, h) }))
+        .filter(c => c.semVir >= Math.max(30, c.intervalo * 2) && c.semVir <= 365)
+        .sort((a, b) => b.visitas.length - a.visitas.length || a.semVir - b.semVir);
+}
+
+function renderizarClientes() {
+    const sumidos = calcularSumidos();
+    document.getElementById('contSumidos').textContent = sumidos.length;
+    document.getElementById('abaRanking').classList.toggle('ativo', abaClientes === 'ranking');
+    document.getElementById('abaSumidos').classList.toggle('ativo', abaClientes === 'sumidos');
+    document.getElementById('clientesPeriodo').style.visibility = abaClientes === 'ranking' ? '' : 'hidden';
+    const alvo = document.getElementById('conteudoClientes');
+
+    if (abaClientes === 'sumidos') {
+        if (!sumidos.length) {
+            alvo.innerHTML = `<div class="vazio"><strong>Ninguém sumido</strong>Os clientes frequentes estão voltando no ritmo de sempre.</div>`;
+            return;
+        }
+        alvo.innerHTML = `<p class="nota">Clientes com 3 ou mais visitas que estão sem vir há mais que o dobro do intervalo de costume (mínimo 30 dias).</p>` +
+            sumidos.map(c => {
+                const msg = `Fala ${c.nome}! Faz um tempinho que você não passa aqui na barbearia. Bora dar aquele trato no visual essa semana? É só chamar. ✂️`;
+                return `<div class="item">
+                    <div class="item-topo">
+                        <div>
+                            <div class="item-nome">${esc(c.nome)}</div>
+                            <div class="item-meta">Vinha a cada ~${Math.round(c.intervalo)} dias · ${c.visitas.length} visitas · ${moeda(c.total)} · ${esc(c.barbeiro)}</div>
+                        </div>
+                        <span class="tag tag-perigo">${c.semVir} dias sem vir</span>
+                    </div>
+                    <div class="item-acoes">
+                        ${botaoContato(c, 'Chamar no WhatsApp', msg)}
+                        <button class="btn btn-ghost btn-sm" onclick="abrirCliente('${arg(c.chave)}')">Editar</button>
+                    </div>
+                </div>`;
+            }).join('');
+        return;
+    }
+
+    const inicio = clientesDias ? Barba.somarDias(hoje(), -(clientesDias - 1)) : '0000';
+    const analise = Barba.analisarClientes(d(), s => s.data >= inicio);
+    const genericos = analise.filter(c => c.generico);
+    const chaveOrdem = ordemRanking === 'gasto' ? (c) => c.porPessoa : (c) => c.visitas.length / c.pessoas;
+    const ordenados = analise.filter(c => !c.generico).sort((a, b) => chaveOrdem(b) - chaveOrdem(a));
+    const lista = ordenados.slice(0, rankingExpandido ? 50 : 15);
+
+    alvo.innerHTML = `
+        <div class="chips" style="margin-bottom: 10px;">
+            <button class="chip ${ordemRanking === 'gasto' ? 'ativo' : ''}" onclick="ordenarRanking('gasto')">Quem mais gastou</button>
+            <button class="chip ${ordemRanking === 'visitas' ? 'ativo' : ''}" onclick="ordenarRanking('visitas')">Quem mais veio</button>
+        </div>
+        ${lista.length ? lista.map((c, i) => `
+            <div class="ranking-linha">
+                <span class="ranking-pos ${i < 3 ? 'top' : ''}">${i + 1}</span>
+                <div>
+                    <div class="linha-cliente">${esc(c.nome)} ${c.ambiguo ? `<span class="tag tag-info" title="Mesmo nome em datas muito próximas">~${c.pessoas} pessoas</span>` : ''}</div>
+                    <div class="linha-tipo">${c.visitas.length} visita(s) · ${esc(c.barbeiro)} · última ${formatarData(c.ultima)}</div>
+                </div>
+                <div class="linha-valor">${moeda(c.ambiguo ? c.porPessoa : c.total)}${c.ambiguo ? `<div class="linha-tipo">cada · ${moeda(c.total)} no nome</div>` : ''}</div>
+                <button class="icon-btn" title="Editar cliente" onclick="abrirCliente('${arg(c.chave)}')">✎</button>
+            </div>`).join('') : '<div class="vazio">Nenhum cliente no período.</div>'}
+        ${ordenados.length > 15 ? `<button class="btn btn-ghost btn-sm btn-bloco" style="margin-top: 10px;" onclick="rankingExpandido = !rankingExpandido; renderizarClientes()">${rankingExpandido ? 'Mostrar menos' : 'Ver top 50'}</button>` : ''}
+        <p class="nota">Nomes iguais são separados pela data: o mesmo nome voltando em menos de 7 dias conta como outra pessoa.
+        Se for um cliente só que vem muito, toque em ✎ e marque "É uma pessoa só". Para não misturar, registre com apelido ou sobrenome (ex.: "Paulo do bar").
+        ${genericos.length ? `<br>${genericos.reduce((t, c) => t + c.servicos.length, 0)} serviço(s) com nome genérico (ex.: "Cliente") ficaram fora do ranking.` : ''}</p>`;
+}
+
+// ========== MOVIMENTO (dia x hora) ==========
+const NOMES_DIA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+const ORDEM_DIAS = [2, 3, 4, 5, 6, 0, 1];
+
+function calcularMovimento() {
+    const fim = hoje();
+    const inicio = Barba.somarDias(fim, -89);
+    const diasAbertos = Array.from({ length: 7 }, () => new Set());
+    const qtd = {}, valor = {};
+    todosServicos().filter(s => s.data >= inicio && s.data <= fim && s.hora).forEach(s => {
+        const dia = Barba.diaDaSemana(s.data);
+        const hora = Math.floor(Barba.minutosDe(s.hora) / 60);
+        diasAbertos[dia].add(s.data);
+        const k = dia + '-' + hora;
+        qtd[k] = (qtd[k] || 0) + 1;
+        valor[dia] = (valor[dia] || 0) + s.valor;
+    });
+    // Horário de funcionamento = faixa que concentra 98% dos serviços (lançamentos de madrugada ficam de fora)
+    const porHora = Array(24).fill(0);
+    Object.entries(qtd).forEach(([k, n]) => { porHora[Number(k.split('-')[1])] += n; });
+    const total = porHora.reduce((t, n) => t + n, 0);
+    let horaMin = 0, horaMax = 23, acumulado = 0;
+    while (horaMin < 23 && acumulado + porHora[horaMin] <= total * 0.01) acumulado += porHora[horaMin++];
+    acumulado = 0;
+    while (horaMax > horaMin && acumulado + porHora[horaMax] <= total * 0.01) acumulado += porHora[horaMax--];
+    // Dia com pouquíssimos atendimentos no período (ex.: folga) não entra
+    const diasValidos = ORDEM_DIAS.filter(dia => diasAbertos[dia].size >= 4);
+    return { diasAbertos, qtd, valor, horaMin, horaMax, diasValidos, vazio: !total };
+}
+
+function renderizarMovimento() {
+    const mv = calcularMovimento();
+    const mapa = document.getElementById('mapaMovimento');
+    if (mv.vazio) {
+        mapa.innerHTML = '<div class="vazio">Sem serviços nos últimos 90 dias.</div>';
+        document.getElementById('mapaResumo').innerHTML = '';
+        return;
+    }
+    const dias = mv.diasValidos.length ? mv.diasValidos : ORDEM_DIAS.filter(dia => mv.diasAbertos[dia].size > 0);
+    const horas = [];
+    for (let h = mv.horaMin; h <= mv.horaMax; h++) horas.push(h);
+    const media = (dia, h) => (mv.qtd[dia + '-' + h] || 0) / (mv.diasAbertos[dia].size || 1);
+    let maior = 0;
+    const celulas = [];
+    dias.forEach(dia => horas.forEach(h => { const v = media(dia, h); maior = Math.max(maior, v); celulas.push({ dia, h, v }); }));
+
+    mapa.style.gridTemplateColumns = `40px repeat(${horas.length}, minmax(0, 1fr))`;
+    mapa.innerHTML = '<span></span>' + horas.map(h => `<span class="mapa-hora">${h}h</span>`).join('') +
+        dias.map(dia => `<span class="mapa-dia">${NOMES_DIA[dia].substring(0, 3)}</span>` + horas.map(h => {
+            const v = media(dia, h);
+            const fundo = v ? `rgba(242, 169, 59, ${(0.14 + 0.86 * v / maior).toFixed(2)})` : 'var(--surface-2)';
+            const sel = celulaSelecionada === dia + '-' + h ? 'sel' : '';
+            return `<button class="mapa-celula ${sel}" style="background:${fundo}" onclick="selecionarCelula(${dia}, ${h})"
+                aria-label="${NOMES_DIA[dia]} ${h}h: média ${v.toFixed(1)} serviços"></button>`;
+        }).join('')).join('');
+
+    const cheios = celulas.filter(c => c.v > 0).sort((a, b) => b.v - a.v);
+    const vazios = celulas.filter(c => c.v > 0 && c.h > mv.horaMin && c.h < mv.horaMax).sort((a, b) => a.v - b.v);
+    const porDia = dias.map(dia => ({ dia, media: (mv.valor[dia] || 0) / mv.diasAbertos[dia].size })).sort((a, b) => b.media - a.media);
+    const fmt = (c) => `${NOMES_DIA[c.dia]} ${c.h}h`;
+    document.getElementById('mapaResumo').innerHTML = `
+        <div><span>Horário mais cheio</span><strong>${cheios.slice(0, 2).map(fmt).join(' e ')}</strong></div>
+        <div><span>Horário mais parado</span><strong>${vazios.length ? vazios.slice(0, 2).map(fmt).join(' e ') : '—'}</strong></div>
+        <div><span>Melhor dia</span><strong>${NOMES_DIA[porDia[0].dia]} · ${moeda(porDia[0].media)}/dia</strong></div>
+        <div><span>Dia mais fraco</span><strong>${NOMES_DIA[porDia[porDia.length - 1].dia]} · ${moeda(porDia[porDia.length - 1].media)}/dia</strong></div>`;
+    mostrarDetalheCelula(mv);
+}
+
+function selecionarCelula(dia, h) {
+    celulaSelecionada = celulaSelecionada === dia + '-' + h ? null : dia + '-' + h;
+    renderizarMovimento();
+}
+
+function mostrarDetalheCelula(mv) {
+    const alvo = document.getElementById('mapaDetalhe');
+    if (!celulaSelecionada) { alvo.textContent = 'Toque num quadrado para ver o detalhe'; return; }
+    const [dia, h] = celulaSelecionada.split('-').map(Number);
+    const total = mv.qtd[celulaSelecionada] || 0;
+    const dias = mv.diasAbertos[dia].size;
+    alvo.innerHTML = `<strong style="color: var(--text)">${NOMES_DIA[dia]}, ${h}h às ${h + 1}h:</strong> média de ${(total / (dias || 1)).toFixed(1).replace('.', ',')} serviço(s) — ${total} em ${dias} ${NOMES_DIA[dia].toLowerCase()}(s) trabalhados`;
 }
 
 // ========== MENSALISTAS ==========
